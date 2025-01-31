@@ -51,3 +51,17 @@ function foo(a1, ...a2){
 }
 foo(5, 6);
 ```
+## Destructuring assignment
+[MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment)
+
+Some common use cases:
+``` js
+const [a, b] = array;
+const [a, b, ...rest] = array;
+const [a = aDefault] = array;
+
+const { a, b } = obj;
+const { a: a1, b: b1 } = obj;
+const { a, b, ...rest } = obj;
+const { a: a1 = aDefault } = obj;
+```
