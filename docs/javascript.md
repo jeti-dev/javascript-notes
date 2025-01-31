@@ -114,3 +114,6 @@ for (const i in arr) {
 }
 
 ```
+
+## Temporal dead zone (TDZ)
+A variable declared with `let`, `const` or `class` is in the temporal dead zone from the start of the block until the execution reaches their declaration. In other words you can't use them before they are declared.
