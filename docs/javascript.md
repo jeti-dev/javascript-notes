@@ -131,3 +131,17 @@ var y;
 
 ## Temporal dead zone (TDZ)
 A variable declared with `let`, `const` or `class` is in the temporal dead zone from the start of the block until the execution reaches their declaration. In other words you can't use them before they are declared.
+
+## Type coercion
+[Link](https://www.freecodecamp.org/news/js-type-coercion-explained-27ba3d9a2839/)
+- to string: `+`
+- to boolean: `|| && !`
+- to number: `> < <= >= | & ^ ~ - + * / % +(unary) == !=`
+
+A few example:
+``` js
+console.log('5' + 5); // "55" - number 5 is coerced to string
+console.log('5' - 5); // 0 - string '5' is coerced to number
+console.log('5' == 5); // true - string '5' is coerced to number
+console.log('1' || 5); // 1 - string is coerced to boolean
+```
