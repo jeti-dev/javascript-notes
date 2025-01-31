@@ -89,3 +89,28 @@ const msg = myTag`Hello ${"World"} this is ${"JavaScript"}`;
 
 console.log(msg); // Hello World this is JavaScript
 ```
+
+## Loops
+### for...of
+Iterates over the values of an iterable object:
+- Array
+- String
+- TypedArray
+- Map
+- Set
+- NodeList (and other DOM collections) 
+- object
+- generators
+
+### for...in
+Iterates over the enumerable string properties of an object (ignores symbol properties).
+It might yield suprising results:
+``` js
+const arr = [3, 5, 7];
+arr.foo = "hello";
+
+for (const i in arr) {
+  console.log(i); // "0", "1", "2", "foo"
+}
+
+```
