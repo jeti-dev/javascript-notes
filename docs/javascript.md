@@ -114,6 +114,20 @@ for (const i in arr) {
 }
 
 ```
+## Hoisting
+"A variable can be used before it is declared."
+JS moves the `var` *declarations* to the top of the `scope`. *Initializations* are not moved!
+``` js
+
+console.log(x); // undefined, because only "var x;" is hoisted
+var x = 'foo';
+
+
+y = 2;
+console.log(y); // 2, because "var y;" is moved before "y = 2;"
+var y;
+
+```
 
 ## Temporal dead zone (TDZ)
 A variable declared with `let`, `const` or `class` is in the temporal dead zone from the start of the block until the execution reaches their declaration. In other words you can't use them before they are declared.
