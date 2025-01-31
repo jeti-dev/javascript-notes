@@ -74,3 +74,18 @@ foo({
     b: 2
 });
 ```
+
+## Taggged templates
+[MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates)
+
+Special syntax. Doesn't have to return a string.
+
+``` js
+function myTag(strings, v1, v2){
+    return strings[0] + v1 + strings[1] + v2 + strings[2];
+}
+
+const msg = myTag`Hello ${"World"} this is ${"JavaScript"}`;
+
+console.log(msg); // Hello World this is JavaScript
+```
