@@ -64,4 +64,13 @@ const { a, b } = obj;
 const { a: a1, b: b1 } = obj;
 const { a, b, ...rest } = obj;
 const { a: a1 = aDefault } = obj;
+
+function foo({a, b}){
+    console.log(a, b)
+}
+
+foo({
+    a: 1,
+    b: 2
+});
 ```
