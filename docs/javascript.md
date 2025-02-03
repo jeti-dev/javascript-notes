@@ -145,3 +145,83 @@ console.log('5' - 5); // 0 - string '5' is coerced to number
 console.log('5' == 5); // true - string '5' is coerced to number
 console.log('1' || 5); // 1 - string is coerced to boolean
 ```
+
+## this
+`this` refers to an object or in other words `this` refers to the context where your code runs.
+Its value depends on how a function is *called* and not how it is *defined*.
+
+``` js
+const person = {
+    name: 'John',
+    greet: function() {
+        console.log('Hello, my name is ' + this.name);
+    }
+}
+
+//The function is called "through" the person object.
+person.greet() // Hello, my name is John
+
+// The function is called "through" the window object that doesn't have a "name" property.
+const foo = person.greet;
+foo() // Hello, my name is undefined
+```
+
+### `this` in events
+It is usually the element that received the event.
+
+### `this` in callbacks
+The value of `this` depends on the API.
+``` js
+function cb(){
+    console.log(this);
+}
+
+[1, 2, 3].forEach(cb); // window, window, window
+```
+
+### `this` in arrow functions
+A closure is created over the `this` value so this always refers to the object where the function was defined. This is the opposite how `this` workf for normal functions (see the intro).
+```js
+const cb = function() {
+    console.log('cb ', this);
+}
+
+const cbArr = () =>{
+    console.log('cbArr ',this);
+}
+
+const cbObj = {
+    cb: cb,
+    cbArr: cbArr
+}
+
+cbObj.cb(); // cbObj
+cbObj.cbArr(); // window
+```
+
+### `this` in constructors
+`this` refers to the new object being constructed.
+
+### `call`, `apply`, `bind`
+All of the functions bind `this` to an object in some way.
+- `call`: call the function with the provided object as `this` and provide the parameters one by one
+- `apply`: call the function with the provided object as `this` and provide the parameters in an array which is then spread to the parameters
+- `bind`: create a new function with the provided object as `this`
+
+``` js
+function foo(param1, param2){
+    console.log(this.name, param1, param2);
+}
+
+foo(1, 2); // undefined 1 2
+
+foo.call({name: 'John'}, 1, 2); // John 1 2
+
+foo.apply({name: 'John'}, [1, 2]); // John 1 2 (the values in the array are "spread" into the function arguments)
+
+const newFoo = foo.bind({name: 'John'}); // bind returns a new function with "this" binded to the object passed as argument 
+newFoo(1, 2); // John 1 2
+
+const newFooWithParam1 = foo.bind({name: 'John'}, 1); // bind can also bind arguments
+newFooWithParam1(2); // John 1 2
+```
