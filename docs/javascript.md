@@ -291,6 +291,34 @@ Person.prototype.goodbye = function() {
 
 person1.goodbye(); // Goodbye, Bob
 ```
+### Inheritance
+```js
+// base class
+function User(name){
+    this.name = name;
+}
+
+// setting a method
+User.prototype.getName = function(){
+    return this.name;
+}
+
+// child class
+function Admin(name, isEnabled){
+    // it's like calling "super()"
+    User.call(this, name);
+    this.isEnabled = isEnabled;
+}
+
+// this is like "extends"
+Object.setPrototypeOf(Admin.prototype, User.prototype);
+
+const admin = new Admin('Bob', true);
+
+console.log(admin.name);
+console.log(admin.getName());
+```
+
 ### With and without `new`
 A function can behave differently if called with or without `new`.
 ``` js
