@@ -273,7 +273,7 @@ const person = new Person('John');
 ```
 
 ### Adding a property to the constructor
-Use `prototype`. You can use the new property even if it was added after you created your object.
+Use `prototype`. You can use the new property even if it was added after you created your object. Methods should be added to the prototype because this way all object will share this method resulting in less memory consumption.
 ``` js
 function Person(name) {
   this.name = name;
@@ -298,3 +298,42 @@ Boolean(1) // true
 new Boolean() // wrapper object
 ```
 
+## Prototype
+How objects inherit features from each other. Every object has a prototype which is also an object and has a prototype. This is the prototype chain. We reach the end of the chain when an object has a `null` prototype.
+
+However the name of the property is not prototype. Its name is not standard but browsers usually use `__proto__`. The best way is to use `Object.getPrototypeOf()`.
+
+When we access a property of an object and that property is not part of that object, Javascript starts tries to find that property on the object's prototype and so on.
+
+Shadowing a property is when the child object defines a property that has a same name as a property on the prototype.
+
+### Setting the prototype (inheritance)
+
+`Object.create(yourProtoObject)`
+``` js
+const myProto = {
+    hello: function() {
+        return 'Hello';
+    }
+}
+
+const obj = Object.create(myProto);
+
+console.log(obj.hello()); // Hello
+```
+
+With object constructor functions we have to set the prototype of the function.
+``` js
+const myProto = {
+    hello: function() {
+        return 'Hello';
+    }
+}
+
+function Person(){}
+
+Object.assign(Person.prototype, myProto);
+
+const person = new Person();
+console.log(person.hello());
+```
