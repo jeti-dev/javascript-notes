@@ -365,3 +365,100 @@ Object.assign(Person.prototype, myProto);
 const person = new Person();
 console.log(person.hello());
 ```
+## Classes
+- Constructor
+- Instance Properties
+- Instance Methods
+- Static Properties
+- Static Methods
+- Getter and Setter Methods
+- Inheritance (extends)
+- Method Overriding
+- Private Fields (using #)
+- Public Fields
+
+``` js
+// Parent class
+class Animal {
+  // Static property (shared across all instances)
+  static totalAnimals = 0;
+
+  // Static method (called on the class itself)
+  static describe() {
+    console.log("This is the Animal class.");
+  }
+
+  // Constructor (called when an instance is created)
+  constructor(name, age) {
+    // Instance properties
+    this.name = name;
+    this.age = age;
+
+    // Private field (encapsulated, not accessible outside the class)
+    this.#energy = 100;
+
+    // Increment the static property
+    Animal.totalAnimals++;
+  }
+
+  // Public field (experimental, supported in modern JS)
+  habitat = "Earth";
+
+  // Private field (encapsulated)
+  #energy;
+
+  // Getter for private field
+  get energy() {
+    return this.#energy;
+  }
+
+  // Setter for private field
+  set energy(value) {
+    if (value >= 0 && value <= 100) {
+      this.#energy = value;
+    } else {
+      console.log("Energy must be between 0 and 100.");
+    }
+  }
+
+  // Instance method
+  eat(food) {
+    this.#energy += 10;
+    console.log(`${this.name} is eating ${food}. Energy is now ${this.#energy}.`);
+  }
+
+  // Instance method
+  sleep() {
+    this.#energy = 100;
+    console.log(`${this.name} is sleeping. Energy is now ${this.#energy}.`);
+  }
+
+  // Overridable method
+  makeSound() {
+    console.log(`${this.name} makes a sound.`);
+  }
+}
+
+// Child class (inherits from Animal)
+class Dog extends Animal {
+  constructor(name, age, breed) {
+    // Call the parent constructor
+    super(name, age);
+
+    // Additional instance property
+    this.breed = breed;
+  }
+
+  // Override the parent method
+  makeSound() {
+    console.log(`${this.name} barks!`);
+  }
+
+  // Additional instance method
+  fetch(item) {
+    this.energy -= 10;
+    console.log(`${this.name} fetched the ${item}. Energy is now ${this.energy}.`);
+  }
+}
+
+```
