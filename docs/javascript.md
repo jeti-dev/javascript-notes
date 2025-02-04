@@ -256,3 +256,45 @@ const user = {
 
 user.hello(); // window 
 ```
+
+## Object constructor function
+A new object is created and `this` is set to the new object.
+
+``` js
+function Person(name) {
+  this.name = name;
+  this.hello = function() {
+    console.log('Hello, ' + this.name);
+  }
+}
+
+const person = new Person('John');
+
+```
+
+### Adding a property to the constructor
+Use `prototype`. You can use the new property even if it was added after you created your object.
+``` js
+function Person(name) {
+  this.name = name;
+  this.hello = function() {
+    console.log('Hello, ' + this.name);
+  }
+}
+
+const person1 = new Person('Bob');
+person1.hello();
+
+Person.prototype.goodbye = function() {
+  console.log('Goodbye, ' + this.name);
+};
+
+person1.goodbye(); // Goodbye, Bob
+```
+### With and without `new`
+A function can behave differently if called with or without `new`.
+``` js
+Boolean(1) // true
+new Boolean() // wrapper object
+```
+
