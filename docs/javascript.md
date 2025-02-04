@@ -225,3 +225,34 @@ newFoo(1, 2); // John 1 2
 const newFooWithParam1 = foo.bind({name: 'John'}, 1); // bind can also bind arguments
 newFooWithParam1(2); // John 1 2
 ```
+
+## Arrow functions
+Can't be/have:
+- constructor
+- super
+- arguments
+- `call`, `apply`, `bind`
+
+The arrow function inside inherits `this` from the parent scope.
+Another definition: `this` always refers to the object that defined the function.
+``` js
+function foo(){
+    const hello = () => {
+        console.log(this);
+    }
+    hello();
+}
+
+foo(); // window
+foo.call({name: 'John'}); // the object
+```
+
+Can't be an object method because the object doesn't have a scope:
+``` js
+const user = {
+    name: 'John',
+    hello: ()=>console.log(this) 
+}
+
+user.hello(); // window 
+```
