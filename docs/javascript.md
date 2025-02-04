@@ -462,3 +462,10 @@ class Dog extends Animal {
 }
 
 ```
+
+## IIFE (Immediately Invoked Function Expression)
+``` js
+(function(){
+  console.log('Runs immediately')}
+)()
+```
