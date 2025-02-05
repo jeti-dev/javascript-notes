@@ -469,3 +469,36 @@ class Dog extends Animal {
   console.log('Runs immediately')}
 )()
 ```
+
+## Lexical context, lexical scope, scope
+| Feature                | Lexical Context                                      | Lexical Scope                                      | Scope                                              |
+|------------------------|-----------------------------------------------------|----------------------------------------------------|----------------------------------------------------|
+| **Definition**         | The environment in which a piece of code is executed, including variables, `this`, and closures. | How variable and function names are resolved based on their physical location in the source code. | The region of the code where a variable or function is accessible. |
+| **Focus**              | Execution environment, including `this` and closures. | How nested functions and blocks access variables from their outer scopes. | Accessibility and lifetime of variables and functions. |
+| **Determined At**      | Runtime (when the code is executed).                | Compile time (when the code is written).           | Runtime (for dynamic scoping) or compile time (for lexical scoping). |
+| **Key Components**     | Variables, `this`, closures.                        | Nested functions and blocks.                       | Global scope, function scope, block scope.         |
+| **Example**            | A closure retaining access to variables from its outer scope. | An inner function accessing a variable from its outer function. | A variable declared in a function is accessible only within that function. |
+
+### Lexical Context:
+
+Refers to the execution environment of a piece of code, including variables, the value of this, and closures.
+
+Determined at runtime.
+
+Example: A closure retaining access to variables from its outer scope.
+
+### Lexical Scope:
+
+Refers to how variable and function names are resolved based on their physical location in the source code.
+
+Determined at compile time.
+
+Example: An inner function accessing a variable from its outer function.
+
+###Scope:
+
+Refers to the region of the code where a variable or function is accessible.
+
+Includes global scope, function scope, and block scope.
+
+Example: A variable declared in a function is accessible only within that function.
