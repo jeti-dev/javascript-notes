@@ -470,35 +470,28 @@ class Dog extends Animal {
 )()
 ```
 
-## Lexical context, lexical scope, scope
-| Feature                | Lexical Context                                      | Lexical Scope                                      | Scope                                              |
-|------------------------|-----------------------------------------------------|----------------------------------------------------|----------------------------------------------------|
-| **Definition**         | The environment in which a piece of code is executed, including variables, `this`, and closures. | How variable and function names are resolved based on their physical location in the source code. | The region of the code where a variable or function is accessible. |
-| **Focus**              | Execution environment, including `this` and closures. | How nested functions and blocks access variables from their outer scopes. | Accessibility and lifetime of variables and functions. |
-| **Determined At**      | Runtime (when the code is executed).                | Compile time (when the code is written).           | Runtime (for dynamic scoping) or compile time (for lexical scoping). |
-| **Key Components**     | Variables, `this`, closures.                        | Nested functions and blocks.                       | Global scope, function scope, block scope.         |
-| **Example**            | A closure retaining access to variables from its outer scope. | An inner function accessing a variable from its outer function. | A variable declared in a function is accessible only within that function. |
+## Closures
+[MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures) "A closure is the combination of a function bundled together (enclosed) with references to its surrounding state (the **lexical environment**). In other words, a closure gives a function access to its outer scope."
 
-### Lexical Context:
+"The lexical environment consists of any variables that were in-scope at the time the closure was created. "
 
-Refers to the execution environment of a piece of code, including variables, the value of this, and closures.
+"Closures are useful because they let you associate data (the lexical environment) with a function that operates on that data."
 
-Determined at runtime.
+``` js
 
-Example: A closure retaining access to variables from its outer scope.
+function foo(){
+  var value = 'hi';
 
-### Lexical Scope:
+  function inner(){
+    console.log(value);
+  }
 
-Refers to how variable and function names are resolved based on their physical location in the source code.
+  inner();
+}
 
-Determined at compile time.
+foo(); // hi
 
-Example: An inner function accessing a variable from its outer function.
+```
 
-###Scope:
+"This is an example of **lexical scoping**, which describes how a parser resolves variable names when functions are nested. The word lexical refers to the fact that lexical scoping uses the location where a variable is declared within the source code to determine where that variable is available. Nested functions have access to variables declared in their outer scope."
 
-Refers to the region of the code where a variable or function is accessible.
-
-Includes global scope, function scope, and block scope.
-
-Example: A variable declared in a function is accessible only within that function.
