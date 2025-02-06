@@ -559,3 +559,23 @@ employee.work(); // Bob is working as a Developer. (new method)
 | **Flexibility**        | Highly flexible; objects can be composed dynamically. | Less flexible; relies on a fixed prototype chain. |
 | **Performance**        | Slower for creating many objects.                | Faster for creating many objects.                |
 | **`instanceof`**       | Cannot use `instanceof`.                         | Can use `instanceof` to check inheritance.       |
+
+## Mixin
+A set of methods that implement a feature. It can be used by other classes/objects without "extending" or "implementing" it.
+
+``` js
+function User(name){
+    this.name = name;
+}
+
+const loggerMixin = {
+    log: function(){
+        console.log(this.name);
+    }
+}
+
+Object.assign(User.prototype, loggerMixin);
+
+const user = new User('John');
+user.log();
+```
