@@ -365,6 +365,14 @@ Object.assign(Person.prototype, myProto);
 const person = new Person();
 console.log(person.hello());
 ```
+
+## Properties: `prototype` vs `__proto__`
+Only functions have `prototype` and only objects have `__proto__`!
+Using `__proto__` is not recommended anymore, use `Object.getPrototypeOf()` and `Object.setPrototypeOf()` instead.
+
+`prototype` is like the blueprint for creating the objects and `__proto__` is the actual object used on the prototype chain to lookup properties.
+
+
 ## Classes
 - Constructor
 - Instance Properties
