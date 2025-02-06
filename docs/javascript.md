@@ -503,3 +503,58 @@ foo(); // hi
 
 "This is an example of **lexical scoping**, which describes how a parser resolves variable names when functions are nested. The word lexical refers to the fact that lexical scoping uses the location where a variable is declared within the source code to determine where that variable is available. Nested functions have access to variables declared in their outer scope."
 
+## Functional inheritance
+
+``` js
+function createPerson(name, age) {
+  // Private state (encapsulated using closures)
+  let _age = age;
+
+  // Public interface (returned object)
+  return {
+    name, // Public property
+    getAge() {
+      return _age; // Access private state
+    },
+    celebrateBirthday() {
+      _age++; // Modify private state
+      console.log(`${this.name} is now ${_age} years old!`);
+    }
+  };
+}
+
+const person = createPerson("Alice", 30);
+console.log(person.name); // Alice (public property)
+console.log(person.getAge()); // 30 (access private state)
+person.celebrateBirthday(); // Alice is now 31 years old!
+```
+
+``` js
+function createEmployee(name, age, jobTitle) {
+  // Inherit from createPerson
+  const person = createPerson(name, age);
+
+  // Extend the object with additional properties/methods
+  return {
+    ...person, // Spread operator to copy properties/methods
+    jobTitle,
+    work() {
+      console.log(`${this.name} is working as a ${this.jobTitle}.`);
+    }
+  };
+}
+
+const employee = createEmployee("Bob", 25, "Developer");
+console.log(employee.name); // Bob (inherited from createPerson)
+console.log(employee.getAge()); // 25 (inherited from createPerson)
+employee.celebrateBirthday(); // Bob is now 26 years old! (inherited from createPerson)
+employee.work(); // Bob is working as a Developer. (new method)
+```
+
+| Feature                | Functional Inheritance                            | Prototypal Inheritance                            |
+|------------------------|--------------------------------------------------|--------------------------------------------------|
+| **Encapsulation**      | Truly private state using closures.              | No native private state (until ES2022's `#`).    |
+| **Memory Usage**       | Each object has its own copy of methods.         | Methods are shared via the prototype.            |
+| **Flexibility**        | Highly flexible; objects can be composed dynamically. | Less flexible; relies on a fixed prototype chain. |
+| **Performance**        | Slower for creating many objects.                | Faster for creating many objects.                |
+| **`instanceof`**       | Cannot use `instanceof`.                         | Can use `instanceof` to check inheritance.       |
