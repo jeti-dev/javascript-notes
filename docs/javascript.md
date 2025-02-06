@@ -306,6 +306,7 @@ User.prototype.getName = function(){
 // child class
 function Admin(name, isEnabled){
     // it's like calling "super()"
+    // As we don't use "new" a new object is not created. By using "this" the name property will be set on the new Admin object
     User.call(this, name);
     this.isEnabled = isEnabled;
 }
