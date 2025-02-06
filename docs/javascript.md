@@ -579,3 +579,114 @@ Object.assign(User.prototype, loggerMixin);
 const user = new User('John');
 user.log();
 ```
+
+## Regex
+
+- `/ab+c/` regex lieral, can't be dynamic
+- `new RegExp("ab+c")` calling the function constructor, can be dynamic 
+
+### String methods and the rexes functions
+| Method                | Description                                                                 | Example                                                                 |
+|-----------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `match()`             | Returns an array of matches for a string against a regex. Returns `null` if no match is found. | `"Hello World".match(/o/g)` → `["o", "o"]`                              |
+| `matchAll()`          | Returns an iterator of all results matching a string against a regex (requires `g` flag). | `[..."Hello World".matchAll(/o/g)]` → `[["o"], ["o"]]`                  |
+| `search()`            | Returns the index of the first match of a regex in a string. Returns `-1` if no match is found. | `"Hello World".search(/o/)` → `4`                                      |
+| `replace()`           | Replaces matches of a regex in a string with a replacement string or function. | `"Hello World".replace(/o/g, "a")` → `"Hella Warld"`                   |
+| `replaceAll()`        | Replaces all matches of a regex or string in a string with a replacement string or function. | `"Hello World".replaceAll(/o/g, "a")` → `"Hella Warld"`                |
+| `split()`             | Splits a string into an array of substrings using a regex or string as the delimiter. | `"Hello World".split(/\s/)` → `["Hello", "World"]`                     |
+| `test()` (RegExp)     | Tests if a regex matches a string. Returns `true` or `false`.               | `/o/.test("Hello World")` → `true`                                     |
+| `exec()` (RegExp)     | Executes a regex on a string and returns the match details (or `null`).     | `/o/.exec("Hello World")` → `["o", index: 4, input: "Hello World"]`    |
+
+# Regex Cheat Sheet
+
+## Basic Syntax
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `.`          | Matches any single character except newline (`\n`).                         |
+| `\d`         | Matches any digit (0-9).                                                    |
+| `\D`         | Matches any non-digit character.                                            |
+| `\w`         | Matches any word character (a-z, A-Z, 0-9, _).                              |
+| `\W`         | Matches any non-word character.                                             |
+| `\s`         | Matches any whitespace character (space, tab, newline).                     |
+| `\S`         | Matches any non-whitespace character.                                       |
+| `\b`         | Matches a word boundary.                                                    |
+| `\B`         | Matches a non-word boundary.                                                |
+| `^`          | Matches the start of a string.                                              |
+| `$`          | Matches the end of a string.                                                |
+| `\`          | Escapes a special character (e.g., `\.` matches a literal dot).             |
+
+## Quantifiers
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `*`          | Matches 0 or more of the preceding element.                                 |
+| `+`          | Matches 1 or more of the preceding element.                                 |
+| `?`          | Matches 0 or 1 of the preceding element.                                    |
+| `{n}`        | Matches exactly `n` occurrences of the preceding element.                   |
+| `{n,}`       | Matches `n` or more occurrences of the preceding element.                   |
+| `{n,m}`      | Matches between `n` and `m` occurrences of the preceding element.           |
+
+## Character Classes
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `[abc]`      | Matches any one of the characters `a`, `b`, or `c`.                         |
+| `[^abc]`     | Matches any character except `a`, `b`, or `c`.                              |
+| `[a-z]`      | Matches any character in the range `a` to `z`.                              |
+| `[A-Z]`      | Matches any character in the range `A` to `Z`.                              |
+| `[0-9]`      | Matches any digit in the range `0` to `9`.                                  |
+| `[a-zA-Z]`   | Matches any character in the range `a` to `z` or `A` to `Z`.                |
+
+## Groups and Capturing
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `(abc)`      | Captures a group. Matches `abc` and stores it for later use.                |
+| `(?:abc)`    | Non-capturing group. Matches `abc` but does not store it.                   |
+| `(?<name>abc)` | Named capturing group. Matches `abc` and stores it under the name `name`. |
+| `\1`, `\2`, etc. | Backreferences to captured groups (e.g., `\1` refers to the first group). |
+| `\k<name>`   | Backreference to a named capturing group.                                   |
+
+## Disjunction (Alternation)
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `a|b`        | Matches either `a` or `b`.                                                  |
+
+## Lookahead and Lookbehind
+| Syntax       | Description                                                                 |
+|--------------|-----------------------------------------------------------------------------|
+| `(?=abc)`    | Positive lookahead. Matches if `abc` is ahead.                              |
+| `(?!abc)`    | Negative lookahead. Matches if `abc` is not ahead.                          |
+| `(?<=abc)`   | Positive lookbehind. Matches if `abc` is behind.                            |
+| `(?<!abc)`   | Negative lookbehind. Matches if `abc` is not behind.                        |
+
+## Flags
+
+| Flag | Description                                                                 | Example                                                                 |
+|------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `g`  | **Global search**: Finds all matches in the string, not just the first one. | `"hello hello".match(/hello/g)` → `["hello", "hello"]`                  |
+| `i`  | **Case-insensitive search**: Ignores case when matching.                    | `"Hello".match(/hello/i)` → `["Hello"]`                                 |
+| `m`  | **Multiline mode**: `^` and `$` match the start/end of each line, not just the start/end of the string. | `"line1\nline2".match(/^line2/m)` → `["line2"]`                        |
+| `s`  | **Dot-all mode**: Allows `.` to match newline characters (`\n`).            | `"line1\nline2".match(/line1.line2/s)` → `["line1\nline2"]`             |
+| `u`  | **Unicode mode**: Treats the pattern as a sequence of Unicode code points.  | `"😊".match(/\u{1F60A}/u)` → `["😊"]`                                   |
+| `y`  | **Sticky mode**: Matches only from the index indicated by `lastIndex`.      | ``` const regex = /a/y; regex.lastIndex = 1; regex.test("baa") ``` → `true` |
+
+
+## Examples
+| Example                      | Description                                                                 |
+|------------------------------|-----------------------------------------------------------------------------|
+| `/hello/`                    | Matches the exact string `"hello"`.                                         |
+| `/^hello/`                   | Matches `"hello"` at the start of a string.                                 |
+| `/hello$/`                   | Matches `"hello"` at the end of a string.                                   |
+| `/h.llo/`                    | Matches `"hallo"`, `"hello"`, `"hxllo"`, etc.                               |
+| `/h\*llo/`                   | Matches `"hllo"`, `"hello"`, `"heello"`, etc.                               |
+| `/h\+llo/`                   | Matches `"hello"`, `"heello"`, etc. (at least one `e`).                     |
+| `/he?llo/`                   | Matches `"hllo"` or `"hello"`.                                              |
+| `/he{2}llo/`                 | Matches `"heello"`.                                                         |
+| `/he{2,4}llo/`               | Matches `"heello"`, `"heeello"`, or `"heeeello"`.                           |
+| `/[aeiou]/`                  | Matches any vowel.                                                          |
+| `/[^aeiou]/`                 | Matches any non-vowel.                                                      |
+| `/(\w+)\s\1/`                | Matches repeated words (e.g., `"hello hello"`).                             |
+| `/(?<=@)\w+/`                | Matches a username in an email (e.g., `"user"` in `"user@example.com"`).    |
+| `/hello/gi`                  | Matches all occurrences of `"hello"` case-insensitively.                    |
+| `/(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/` | Named capturing groups for date format (e.g., `2023-10-05`).            |
+| `/cat\|dog/`                  | Matches either `"cat"` or `"dog"`.                                          |
+|
+
