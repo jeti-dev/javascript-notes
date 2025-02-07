@@ -690,3 +690,15 @@ user.log();
 | `/cat\|dog/`                  | Matches either `"cat"` or `"dog"`.                                          |
 |
 
+## `typeof`
+
+| Return Value | Description                                                                 | Example                                                                 |
+|--------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `"undefined"`| The value is `undefined`.                                                   | `typeof undefined` → `"undefined"`                                      |
+| `"boolean"`  | The value is a boolean (`true` or `false`).                                 | `typeof true` → `"boolean"`                                             |
+| `"number"`   | The value is a number (including `NaN` and `Infinity`).                     | `typeof 42` → `"number"`                                                |
+| `"string"`   | The value is a string.                                                      | `typeof "hello"` → `"string"`                                           |
+| `"bigint"`   | The value is a `BigInt`.                                                    | `typeof 123n` → `"bigint"`                                              |
+| `"symbol"`   | The value is a `Symbol`.                                                    | `typeof Symbol("foo")` → `"symbol"`                                     |
+| `"function"` | The value is a function (or a class, which is technically a function).      | `typeof function() {}` → `"function"`                                   |
+| `"object"`   | The value is an object (including `null`, arrays, and objects).             | `typeof {}` → `"object"`<br>`typeof null` → `"object"`<br>`typeof []` → `"object"` |
