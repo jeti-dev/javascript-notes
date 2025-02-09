@@ -702,3 +702,36 @@ user.log();
 | `"symbol"`   | The value is a `Symbol`.                                                    | `typeof Symbol("foo")` → `"symbol"`                                     |
 | `"function"` | The value is a function (or a class, which is technically a function).      | `typeof function() {}` → `"function"`                                   |
 | `"object"`   | The value is an object (including `null`, arrays, and objects).             | `typeof {}` → `"object"`<br>`typeof null` → `"object"`<br>`typeof []` → `"object"` |
+
+## Symbol
+
+A `symbol` is a unique value usually used to create object keys.
+``` js
+const s = Symbol(); // using new throws an error!
+const sd = Symbol("description"); // just a description
+```
+
+You can create a `symbol` which is unique acrosss files and "realms". The next method creates a `symbol` for the given key or returns an existing `symbol` for the key from the registry: 
+``` js
+const sk = Symbol.for("key");
+const key = Symbol.keyFor(sk) // get the key of the symbol 
+```
+`Symbol` properties of objects are not iterable (they won't appear in `for ... in`) and they are ignored by `JSON.stringify()` too!
+
+### Well-known Symbol
+These static properties of `Symbol` can be used to "implement" some behaviours.
+
+| Symbol                     | Description                                                                 | Example                                                                 |
+|----------------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `Symbol.iterator`          | Used to define the default iterator for an object.                          | ```const obj = { [Symbol.iterator]: function* () { yield 1; yield 2; } }; [...obj]``` → `[1, 2]` |
+| `Symbol.asyncIterator`     | Used to define the default async iterator for an object.                    | ```const obj = { [Symbol.asyncIterator]: async function* () { yield 1; yield 2; } }; (async () => { for await (const val of obj) console.log(val); })();``` → `1, 2` |
+| `Symbol.match`             | Used to customize the behavior of `String.prototype.match`.                 | ```const obj = { [Symbol.match]: () => "custom" }; "hello".match(obj)``` → `"custom"` |
+| `Symbol.replace`           | Used to customize the behavior of `String.prototype.replace`.               | ```const obj = { [Symbol.replace]: () => "world" }; "hello".replace(obj)``` → `"world"` |
+| `Symbol.search`            | Used to customize the behavior of `String.prototype.search`.                | ```const obj = { [Symbol.search]: () => 2 }; "hello".search(obj)``` → `2` |
+| `Symbol.split`             | Used to customize the behavior of `String.prototype.split`.                 | ```const obj = { [Symbol.split]: () => ["he", "llo"] }; "hello".split(obj)``` → `["he", "llo"]` |
+| `Symbol.hasInstance`       | Used to customize the behavior of `instanceof`.                             | ```class MyClass { static [Symbol.hasInstance]() { return true; } }; console.log({} instanceof MyClass);``` → `true` |
+| `Symbol.isConcatSpreadable`| Used to determine if an object should be flattened during `Array.prototype.concat`. | ```const obj = { [Symbol.isConcatSpreadable]: true, length: 2, 0: 3, 1: 4 }; [1, 2].concat(obj)``` → `[1, 2, 3, 4]` |
+| `Symbol.unscopables`       | Used to exclude properties from being bound by `with` statements.           | ```Array.prototype[Symbol.unscopables]``` → `{ copyWithin: true, entries: true, ... }` |
+| `Symbol.species`           | Used to customize the constructor used for derived objects.                 | ```class MyArray extends Array { static get [Symbol.species]() { return Array; } }; const myArray = new MyArray(1, 2, 3); console.log(myArray.map(x => x * 2) instanceof MyArray);``` → `false` |
+| `Symbol.toPrimitive`       | Used to customize the behavior of object-to-primitive conversion.           | ```const obj = { [Symbol.toPrimitive]: (hint) => hint === "number" ? 42 : "forty-two" }; console.log(obj + 1);``` → `"forty-two1"` |
+| `Symbol.toStringTag`       | Used to customize the default description of an object.                     | ```const obj = { [Symbol.toStringTag]: "MyObject" }; console.log(obj.toString());``` → `"[object MyObject]"` |
