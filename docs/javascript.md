@@ -735,3 +735,97 @@ These static properties of `Symbol` can be used to "implement" some behaviours.
 | `Symbol.species`           | Used to customize the constructor used for derived objects.                 | ```class MyArray extends Array { static get [Symbol.species]() { return Array; } }; const myArray = new MyArray(1, 2, 3); console.log(myArray.map(x => x * 2) instanceof MyArray);``` → `false` |
 | `Symbol.toPrimitive`       | Used to customize the behavior of object-to-primitive conversion.           | ```const obj = { [Symbol.toPrimitive]: (hint) => hint === "number" ? 42 : "forty-two" }; console.log(obj + 1);``` → `"forty-two1"` |
 | `Symbol.toStringTag`       | Used to customize the default description of an object.                     | ```const obj = { [Symbol.toStringTag]: "MyObject" }; console.log(obj.toString());``` → `"[object MyObject]"` |
+
+## Set, Map, WeakSet, WeakMap
+### Set
+Unique values of primitives and object references. You can iterate over the items in the order they were added to the `Set`. Quite fast.
+
+[Set composition visually](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set#set_composition)
+
+`Set` methods work with set-like objects:
+- has a `size` property 
+- has a `keys()` method that returns an iterator
+- has a `has()` method
+
+| Method                | Description |
+|----------------------|-------------|
+| `Set.prototype.add(value)` | Adds a new element with the given value to the set. Returns the set itself. |
+| `Set.prototype.delete(value)` | Removes the specified element from the set. Returns `true` if the value was removed, otherwise `false`. |
+| `Set.prototype.has(value)` | Returns `true` if the value exists in the set, otherwise `false`. |
+| `Set.prototype.clear()` | Removes all elements from the set. |
+| `Set.prototype.values()` | Returns a new iterator object containing all values in the set. |
+| `Set.prototype.keys()` | Alias for `values()`, since `Set` does not have keys. |
+| `Set.prototype.entries()` | Returns a new iterator object containing `[value, value]` pairs (to align with `Map`). |
+| `Set.prototype.forEach(callbackFn, thisArg)` | Calls `callbackFn` once for each value in the set, in insertion order. |
+
+
+
+| Method                     | Description |
+|---------------------------|-------------|
+| `Set.prototype.intersection(otherSet)` | Returns a new set containing elements common to both sets. |
+| `Set.prototype.union(otherSet)` | Returns a new set containing all elements from both sets. |
+| `Set.prototype.difference(otherSet)` | Returns a new set containing elements present in the first set but not in the second. |
+| `Set.prototype.symmetricDifference(otherSet)` | Returns a new set with elements present in either set but not in both. |
+| `Set.prototype.isSubsetOf(otherSet)` | Returns `true` if all elements of the first set exist in the second set. |
+| `Set.prototype.isSupersetOf(otherSet)` | Returns `true` if the first set contains all elements of the second set. |
+
+### Map
+Key-value pairs but remembers the order of how they keys were added. A key can be any value.
+Map-like objects:
+- read-only: size, entries(), forEach(), get(), has(), keys(), values(), and Symbol.iterator
+- writeable additionally has: clear(), delete(), and set()
+
+| Method                        | Description |
+|------------------------------|-------------|
+| `Map.prototype.set(key, value)` | Adds or updates a key-value pair in the map. Returns the map itself. |
+| `Map.prototype.get(key)`        | Returns the value associated with the given key, or `undefined` if the key is not found. |
+| `Map.prototype.has(key)`        | Returns `true` if the map contains the specified key, otherwise `false`. |
+| `Map.prototype.delete(key)`     | Removes the key-value pair from the map. Returns `true` if the key existed, otherwise `false`. |
+| `Map.prototype.clear()`         | Removes all key-value pairs from the map. |
+| `Map.prototype.size`            | Returns the number of key-value pairs in the map. (Not a function, but a property.) |
+| `Map.prototype.keys()`          | Returns a new iterator object containing all keys in the map. |
+| `Map.prototype.values()`        | Returns a new iterator object containing all values in the map. |
+| `Map.prototype.entries()`       | Returns a new iterator object containing `[key, value]` pairs for each entry in the map. |
+| `Map.prototype.forEach(callbackFn, thisArg)` | Calls `callbackFn` once for each key-value pair in insertion order. |
+
+### WeakSet
+Only objects and non-registered symbols can be stored. If the elements in the `WeakSet` are not referenced elsewhere they can be deleted by the garbage collector. Usage: e.g. recursive function where there are multiple identical objects so you can "tag" an object if that has been visited before. This is why it only has these methods:
+| Method                 | Description |
+|------------------------|-------------|
+| `WeakSet.prototype.add(value)` | Adds an object to the `WeakSet`. Returns the `WeakSet` itself. |
+| `WeakSet.prototype.delete(value)` | Removes the given object from the `WeakSet`. Returns `true` if the object was found and removed, otherwise `false`. |
+| `WeakSet.prototype.has(value)` | Returns `true` if the object exists in the `WeakSet`, otherwise `false`. |
+
+Use case: On click you want to do something with a DOM node but do it only for the first time. You can put them in a `WeakSet` so you can check if you've seen that node already and you don't prevent it from being garbage collected.
+
+### WeakMap
+The keys can be only objects or non-registered symbols. When a key is garbage collacted then its value is also garbage collected.
+
+| Method                    | Description |
+|---------------------------|-------------|
+| `WeakMap.prototype.set(key, value)` | Adds a key-value pair to the `WeakMap`. The key must be an object. |
+| `WeakMap.prototype.get(key)` | Returns the value associated with the given object key, or `undefined` if the key is not found. |
+| `WeakMap.prototype.has(key)` | Returns `true` if the key exists in the `WeakMap`, otherwise `false`. |
+| `WeakMap.prototype.delete(key)` | Removes the key-value pair from the `WeakMap`. Returns `true` if the key existed, otherwise `false`. |
+
+
+When the DOM element is deleted, the number is deleted too:
+``` js
+const hoverCounts = new WeakMap();
+
+function trackHover(event) {
+  let element = event.target;
+  
+  // Get the current count or initialize it to 0
+  let count = hoverCounts.get(element) || 0;
+  hoverCounts.set(element, count + 1);
+
+  console.log(`Hovered ${hoverCounts.get(element)} times`);
+}
+
+// Attach event listeners
+document.querySelectorAll(".track-hover").forEach(element => {
+  element.addEventListener("mouseenter", trackHover);
+});
+
+```
