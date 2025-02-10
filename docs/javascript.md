@@ -585,17 +585,19 @@ user.log();
 - `/ab+c/` regex lieral, can't be dynamic
 - `new RegExp("ab+c")` calling the function constructor, can be dynamic 
 
-### String methods and the rexes functions
-| Method                | Description         | Example   |
-|-----------------------|---------------------|-----------|
-| `match()`             | Returns an array of matches for a string against a regex. Returns `null` if no match is found. | `"Hello World".match(/o/g)` → `["o", "o"]`                              |
-| `matchAll()`          | Returns an iterator of all results matching a string against a regex (requires `g` flag). | `[..."Hello World".matchAll(/o/g)]` → `[["o"], ["o"]]`                  |
-| `search()`            | Returns the index of the first match of a regex in a string. Returns `-1` if no match is found. | `"Hello World".search(/o/)` → `4`                                      |
-| `replace()`           | Replaces matches of a regex in a string with a replacement string or function. | `"Hello World".replace(/o/g, "a")` → `"Hella Warld"`                   |
-| `replaceAll()`        | Replaces all matches of a regex or string in a string with a replacement string or function. | `"Hello World".replaceAll(/o/g, "a")` → `"Hella Warld"`                |
-| `split()`             | Splits a string into an array of substrings using a regex or string as the delimiter. | `"Hello World".split(/\s/)` → `["Hello", "World"]`                     |
-| `test()` (RegExp)     | Tests if a regex matches a string. Returns `true` or `false`.               | `/o/.test("Hello World")` → `true`                                     |
-| `exec()` (RegExp)     | Executes a regex on a string and returns the match details (or `null`).     | `/o/.exec("Hello World")` → `["o", index: 4, input: "Hello World"]`    |
+### String methods and the regex functions
+| Method | Description | Example |
+|--------|-------------|---------|
+| `match(regex)` | Returns an array of matches or `null` if no match is found. | `"hello123".match(/\d+/)` → `["123"]` |
+| `matchAll(regex)` | Returns an iterator of all matches, including capturing groups. | `Array.from("test123test456".matchAll(/(\d+)/g))` → `[["123"], ["456"]]` |
+| `search(regex)` | Returns the index of the first match, or `-1` if not found. | `"hello123".search(/\d/)` → `5` |
+| `replace(regex, replacement)` | Replaces matched substrings with a replacement string or function. | `"hello123".replace(/\d+/, "XYZ")` → `"helloXYZ"` |
+| `replaceAll(regex, replacement)` | Replaces all occurrences of a pattern with a replacement string or function. (**ES2021+**) | `"a1b2c3".replaceAll(/\d/g, "X")` → `"aXbXcX"` |
+| `split(regex)` | Splits the string into an array based on the regex pattern. | `"apple,banana,grape".split(/,/)` → `["apple", "banana", "grape"]` |
+| `startsWith(str)` | Checks if the string starts with the given substring (**not regex-based**). | `"hello world".startsWith("hello")` → `true` |
+| `endsWith(str)` | Checks if the string ends with the given substring (**not regex-based**). | `"hello world".endsWith("world")` → `true` |
+| `includes(str)` | Checks if the string contains the given substring (**not regex-based**). | `"hello world".includes("lo wo")` → `true` |
+
 
 # Regex Cheat Sheet
 
