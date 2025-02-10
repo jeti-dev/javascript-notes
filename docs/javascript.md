@@ -586,8 +586,8 @@ user.log();
 - `new RegExp("ab+c")` calling the function constructor, can be dynamic 
 
 ### String methods and the rexes functions
-| Method                | Description                                                                 | Example                                                                 |
-|-----------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| Method                | Description         | Example   |
+|-----------------------|---------------------|-----------|
 | `match()`             | Returns an array of matches for a string against a regex. Returns `null` if no match is found. | `"Hello World".match(/o/g)` → `["o", "o"]`                              |
 | `matchAll()`          | Returns an iterator of all results matching a string against a regex (requires `g` flag). | `[..."Hello World".matchAll(/o/g)]` → `[["o"], ["o"]]`                  |
 | `search()`            | Returns the index of the first match of a regex in a string. Returns `-1` if no match is found. | `"Hello World".search(/o/)` → `4`                                      |
