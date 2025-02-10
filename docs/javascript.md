@@ -829,3 +829,55 @@ document.querySelectorAll(".track-hover").forEach(element => {
 });
 
 ```
+
+## `try...catch`
+- `finally` runs every time. In the example above it log "Finally" first then the return value 1.
+- If we returned a value from `finally` that would be the return value of the function (it even overrides a `throw` in the `catch`!) but it is a bad practice. 
+- The exception usually has a name and a message property.
+- An exception is only caught once by the closest `catch` block.
+- optional catch binding: You don't need to declare the param in the `catch` block.
+- `new Error('msg')`: `msg` will be the `e.message`.
+- You can `throw` any value.
+- You can extend the `Error` class to create custom errors.
+``` js
+function foo(){
+    try{
+        return 1;
+    }
+    catch(e){
+        console.log(e.name, e.message);
+    }
+    finally{
+      console.log('Finally');
+    }
+}
+
+console.log(foo());
+```
+
+You can't "filter" the exception type like in other languages but you can do e.g.:
+``` js
+try {
+  foo();
+} catch (e) {
+  if (e instanceof RangeError) {
+   // handle only this type of error
+  } else {
+    throw e; // re-throw the error
+  }
+}
+
+```
+
+Again, `finally` runs every time! Logs "finally" then "catch err".
+``` js
+try {
+  try {
+    throw new Error("err");
+  } finally {
+    console.log("finally"); // logged first, no catch is here!
+  }
+} catch (e) {
+  console.error("catch", e.message); // logged second
+}
+```
