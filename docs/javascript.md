@@ -883,3 +883,32 @@ try {
   console.error("catch", e.message); // logged second
 }
 ```
+
+## Promise
+3 states:
+- pending
+- fulfilled
+- rejected
+- (settled: after fulfilled or rejected)
+
+Functions:
+- `then(successHandler, errorHandler)`
+- `catch(errorHandler)`
+- `finally(handler)`
+
+A promise cna be added to more than 1 chain:
+``` js
+const a = new Promise(myExecutorFunc);
+const b = a.then(h1); // runs first
+const c = a.then(h2); // runs second
+
+```
+`thenable` is something that has a `then(successHandler, errorHandler)` method.
+
+### Concurrency 
+| Method | Description | Example |
+|--------|-------------|---------|
+| `Promise.all(iterable)` | Runs multiple promises in parallel and resolves when all of them fulfill, or rejects if any fail. | `Promise.all([p1, p2])` → Resolves when both `p1` and `p2` resolve. |
+| `Promise.allSettled(iterable)` | Runs multiple promises in parallel and resolves **only when all** have settled (fulfilled or rejected). | `Promise.allSettled([p1, p2])` → Returns results for all promises. |
+| `Promise.race(iterable)` | Runs multiple promises in parallel and resolves/rejects as soon as **one** of them settles. | `Promise.race([p1, p2])` → Resolves/rejects with the first settled promise. |
+| `Promise.any(iterable)` | Runs multiple promises in parallel and resolves as soon as **one** fulfills (ignores rejections). Fails only if all reject. | `Promise.any([p1, p2])` → Resolves with the first fulfilled promise. |
