@@ -1032,3 +1032,30 @@ getDataPromisified("name").then((e) => console.log("result: ", e));
 | **Common Use Case**   | Simple operations where error propagation isn't needed.           | Complex chains where consistent error handling is required. |
 | **Best Practice**     | Not recommended for chained promises.                             | Recommended for chaining with consistent error handling.    |
 | **Example**           | `promise.then(success, failure)`                                  | `promise.then(success).catch(failure)`                      |
+
+## Iterator
+
+An object has to implement the `Symbol.iterator` method to be iterable.
+
+```js
+const numbers = {};
+
+// Make it Iterable
+numbers[Symbol.iterator] = function () {
+  let n = 0;
+  done = false;
+  return {
+    next() {
+      n += 10;
+      if (n == 100) {
+        done = true;
+      }
+      return { value: n, done: done };
+    },
+  };
+};
+
+for (const num of numbers) {
+  // will run until done = false
+}
+```
