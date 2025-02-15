@@ -1062,7 +1062,7 @@ for (const num of numbers) {
 
 ## Generators
 
-All geneerators are iterators but not all iterators all generators.
+All generators are iterators but not all iterators all generators.
 Syntax:
 
 ```js
@@ -1077,6 +1077,24 @@ generator().next().value; // 1
 
 - Use Iterators for manual control and performance-critical tasks.
 - Use Generators for complex logic, lazy evaluation, and infinite sequences.
+
+[Source](https://stackoverflow.com/questions/37124006/iterator-and-a-generator-in-javascript)
+
+```js
+function* mygen() {
+  // 1st next(): return 12, myVal is undefined
+  // 2nd next(): myVal gets the value passed to next()
+  var myVal = yield 12;
+  return myVal * 2;
+}
+
+const myIt = mygen();
+
+const firstGenValue = myIt.next().value; // 12
+const result = myIt.next(firstGenValue * 2).value;
+
+console.log(result); // 48
+```
 
 Async generator [Source](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#using_an_async_generator_function_to_read_a_series_of_files)
 
