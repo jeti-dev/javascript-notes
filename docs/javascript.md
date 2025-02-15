@@ -1059,3 +1059,44 @@ for (const num of numbers) {
   // will run until done = false
 }
 ```
+
+## Generators
+
+All geneerators are iterators but not all iterators all generators.
+Syntax:
+
+```js
+function* myGenerator() {
+  // implement
+  yield 1;
+}
+
+const generator = myGenerator();
+generator().next().value; // 1
+```
+
+- Use Iterators for manual control and performance-critical tasks.
+- Use Generators for complex logic, lazy evaluation, and infinite sequences.
+
+Async generator [Source](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function*#using_an_async_generator_function_to_read_a_series_of_files)
+
+```js
+async function* readFiles(directory) {
+  const files = await fs.readdir(directory);
+  for (const file of files) {
+    const stats = await fs.stat(file);
+    if (stats.isFile()) {
+      yield {
+        name: file,
+        content: await fs.readFile(file, "utf8"),
+      };
+    }
+  }
+}
+
+const files = readFiles(".");
+console.log((await files.next()).value);
+// Possible output: { name: 'file1.txt', content: '...' }
+console.log((await files.next()).value);
+// Possible output: { name: 'file2.txt', content: '...' }
+```
