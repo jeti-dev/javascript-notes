@@ -1118,3 +1118,27 @@ console.log((await files.next()).value);
 console.log((await files.next()).value);
 // Possible output: { name: 'file2.txt', content: '...' }
 ```
+
+## Currying
+
+Translate a function like `foo(a,b)` to `foo2(a)(b)`.
+The point is that we can "configure" the object with `a` then we just call the new function wit `b` but the function still has access to `a` internally.
+
+[Advanced example](https://javascript.info/currying-partials#advanced-curry-implementation)
+
+```js
+function curry(originalFunc) {
+  return function funcA(a) {
+    return function funcB(b) {
+      return originalFunc(a, b);
+    };
+  };
+}
+
+function sumFunc(a, b) {
+  return a + b;
+}
+
+let curriedSum = curry(sumFunc); // = funcA
+console.log(curriedSum(1)(2)); // first calls funcA which returns funcB and that is immediately called with param 2
+```
