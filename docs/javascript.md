@@ -1142,3 +1142,18 @@ function sumFunc(a, b) {
 let curriedSum = curry(sumFunc); // = funcA
 console.log(curriedSum(1)(2)); // first calls funcA which returns funcB and that is immediately called with param 2
 ```
+
+## Memoization
+
+To cache the results of a function based on the function params.
+[Source](https://stackoverflow.com/questions/30386943/how-to-create-a-memoize-function)
+
+```js
+var myMemoizeFunc = function (passedFunc) {
+  var cache = {};
+  return function (x) {
+    if (x in cache) return cache[x];
+    return (cache[x] = passedFunc(x));
+  };
+};
+```
