@@ -1157,3 +1157,51 @@ var myMemoizeFunc = function (passedFunc) {
   };
 };
 ```
+
+## Temporary constructor
+
+- every function has a `prototype` which is an object
+- we add methods to this object to share the methods across objects
+- then the objects has a `__proto__` or similar property that points to this object
+- this is the prototype chain
+- every `prototype` has a `constructor` property that points back to the function which created it
+
+Old way of creating prototype chain:
+
+```js
+function Human(name) {
+  this.name = name;
+}
+
+function User(name, age) {
+  // init code of Human
+  Human.call(this, name);
+  this.age = age;
+}
+
+//setup prototype chain
+User.prototype = new Human(); // this runs the Human constructor but we don't want that here because we don't have a "name" param at this point!
+User.prototype.constructor = User;
+```
+
+Using a temporary constructor to fix it:
+
+```js
+function Human(name) {
+  this.name = name;
+}
+
+function User(name, age) {
+  // init code of Human
+  Human.call(this, name);
+  this.age = age;
+}
+
+function TempConstructor() {}
+TempConstructor.prototype = Human.prototype; // "inherit"
+User.prototype = new TempConstructor(); // creates a new object
+User.prototype.constructor = User;
+```
+
+This way `User` has an empty object `prototype` and the `prototype` of that is `Human`!
+So `User` has access to everything in `Human` but as they don't have the same object as their prototype, if you modify any of the 2 `prototype`-s, it won't affect the other!
