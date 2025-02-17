@@ -1251,3 +1251,25 @@ Similar methods
 | `Object.isFrozen()` | Checks if an object is frozen. | `js\nconst obj = {};\nObject.freeze(obj);\nconsole.log(Object.isFrozen(obj)); // true\n` |
 | `Object.isSealed()` | Checks if an object is sealed. | `js\nconst obj = {};\nObject.seal(obj);\nconsole.log(Object.isSealed(obj)); // true\n` |
 | `Object.isExtensible()` | Checks if new properties can be added to an object. | `js\nconst obj = {};\nconsole.log(Object.isExtensible(obj)); // true\nObject.preventExtensions(obj);\nconsole.log(Object.isExtensible(obj)); // false\n` |
+
+## `getter` and `setter`
+
+```js
+let user = {
+  _age: 22,
+  get age() {
+    return this._age;
+  },
+
+  set age(value) {
+    this._age = value;
+  },
+};
+```
+
+Properts descriptors:
+
+- get()
+- set()
+- enumerable
+- configurable
