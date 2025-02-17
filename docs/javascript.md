@@ -1206,6 +1206,12 @@ User.prototype.constructor = User;
 This way `User` has an empty object `prototype` and the `prototype` of that is `Human`!
 So `User` has access to everything in `Human` but as they don't have the same object as their prototype, if you modify any of the 2 `prototype`-s, it won't affect the other!
 
+## `instanceof`
+
+Checks the prototype chain if the `prototype` of a constructor is in the chain.
+Implementing `Symbol.hasInstance` we can test when our object is `instanceof` something.
+It's the same for classes.
+
 ## Property descriptors
 
 [More info](https://javascript.info/property-descriptors)
