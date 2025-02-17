@@ -1205,3 +1205,49 @@ User.prototype.constructor = User;
 
 This way `User` has an empty object `prototype` and the `prototype` of that is `Human`!
 So `User` has access to everything in `Human` but as they don't have the same object as their prototype, if you modify any of the 2 `prototype`-s, it won't affect the other!
+
+## Property descriptors
+
+[More info](https://javascript.info/property-descriptors)
+We can set some properties of object properties:
+
+- writable: if the value can be changed
+- enumerable: if the property is listed in loops, Object.keys()
+- configurable: if these descriptor properties can be changed and if the property itself can be deleted
+
+```js
+Object.defineProperty(user, "age", {
+  writable: false,
+  enumerable: true,
+  configurable: true,
+});
+
+Object.getOwnPropertyDescriptor(user, "age");
+/*
+{
+  "value": "22",
+  "writable": false,
+  "enumerable": true,
+  "configurable": true
+}
+*/
+
+// Working with multiple descriptors at once
+
+Object.defineProperties(user, {
+  age: {...},
+  address: {...}
+});
+
+ Object.getOwnPropertyDescriptors(user)
+```
+
+Similar methods
+| Method | Description | Example |
+|-----------------------|------------------------------------------------------|-----------------------------------------------------------|
+| `Object.freeze()` | Makes an object **immutable**. Cannot add, remove, or change properties. | `js\nconst obj = {name: 'John'};\nObject.freeze(obj);\nobj.name = 'Doe'; // No effect\nconsole.log(obj.name); // John\n` |
+| `Object.seal()` | Prevents adding or removing properties, but allows modifying existing ones. | `js\nconst obj = {age: 30};\nObject.seal(obj);\nobj.age = 31; // Works\nobj.name = 'John'; // Fails\nconsole.log(obj.age); // 31\n` |
+| `Object.preventExtensions()` | Disallows adding new properties, but existing properties can be deleted or modified. | `js\nconst obj = {title: 'Book'};\nObject.preventExtensions(obj);\nobj.author = 'Unknown'; // Fails\nconsole.log(obj.author); // undefined\n` |
+| `Object.isFrozen()` | Checks if an object is frozen. | `js\nconst obj = {};\nObject.freeze(obj);\nconsole.log(Object.isFrozen(obj)); // true\n` |
+| `Object.isSealed()` | Checks if an object is sealed. | `js\nconst obj = {};\nObject.seal(obj);\nconsole.log(Object.isSealed(obj)); // true\n` |
+| `Object.isExtensible()` | Checks if new properties can be added to an object. | `js\nconst obj = {};\nconsole.log(Object.isExtensible(obj)); // true\nObject.preventExtensions(obj);\nconsole.log(Object.isExtensible(obj)); // false\n` |
