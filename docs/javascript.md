@@ -649,9 +649,11 @@ user.log();
 | `endsWith(str)`                  | Checks if the string ends with the given substring (**not regex-based**).                  | `"hello world".endsWith("world")` → `true`                               |
 | `includes(str)`                  | Checks if the string contains the given substring (**not regex-based**).                   | `"hello world".includes("lo wo")` → `true`                               |
 
-# Regex Cheat Sheet
+### greedy
 
-## Basic Syntax
+If `?` is used immediately after any of the quantifiers \*, +, ?, or {}.
+
+### Basic Syntax
 
 | Syntax | Description                                                     |
 | ------ | --------------------------------------------------------------- |
@@ -668,7 +670,7 @@ user.log();
 | `$`    | Matches the end of a string.                                    |
 | `\`    | Escapes a special character (e.g., `\.` matches a literal dot). |
 
-## Quantifiers
+### Quantifiers
 
 | Syntax  | Description                                                       |
 | ------- | ----------------------------------------------------------------- |
@@ -679,7 +681,7 @@ user.log();
 | `{n,}`  | Matches `n` or more occurrences of the preceding element.         |
 | `{n,m}` | Matches between `n` and `m` occurrences of the preceding element. |
 
-## Character Classes
+### Character Classes
 
 | Syntax     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
@@ -690,7 +692,7 @@ user.log();
 | `[0-9]`    | Matches any digit in the range `0` to `9`.                   |
 | `[a-zA-Z]` | Matches any character in the range `a` to `z` or `A` to `Z`. |
 
-## Groups and Capturing
+### Groups and Capturing
 
 | Syntax           | Description                                                               |
 | ---------------- | ------------------------------------------------------------------------- |
@@ -700,13 +702,13 @@ user.log();
 | `\1`, `\2`, etc. | Backreferences to captured groups (e.g., `\1` refers to the first group). |
 | `\k<name>`       | Backreference to a named capturing group.                                 |
 
-## Disjunction (Alternation)
+### Disjunction (Alternation)
 
 | Syntax | Description |
 | ------ | ----------- | -------------------------- |
 | `a     | b`          | Matches either `a` or `b`. |
 
-## Lookahead and Lookbehind
+### Lookahead and Lookbehind
 
 | Syntax     | Description                                          |
 | ---------- | ---------------------------------------------------- |
@@ -715,7 +717,7 @@ user.log();
 | `(?<=abc)` | Positive lookbehind. Matches if `abc` is behind.     |
 | `(?<!abc)` | Negative lookbehind. Matches if `abc` is not behind. |
 
-## Flags
+### Flags
 
 | Flag | Description                                                                                             | Example                                                               |
 | ---- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -726,7 +728,7 @@ user.log();
 | `u`  | **Unicode mode**: Treats the pattern as a sequence of Unicode code points.                              | `"😊".match(/\u{1F60A}/u)` → `["😊"]`                                 |
 | `y`  | **Sticky mode**: Matches only from the index indicated by `lastIndex`.                                  | `const regex = /a/y; regex.lastIndex = 1; regex.test("baa")` → `true` |
 
-## Examples
+### Examples
 
 | Example                                          | Description                                                              |
 | ------------------------------------------------ | ------------------------------------------------------------------------ |
