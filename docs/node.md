@@ -91,3 +91,24 @@ exports = {
 | **Scalable & Lightweight**       | Uses fewer system resources than multi-threaded architectures, making it well-suited for high-traffic applications. | **Single-Threaded Bottlenecks**       | CPU-intensive tasks block the event loop, slowing down all operations and making the app unresponsive.   |
 | **Real-Time Capabilities**       | Well-suited for real-time applications like chat apps, online gaming, and live notifications.                       | **Potential Memory Leaks**            | If event listeners aren’t removed properly, memory consumption increases, leading to performance issues. |
 | **Decoupled Components**         | Components communicate via events, allowing for better modularity and separation of concerns.                       | **Complex Code Structure**            | Large applications may become difficult to manage without a well-structured event-driven architecture.   |
+
+## Console
+
+| **Method**                  | **Description**                                    | **Example**                                 |
+| --------------------------- | -------------------------------------------------- | ------------------------------------------- |
+| `console.log()`             | Logs general messages.                             | `console.log("Hello, World!");`             |
+| `console.error()`           | Logs error messages to `stderr`.                   | `console.error("Error occurred!");`         |
+| `console.warn()`            | Logs warning messages.                             | `console.warn("This is a warning!");`       |
+| `console.info()`            | Alias for `console.log()`, used for info logs.     | `console.info("Information message");`      |
+| `console.debug()`           | Alias for `console.log()`, used for debugging.     | `console.debug("Debug details");`           |
+| `console.table(data)`       | Displays tabular data.                             | `console.table([{name: "John", age: 30}]);` |
+| `console.group(label)`      | Starts a collapsible group.                        | `console.group("Fruits");`                  |
+| `console.groupCollapsed()`  | Starts a collapsed group.                          | `console.groupCollapsed("Hidden");`         |
+| `console.groupEnd()`        | Ends the last opened group.                        | `console.groupEnd();`                       |
+| `console.time(label)`       | Starts a timer.                                    | `console.time("myTimer");`                  |
+| `console.timeEnd(label)`    | Ends a timer and logs the elapsed time.            | `console.timeEnd("myTimer");`               |
+| `console.count(label)`      | Logs how many times a label was counted.           | `console.count("Apples");`                  |
+| `console.countReset(label)` | Resets the count for a label.                      | `console.countReset("Apples");`             |
+| `console.assert(cond, msg)` | Logs a message only if the condition is **false**. | `console.assert(1 === 2, "Oops!");`         |
+| `console.trace(label)`      | Prints a stack trace.                              | `console.trace("Debugging trace");`         |
+| `console.clear()`           | Clears the console output.                         | `console.clear();`                          |
