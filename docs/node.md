@@ -81,3 +81,13 @@ exports = {
 | **Browser Support**       | ❌ Not supported natively                        | ✅ Supported in modern browsers                                    |
 | **Usage in Node.js**      | Default module system                            | Requires `"type": "module"` in `package.json` or `.mjs` extension  |
 | **Best for**              | Legacy and Node.js environments                  | Modern JS applications and frontend development                    |
+
+## Event driven architecture
+
+| **Advantage**                    | **Explanation**                                                                                                     | **Disadvantage**                      | **Explanation**                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Asynchronous & Non-Blocking**  | The event loop allows I/O operations to run without blocking execution, improving performance.                      | **Harder Debugging & Error Handling** | Since execution is non-linear, errors are harder to trace and may be swallowed if not handled properly.  |
+| **Efficient for I/O Operations** | Ideal for applications handling multiple network requests, file I/O, or database queries simultaneously.            | **Callback Hell (Deep Nesting)**      | Heavy reliance on callbacks can lead to deeply nested code, making it hard to read and maintain.         |
+| **Scalable & Lightweight**       | Uses fewer system resources than multi-threaded architectures, making it well-suited for high-traffic applications. | **Single-Threaded Bottlenecks**       | CPU-intensive tasks block the event loop, slowing down all operations and making the app unresponsive.   |
+| **Real-Time Capabilities**       | Well-suited for real-time applications like chat apps, online gaming, and live notifications.                       | **Potential Memory Leaks**            | If event listeners aren’t removed properly, memory consumption increases, leading to performance issues. |
+| **Decoupled Components**         | Components communicate via events, allowing for better modularity and separation of concerns.                       | **Complex Code Structure**            | Large applications may become difficult to manage without a well-structured event-driven architecture.   |
