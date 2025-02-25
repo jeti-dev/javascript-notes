@@ -92,6 +92,17 @@ exports = {
 | **Real-Time Capabilities**       | Well-suited for real-time applications like chat apps, online gaming, and live notifications.                       | **Potential Memory Leaks**            | If event listeners aren’t removed properly, memory consumption increases, leading to performance issues. |
 | **Decoupled Components**         | Components communicate via events, allowing for better modularity and separation of concerns.                       | **Complex Code Structure**            | Large applications may become difficult to manage without a well-structured event-driven architecture.   |
 
+## Async timing - more to come
+
+# **Comparison of Asynchronous Execution Methods in Node.js**
+
+| **Method**           | **Execution Timing**                                       | **Order in Event Loop**                                            | **Use Case**                                                                 |
+| -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `process.nextTick()` | Before I/O, timers, and `setImmediate()`                   | **Highest Priority** (executes immediately after synchronous code) | Critical tasks that must execute before moving to the next event loop cycle. |
+| `queueMicrotask()`   | Before next event loop phase, after resolved Promises      | **After `process.nextTick()` but before I/O**                      | Short async tasks that shouldn't block the event loop.                       |
+| `setImmediate()`     | After I/O callbacks, before next event loop cycle          | **Runs after I/O callbacks**                                       | Tasks that should run after I/O but before the next loop iteration.          |
+| `setTimeout(fn, 0)`  | After at least the specified delay (0 ms means next cycle) | **Runs after timers phase**                                        | Delayed execution, runs in the **timers phase** after I/O.                   |
+
 ## Console
 
 | **Method**                  | **Description**                                    | **Example**                                 |
