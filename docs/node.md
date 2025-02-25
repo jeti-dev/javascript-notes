@@ -112,3 +112,35 @@ exports = {
 | `console.assert(cond, msg)` | Logs a message only if the condition is **false**. | `console.assert(1 === 2, "Oops!");`         |
 | `console.trace(label)`      | Prints a stack trace.                              | `console.trace("Debugging trace");`         |
 | `console.clear()`           | Clears the console output.                         | `console.clear();`                          |
+
+## File system
+
+| **Method**                        | **Description**                                         | **Example**                                        |
+| --------------------------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| `fs.readFile(path, callback)`     | Reads a file asynchronously with a callback.            | `fs.readFile("file.txt", cb);`                     |
+| `fs.writeFile(path, data, cb)`    | Writes data to a file asynchronously.                   | `fs.writeFile("file.txt", "Hello", cb);`           |
+| `fs.appendFile(path, data, cb)`   | Appends data to a file asynchronously.                  | `fs.appendFile("file.txt", "More", cb);`           |
+| `fs.rename(oldPath, newPath, cb)` | Renames a file asynchronously.                          | `fs.rename("old.txt", "new.txt", cb);`             |
+| `fs.unlink(path, cb)`             | Deletes a file asynchronously.                          | `fs.unlink("file.txt", cb);`                       |
+| `fs.stat(path, cb)`               | Gets file statistics (size, type, etc.) asynchronously. | `fs.stat("file.txt", cb);`                         |
+| `fs.mkdir(path, cb)`              | Creates a directory asynchronously.                     | `fs.mkdir("myDir", cb);`                           |
+| `fs.rmdir(path, cb)`              | Removes a directory asynchronously.                     | `fs.rmdir("myDir", cb);`                           |
+| `fs.readdir(path, cb)`            | Reads the contents of a directory asynchronously.       | `fs.readdir("myDir", cb);`                         |
+| `fs.access(path, cb)`             | Checks if a file is accessible with permissions.        | `fs.access("file.txt", cb);`                       |
+| `fs.copyFile(src, dest, cb)`      | Copies a file asynchronously.                           | `fs.copyFile("src.txt", "dest.txt", cb);`          |
+| `fs.createReadStream(path)`       | Creates a readable file stream.                         | `const stream = fs.createReadStream("file.txt");`  |
+| `fs.createWriteStream(path)`      | Creates a writable file stream.                         | `const stream = fs.createWriteStream("file.txt");` |
+
+| **Promise-based Method**               | **Description**                         | **Example**                                          |
+| -------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `fs.promises.readFile(path)`           | Reads a file as a promise.              | `await fs.promises.readFile("file.txt");`            |
+| `fs.promises.writeFile(path, data)`    | Writes data to a file as a promise.     | `await fs.promises.writeFile("file.txt", "Hello");`  |
+| `fs.promises.appendFile(path, data)`   | Appends data to a file as a promise.    | `await fs.promises.appendFile("file.txt", "More");`  |
+| `fs.promises.rename(oldPath, newPath)` | Renames a file as a promise.            | `await fs.promises.rename("old.txt", "new.txt");`    |
+| `fs.promises.unlink(path)`             | Deletes a file as a promise.            | `await fs.promises.unlink("file.txt");`              |
+| `fs.promises.stat(path)`               | Gets file statistics as a promise.      | `await fs.promises.stat("file.txt");`                |
+| `fs.promises.mkdir(path)`              | Creates a directory as a promise.       | `await fs.promises.mkdir("myDir");`                  |
+| `fs.promises.rmdir(path)`              | Removes a directory as a promise.       | `await fs.promises.rmdir("myDir");`                  |
+| `fs.promises.readdir(path)`            | Reads directory contents as a promise.  | `await fs.promises.readdir("myDir");`                |
+| `fs.promises.access(path)`             | Checks file accessibility as a promise. | `await fs.promises.access("file.txt");`              |
+| `fs.promises.copyFile(src, dest)`      | Copies a file as a promise.             | `await fs.promises.copyFile("src.txt", "dest.txt");` |
