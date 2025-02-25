@@ -144,3 +144,172 @@ exports = {
 | `fs.promises.readdir(path)`            | Reads directory contents as a promise.  | `await fs.promises.readdir("myDir");`                |
 | `fs.promises.access(path)`             | Checks file accessibility as a promise. | `await fs.promises.access("file.txt");`              |
 | `fs.promises.copyFile(src, dest)`      | Copies a file as a promise.             | `await fs.promises.copyFile("src.txt", "dest.txt");` |
+
+### Readable stream
+
+```js
+const fs = require("fs");
+
+const stream = fs.createReadStream("large-log.txt", "utf8");
+
+stream.on("data", (chunk) => {
+  console.log("Received chunk:", chunk);
+});
+
+stream.on("end", () => {
+  console.log("Finished reading file.");
+});
+
+stream.on("error", (err) => {
+  console.error("Error reading file:", err);
+});
+```
+
+### Writable stream
+
+```js
+const fs = require("fs");
+
+const stream = fs.createWriteStream("server-log.txt", { flags: "a" });
+
+stream.write("Server started at " + new Date().toISOString() + "\n");
+stream.write("New user connected.\n");
+
+stream.end();
+```
+
+### Async generators
+
+```js
+const fs = require("fs");
+const readline = require("readline");
+
+async function* readLines(filePath) {
+  const fileStream = fs.createReadStream(filePath, "utf8");
+  const rl = readline.createInterface({ input: fileStream });
+
+  for await (const line of rl) {
+    yield line;
+  }
+}
+
+// Usage
+(async () => {
+  for await (const line of readLines("large-log.txt")) {
+    console.log("Line:", line);
+  }
+})();
+```
+
+```js
+const fs = require("fs");
+const readline = require("readline");
+
+async function* readJSONLines(filePath) {
+  const fileStream = fs.createReadStream(filePath, "utf8");
+  const rl = readline.createInterface({ input: fileStream });
+
+  for await (const line of rl) {
+    yield JSON.parse(line);
+  }
+}
+
+// Usage
+(async () => {
+  for await (const obj of readJSONLines("large-data.jsonl")) {
+    console.log("JSON Object:", obj);
+  }
+})();
+```
+
+```js
+const http = require("http");
+const fs = require("fs");
+
+async function* streamFile(filePath) {
+  const stream = fs.createReadStream(filePath, "utf8");
+  for await (const chunk of stream) {
+    yield chunk;
+  }
+}
+
+http
+  .createServer(async (req, res) => {
+    res.writeHead(200, { "Content-Type": "text/plain" });
+
+    for await (const chunk of streamFile("large-file.txt")) {
+      res.write(chunk);
+    }
+
+    res.end();
+  })
+  .listen(3000, () => console.log("Server running on port 3000"));
+```
+
+```js
+const fs = require("fs");
+const readline = require("readline");
+
+async function* processCSV(filePath) {
+  const stream = fs.createReadStream(filePath, "utf8");
+  const rl = readline.createInterface({ input: stream });
+
+  const headers = (await rl[Symbol.asyncIterator]().next()).value.split(",");
+
+  for await (const line of rl) {
+    const values = line.split(",");
+    const json = Object.fromEntries(headers.map((h, i) => [h, values[i]]));
+    yield JSON.stringify(json) + "\n";
+  }
+}
+
+async function writeJSON(outputPath, generator) {
+  const writeStream = fs.createWriteStream(outputPath, { flags: "w" });
+
+  for await (const json of generator) {
+    writeStream.write(json);
+  }
+
+  writeStream.end();
+}
+
+// Convert "data.csv" to "output.json"
+writeJSON("output.json", processCSV("data.csv")).then(() =>
+  console.log("CSV transformed to JSON")
+);
+```
+
+```js
+const fs = require("fs");
+const fetch = require("node-fetch");
+
+async function* fetchPaginatedData(apiUrl) {
+  let page = 1;
+
+  while (true) {
+    const res = await fetch(`${apiUrl}?page=${page}`);
+    const data = await res.json();
+
+    if (data.length === 0) break; // Stop when no more data
+
+    yield JSON.stringify(data) + "\n";
+    page++;
+  }
+}
+
+async function saveToFile(outputFile, generator) {
+  const stream = fs.createWriteStream(outputFile, { flags: "w" });
+
+  for await (const chunk of generator) {
+    stream.write(chunk);
+  }
+
+  stream.end();
+}
+
+// Fetch and store API data
+saveToFile(
+  "api-data.json",
+  fetchPaginatedData("https://jsonplaceholder.typicode.com/posts")
+).then(() => console.log("API data saved."));
+```
