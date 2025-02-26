@@ -343,3 +343,27 @@ saveToFile(
   fetchPaginatedData("https://jsonplaceholder.typicode.com/posts")
 ).then(() => console.log("API data saved."));
 ```
+
+## URI
+
+| Method/Property                           | Description                                                                                    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `encodeURI(uri)`                          | Encodes a URI by escaping special characters (except `:, /, ? & = + $ #`).                     |
+| `encodeURIComponent(uriComponent)`        | Encodes a URI component, escaping all special characters, making it safe for query parameters. |
+| `decodeURI(encodedURI)`                   | Decodes an encoded URI back to its original format.                                            |
+| `decodeURIComponent(encodedURIComponent)` | Decodes an encoded URI component.                                                              |
+| `URL`                                     | The constructor for creating and parsing URLs.                                                 |
+| `URLSearchParams`                         | An API to work with query string parameters easily.                                            |
+| `URL.href`                                | The full URL as a string.                                                                      |
+| `URL.protocol`                            | Gets or sets the protocol (`http:`, `https:`, etc.).                                           |
+| `URL.host`                                | The hostname and port (`example.com:3000`).                                                    |
+| `URL.hostname`                            | The domain name (`example.com`).                                                               |
+| `URL.port`                                | The port number (`3000`).                                                                      |
+| `URL.pathname`                            | The path of the URL (`/some/page`).                                                            |
+| `URL.search`                              | The query string (`?key=value`).                                                               |
+| `URL.hash`                                | The fragment (`#section`).                                                                     |
+| `URLSearchParams.get(name)`               | Retrieves the value of a query parameter.                                                      |
+| `URLSearchParams.set(name, value)`        | Updates or adds a query parameter.                                                             |
+| `URLSearchParams.append(name, value)`     | Appends a new query parameter without replacing existing ones.                                 |
+| `URLSearchParams.delete(name)`            | Removes a query parameter.                                                                     |
+| `URLSearchParams.toString()`              | Converts query parameters to a string format (`key=value&another=value`).                      |
