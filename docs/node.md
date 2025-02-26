@@ -94,7 +94,7 @@ exports = {
 
 ## Async timing - more to come
 
-# **Comparison of Asynchronous Execution Methods in Node.js**
+Comparison of Asynchronous Execution Methods in Node.js
 
 | **Method**           | **Execution Timing**                                       | **Order in Event Loop**                                            | **Use Case**                                                                 |
 | -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
@@ -102,6 +102,25 @@ exports = {
 | `queueMicrotask()`   | Before next event loop phase, after resolved Promises      | **After `process.nextTick()` but before I/O**                      | Short async tasks that shouldn't block the event loop.                       |
 | `setImmediate()`     | After I/O callbacks, before next event loop cycle          | **Runs after I/O callbacks**                                       | Tasks that should run after I/O but before the next loop iteration.          |
 | `setTimeout(fn, 0)`  | After at least the specified delay (0 ms means next cycle) | **Runs after timers phase**                                        | Delayed execution, runs in the **timers phase** after I/O.                   |
+
+```js
+console.log("Start");
+
+setTimeout(() => console.log("setTimeout"), 0);
+setImmediate(() => console.log("setImmediate"));
+
+process.nextTick(() => console.log("nextTick"));
+queueMicrotask(() => console.log("queueMicrotask"));
+
+console.log("End");
+
+// Start
+// End
+// nextTick
+// queueMicrotask
+// setImmediate
+// setTimeout
+```
 
 ## Console
 
