@@ -367,3 +367,27 @@ saveToFile(
 | `URLSearchParams.append(name, value)`     | Appends a new query parameter without replacing existing ones.                                 |
 | `URLSearchParams.delete(name)`            | Removes a query parameter.                                                                     |
 | `URLSearchParams.toString()`              | Converts query parameters to a string format (`key=value&another=value`).                      |
+
+## Buffer
+
+Buffers allow you to store, manipulate, and transfer binary data easily.
+
+| Method/Property               | Description                                                                                            | Example                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `Buffer.alloc(size)`          | Creates a new `Buffer` of the specified size, filled with zeros.                                       | `const buf = Buffer.alloc(10);` → `Buffer of size 10`                       |
+| `Buffer.allocUnsafe(size)`    | Creates a new `Buffer` of the specified size, but does not initialize it.                              | `const buf = Buffer.allocUnsafe(10);` → `Uninitialized Buffer of size 10`   |
+| `Buffer.from(array)`          | Creates a `Buffer` from an array of bytes.                                                             | `const buf = Buffer.from([1, 2, 3]);` → `Buffer with values [1, 2, 3]`      |
+| `Buffer.from(string)`         | Creates a `Buffer` from a string.                                                                      | `const buf = Buffer.from("hello");` → `Buffer with ASCII values of "hello"` |
+| `Buffer.from(buffer)`         | Creates a copy of an existing `Buffer`.                                                                | `const buf2 = Buffer.from(buf);` → `Copy of buf`                            |
+| `Buffer.byteLength(string)`   | Returns the number of bytes required to store a string.                                                | `Buffer.byteLength("hello");` → `5`                                         |
+| `Buffer.concat(list)`         | Concatenates an array of `Buffer` objects into a single `Buffer`.                                      | `const buf = Buffer.concat([buf1, buf2]);` → `Concatenated Buffer`          |
+| `Buffer.isBuffer(obj)`        | Checks if an object is a `Buffer`.                                                                     | `Buffer.isBuffer(buf);` → `true`                                            |
+| `buf.length`                  | Returns the size of the `Buffer` in bytes.                                                             | `buf.length;` → `10`                                                        |
+| `buf.toString([encoding])`    | Converts the `Buffer` to a string using the specified encoding (default: `utf8`).                      | `buf.toString("utf8");` → `"hello"`                                         |
+| `buf.write(string, [offset])` | Writes a string to the `Buffer` at the specified offset.                                               | `buf.write("world", 0);` → `Buffer with "world"`                            |
+| `buf.slice([start, end])`     | Returns a new `Buffer` that references the same memory as the original, but with a subset of the data. | `const slice = buf.slice(0, 5);` → `Buffer with first 5 bytes`              |
+| `buf.copy(target, [start])`   | Copies data from the `Buffer` to a target `Buffer`.                                                    | `buf.copy(targetBuf, 0);` → `Copies data to targetBuf`                      |
+| `buf.equals(otherBuffer)`     | Checks if two `Buffer` objects have the same bytes.                                                    | `buf.equals(buf2);` → `true` or `false`                                     |
+| `buf.indexOf(value)`          | Returns the index of the first occurrence of a value in the `Buffer`.                                  | `buf.indexOf("h");` → `0`                                                   |
+| `buf.includes(value)`         | Checks if the `Buffer` contains a value.                                                               | `buf.includes("hello");` → `true`                                           |
+| `buf.fill(value)`             | Fills the `Buffer` with the specified value.                                                           | `buf.fill(0);` → `Buffer filled with zeros`                                 |
