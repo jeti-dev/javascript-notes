@@ -397,3 +397,76 @@ Not really used directly but it used under the hood for streams and other stuff.
 | `buf.indexOf(value)`          | Returns the index of the first occurrence of a value in the `Buffer`.                                  | `buf.indexOf("h");` → `0`                                                   |
 | `buf.includes(value)`         | Checks if the `Buffer` contains a value.                                                               | `buf.includes("hello");` → `true`                                           |
 | `buf.fill(value)`             | Fills the `Buffer` with the specified value.                                                           | `buf.fill(0);` → `Buffer filled with zeros`                                 |
+
+## Cluster
+
+Run multiple instances of your app to distribute workload.
+However `woorker_threads` should be used when process isolation is not needed. `worker_threads` allows running multiple application threads within a single Node.js instance.
+IPC = inter process communication.
+
+```js
+const cluster = require("cluster");
+const http = require("http");
+const os = require("os");
+
+if (cluster.isMaster) {
+  const numCPUs = os.cpus().length; // Get the number of CPU cores
+
+  console.log(`Master process ${process.pid} is running`);
+
+  // Fork workers (one per CPU core)
+  for (let i = 0; i < numCPUs; i++) {
+    const worker = cluster.fork();
+
+    // Listen for messages from workers - IPC from Child to Parent: receive message
+    worker.on("message", (message) => {
+      console.log(
+        `Master received message from Worker ${worker.process.pid}:`,
+        message
+      );
+    });
+
+    // IPC - Master to Child: send message
+    setTimeout(() => {
+      worker.send({ msg: "Hello from master" });
+    }, 2000);
+  }
+
+  // Restart a worker if one dies
+  cluster.on("exit", (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died. Starting a new one...`);
+    cluster.fork();
+  });
+} else {
+  // IPC - Master to Child: receive message
+  process.on("message", (message) => {
+    console.log(`Worker ${process.pid} received message from master:`, message);
+  });
+
+  // Worker process: Create an HTTP server
+  http
+    .createServer((req, res) => {
+      res.writeHead(200);
+      res.end(`Handled by worker ${process.pid}\n`);
+
+      // Worker sends a message to the master - IPC from Child to Parent: send message
+      process.send({ pid: process.pid, status: "Request Handled" });
+    })
+    .listen(3000);
+
+  console.log(`Worker ${process.pid} started`);
+}
+```
+
+PROs
+
+- ✅ High-traffic web servers – Allows Node.js to handle more concurrent requests.
+- ✅ CPU-intensive tasks – Spawns multiple processes to distribute the workload.
+- ✅ Microservices & APIs – Helps in scaling backend services efficiently.
+- ✅ WebSockets & Real-time Apps – Improves handling of multiple connections.
+
+CONs
+
+- 🚨 Not Shared Memory – Workers do not share memory, so you need inter-process communication (IPC).
+- 🚨 Not for Heavy Computation – For CPU-heavy tasks, consider worker threads instead.
+- 🚨 State Management Issues – Sessions or caches should be stored in a database (e.g., Redis) instead of worker memory.
