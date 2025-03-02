@@ -5,6 +5,31 @@ layout: default
 
 # Node.js
 
+## Process vs thread
+
+A process is an instance of a running program with its own memory space and execution environment.
+
+- In Node.js, each script runs in a single process by default.
+- Processes do not share memory with each other.
+- The Cluster module is used to spawn multiple processes.
+
+✅ Use Processes (Cluster/Child Processes) when:
+
+- You need to run separate applications or services.
+- Your tasks are independent and don’t need shared memory.
+- You want load balancing (e.g., multiple workers handling requests).
+
+A thread is a lightweight unit of execution within a process.
+
+- Threads share memory with their parent process.
+- Node.js is single-threaded by default but uses worker threads for parallel execution.
+
+✅ Use Threads (Worker Threads) when:
+
+- You need to perform CPU-intensive tasks in parallel (e.g., data processing).
+- You require shared memory access between tasks.
+- You want to offload heavy computations without blocking the event loop.
+
 ## Modules
 
 ### CommonJS
@@ -404,6 +429,24 @@ Run multiple instances of your app to distribute workload.
 However `woorker_threads` should be used when process isolation is not needed. `worker_threads` allows running multiple application threads within a single Node.js instance.
 IPC = inter process communication.
 
+# Frequently Used `cluster` Methods in Node.js
+
+| Method / Property                                | Description                                                     | Best Use Case                                                             |
+| ------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `cluster.isMaster` (Deprecated: Use `isPrimary`) | Boolean indicating if the process is the master/primary process | Running different logic for master and worker processes                   |
+| `cluster.isWorker`                               | Boolean indicating if the process is a worker                   | Distinguishing worker processes from the master process                   |
+| `cluster.fork()`                                 | Creates a new worker process                                    | Scaling Node.js applications across CPU cores                             |
+| `cluster.on('exit', callback)`                   | Detects when a worker process exits                             | Restarting crashed workers for reliability                                |
+| `cluster.on('online', callback)`                 | Fires when a worker process is successfully spawned             | Logging successful worker creation                                        |
+| `cluster.on('message', callback)`                | Listens for messages from workers                               | Implementing IPC (Inter-Process Communication) between master and workers |
+| `worker.send(message)`                           | Sends a message from the master to a worker                     | Passing data/tasks to worker processes                                    |
+| `worker.process`                                 | Accesses the underlying `child_process` object                  | Managing worker details like PIDs                                         |
+| `worker.id`                                      | Unique identifier of the worker process                         | Tracking workers for debugging or load balancing                          |
+| `worker.kill()`                                  | Terminates a worker process                                     | Stopping a specific worker when needed                                    |
+| `cluster.setupMaster(options)`                   | Configures how workers are spawned                              | Customizing worker forking behavior                                       |
+| `Object.keys(cluster.workers)`                   | Gets an array of all worker IDs                                 | Managing multiple worker processes dynamically                            |
+| `cluster.workers[id]`                            | Gets a specific worker by its ID                                | Sending targeted messages to specific workers                             |
+
 ```js
 const cluster = require("cluster");
 const http = require("http");
@@ -470,3 +513,95 @@ CONs
 - 🚨 Not Shared Memory – Workers do not share memory, so you need inter-process communication (IPC).
 - 🚨 Not for Heavy Computation – For CPU-heavy tasks, consider worker threads instead.
 - 🚨 State Management Issues – Sessions or caches should be stored in a database (e.g., Redis) instead of worker memory.
+
+## child_process
+
+```js
+const express = require("express");
+const { fork } = require("child_process");
+
+const app = express();
+
+app.get("/compute", (req, res) => {
+  const child = fork("child.js"); // Fork a new process
+
+  child.send(5e9); // Send input to child process
+
+  child.on("message", (result) => {
+    res.send(`Computed result: ${result}`);
+  });
+
+  child.on("error", (err) => {
+    res.status(500).send(`Error in child process: ${err.message}`);
+  });
+});
+
+app.listen(3000, () => console.log("Server running on port 3000"));
+```
+
+```js
+process.on("message", (n) => {
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    sum += i;
+  }
+  process.send(sum); // Send result back to parent
+});
+```
+
+| Method                              | Description                                           | Best Use Case                                          |
+| ----------------------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| `exec(command, callback)`           | Runs a shell command and buffers output               | Running simple shell commands like `ls`, `git pull`    |
+| `execFile(file, args, callback)`    | Runs an executable file without a shell               | Running scripts or binaries efficiently                |
+| `spawn(command, args, options)`     | Spawns a new process and streams data                 | Handling large output (e.g., `ping`, `ffmpeg`)         |
+| `fork(modulePath, args, options)`   | Spawns a Node.js child process with IPC               | Running scripts with inter-process communication (IPC) |
+| `execSync(command)`                 | Runs a shell command synchronously and returns output | Short synchronous tasks where blocking is acceptable   |
+| `spawnSync(command, args, options)` | Synchronously spawns a new process                    | Running a command and waiting for the result           |
+| `child.send(message)`               | Sends a message to a child process                    | Communicating between parent and child processes       |
+| `child.on('message', callback)`     | Listens for messages from a child process             | Handling responses from a child process                |
+| `child.kill(signal)`                | Terminates a child process                            | Gracefully stopping long-running tasks                 |
+| `child.stdout.on('data', callback)` | Listens for stdout output from a process              | Capturing real-time output from a command              |
+| `child.stderr.on('data', callback)` | Listens for error output from a process               | Capturing errors from a command                        |
+
+## worker threads
+
+| Method / Property                    | Description                                              | Best Use Case                                              |
+| ------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------- |
+| `new Worker(filename, options)`      | Creates a new worker thread                              | Running CPU-intensive tasks in parallel                    |
+| `worker.postMessage(value)`          | Sends a message to the worker thread                     | Passing data from the main thread to the worker            |
+| `worker.on('message', callback)`     | Listens for messages from the worker                     | Receiving results from the worker thread                   |
+| `worker.terminate()`                 | Stops the worker thread                                  | Gracefully shutting down workers when done                 |
+| `parentPort.postMessage(value)`      | Sends a message from a worker to the main thread         | Communicating results back to the parent                   |
+| `parentPort.on('message', callback)` | Listens for messages from the main thread                | Receiving tasks/data in a worker                           |
+| `isMainThread`                       | Boolean indicating if the script runs in the main thread | Conditionally executing main-thread or worker-thread logic |
+| `workerData`                         | Data passed to the worker at startup                     | Sending immutable startup data to a worker                 |
+| `worker.threadId`                    | Unique identifier of the worker thread                   | Debugging and tracking workers                             |
+| `worker.resourceLimits`              | Object containing memory and CPU limits                  | Setting constraints to prevent resource overuse            |
+| `MessageChannel`                     | Creates a channel for communication between threads      | Efficient inter-worker communication                       |
+| `SharedArrayBuffer`                  | Shared memory buffer across threads                      | High-performance data sharing without copying              |
+| `Atomics`                            | Ensures safe concurrent memory operations                | Synchronizing access to shared memory                      |
+
+### Shared memory
+
+```js
+const { Worker, isMainThread, workerData } = require("worker_threads");
+
+if (isMainThread) {
+  const sharedBuffer = new SharedArrayBuffer(4); // 4 bytes for an Int32
+  const counter = new Int32Array(sharedBuffer); // Shared Int32 array
+
+  console.log(`Main thread: Initial counter value: ${counter[0]}`);
+
+  for (let i = 0; i < 3; i++) {
+    new Worker(__filename, { workerData: sharedBuffer });
+  }
+} else {
+  const counter = new Int32Array(workerData);
+
+  for (let i = 0; i < 1000; i++) {
+    Atomics.add(counter, 0, 1); // Safely increment shared counter
+  }
+
+  console.log(`Worker thread: Counter updated to ${Atomics.load(counter, 0)}`);
+}
+```
