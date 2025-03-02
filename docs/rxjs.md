@@ -1,3 +1,8 @@
+---
+title: RXJS
+layout: default
+---
+
 # RXJS
 
 ## Observable vs Subject
