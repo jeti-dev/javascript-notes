@@ -20,8 +20,12 @@ const subject = new Subject();
 subject.subscribe((value) => console.log("Subscriber 1:", value));
 subject.subscribe((value) => console.log("Subscriber 2:", value));
 
-subject.next(Math.random()); // Emits the same value to all subscribers = multicast
+subject.next(Math.random());
+// Emits the same value to all subscribers = multicast
+// You would have the same behavior even if you used asObservable() on the subject.
 ```
+
+Use `asObservable()` to hide your `Subject` so subscribers can only listen to your values and can't `next()` it.
 
 ## switchMap
 
