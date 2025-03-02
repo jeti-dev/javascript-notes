@@ -376,6 +376,7 @@ saveToFile(
 ## Buffer
 
 Buffers allow you to store, manipulate, and transfer binary data easily.
+Not really used directly but it used under the hood for streams and other stuff. E.g. `readFileSync` can return a `Buffer` and create a base64 strin.
 
 | Method/Property               | Description                                                                                            | Example                                                                     |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
