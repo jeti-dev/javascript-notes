@@ -637,3 +637,32 @@ if (isMainThread) {
 | `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)` | Derives a key from a password (PBKDF2)          | Securely hashing passwords                         |
 | `crypto.randomBytes(size)`                                            | Generates cryptographically strong random bytes | Creating secure tokens and session IDs             |
 | `crypto.randomUUID()`                                                 | Generates a random UUID (v4)                    | Unique identifiers for objects, users, or requests |
+
+## NET
+
+The `net` module provides networking capabilities for TCP servers and clients.
+
+| Feature            | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
+| **TCP Server**     | Create a TCP server with `net.createServer()`.                  |
+| **TCP Client**     | Connect to a TCP server using `net.Socket()`.                   |
+| **Full-Duplex**    | Enables both reading and writing at the same time.              |
+| **Event-Driven**   | Uses events like `connection`, `data`, `error`, `close`.        |
+| **Stream Support** | Works with Node.js streams for handling large data efficiently. |
+
+```js
+const net = require("net");
+
+const server = net.createServer((socket) => {
+  console.log("Client connected");
+
+  socket.on("data", (data) => {
+    console.log("Received:", data.toString());
+    socket.write("Message received");
+  });
+
+  socket.on("end", () => console.log("Client disconnected"));
+});
+
+server.listen(3000, () => console.log("Server running on port 3000"));
+```
