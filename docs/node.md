@@ -605,3 +605,35 @@ if (isMainThread) {
   console.log(`Worker thread: Counter updated to ${Atomics.load(counter, 0)}`);
 }
 ```
+
+## Cryptop
+
+- hash: A one-way transformation, cannot be reverted.
+- encryption: Two-way transformation.
+- cipher: An encrypting and decrypthing algorithm.
+- iv: Initialization vector - adds randomness to the start of the encrypted file, must be unique for each encrytion.
+
+- hash: An attacker could modify the file and re-create the hash too.
+- HMAC: Uses also a key for the hashing so the attacker must know the key too.
+
+- Use hashing for password storage (sha256, bcrypt, PBKDF2).
+- Use HMAC for secure authentication.
+- Use AES for symmetric encryption (encrypt/decrypt with same key).
+- Use RSA/ECDSA for public/private key encryption.
+- Use digital signatures to verify authenticity.
+- Use randomBytes for tokens and security.
+
+| Method                                                                | Description                                     | Use Case                                           |
+| --------------------------------------------------------------------- | ----------------------------------------------- | -------------------------------------------------- |
+| `crypto.createHash(algorithm)`                                        | Creates a hash function                         | Storing passwords securely (one-way encryption)    |
+| `crypto.createHmac(algorithm, key)`                                   | Creates a keyed-hash function (HMAC)            | API authentication, message integrity              |
+| `crypto.createCipheriv(algorithm, key, iv)`                           | Creates a cipher for symmetric encryption       | Encrypting sensitive data like tokens              |
+| `crypto.createDecipheriv(algorithm, key, iv)`                         | Creates a decipher to decrypt data              | Decrypting data encrypted with `createCipheriv`    |
+| `crypto.generateKeyPairSync(type, options)`                           | Generates asymmetric RSA/ECDSA key pairs        | Public-private key encryption                      |
+| `crypto.publicEncrypt(key, data)`                                     | Encrypts data using a public key                | Securely transmitting data                         |
+| `crypto.privateDecrypt(key, encryptedData)`                           | Decrypts data using a private key               | Decrypting received encrypted messages             |
+| `crypto.createSign(algorithm)`                                        | Creates a digital signature                     | Signing documents or transactions                  |
+| `crypto.createVerify(algorithm)`                                      | Verifies a digital signature                    | Ensuring message authenticity                      |
+| `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)` | Derives a key from a password (PBKDF2)          | Securely hashing passwords                         |
+| `crypto.randomBytes(size)`                                            | Generates cryptographically strong random bytes | Creating secure tokens and session IDs             |
+| `crypto.randomUUID()`                                                 | Generates a random UUID (v4)                    | Unique identifiers for objects, users, or requests |
