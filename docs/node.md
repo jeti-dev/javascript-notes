@@ -396,6 +396,26 @@ console.log(decoder.write(buf1)); // ""
 console.log(decoder.write(buf2)); // "€"
 ```
 
+## Timer
+
+Node.js timers work within the event loop and are executed asynchronously. The execution timing depends on:
+
+- Timer Phase in the event loop (setTimeout and setInterval run in the Timers Phase).
+- I/O Callbacks and Event Queue (setImmediate() runs after I/O callbacks).
+- Microtasks like process.nextTick() run before the event loop continues.
+
+The Timer API provides functions for scheduling **delayed** and **recurring** execution of code.
+
+| Method                                      | Description                                                  | Execution Timing                    |
+| ------------------------------------------- | ------------------------------------------------------------ | ----------------------------------- |
+| **`setTimeout(callback, delay, ...args)`**  | Runs `callback` once after `delay` milliseconds.             | Timers Phase (after delay)          |
+| **`clearTimeout(timeoutId)`**               | Cancels a `setTimeout()` timer.                              | Immediately                         |
+| **`setInterval(callback, delay, ...args)`** | Runs `callback` repeatedly every `delay` milliseconds.       | Timers Phase (every delay)          |
+| **`clearInterval(intervalId)`**             | Stops a `setInterval()` timer.                               | Immediately                         |
+| **`setImmediate(callback, ...args)`**       | Runs `callback` on the next event loop iteration, after I/O. | Check Phase                         |
+| **`clearImmediate(immediateId)`**           | Cancels a `setImmediate()` timer.                            | Immediately                         |
+| **`process.nextTick(callback, ...args)`**   | Runs `callback` before the next event loop cycle.            | Before next phase (Microtask Queue) |
+
 ## URI
 
 | Method/Property                           | Description                                                                                    |
