@@ -691,3 +691,34 @@ The `os` module provides useful system-related information like CPU, memory, and
 | `os.networkInterfaces()` | Returns details of available network interfaces.             |
 | `os.endianness()`        | Returns the CPU endianness (`LE` or `BE`).                   |
 | `os.EOL`                 | Returns the system's end-of-line character (`\n` or `\r\n`). |
+
+## ReadLine
+
+The `readline` module provides an interface for reading user input and processing text streams line-by-line.
+
+| Method                              | Description                                              |
+| ----------------------------------- | -------------------------------------------------------- |
+| `readline.createInterface(options)` | Creates a readline interface with input/output streams.  |
+| `rl.question(query, callback)`      | Asks a question and passes the response to the callback. |
+| `rl.on("line", callback)`           | Fires when a new line is received from input.            |
+| `rl.on("close", callback)`          | Fires when the interface is closed.                      |
+| `rl.on("pause", callback)`          | Fires when input is paused.                              |
+| `rl.on("resume", callback)`         | Fires when input resumes after being paused.             |
+| `rl.write(data)`                    | Writes text to the output stream.                        |
+| `rl.pause()`                        | Temporarily stops accepting input.                       |
+| `rl.resume()`                       | Resumes input after pausing.                             |
+| `rl.close()`                        | Closes the readline interface.                           |
+
+```js
+const readline = require("readline");
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+rl.question("Enter your name: ", (name) => {
+  console.log(`Hello, ${name}!`);
+  rl.close();
+});
+```
