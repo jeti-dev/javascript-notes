@@ -374,6 +374,28 @@ saveToFile(
 ).then(() => console.log("API data saved."));
 ```
 
+## StringDecoder
+
+The `string_decoder` module is used to decode buffers into strings **without losing multi-byte characters**.  
+It is ideal for **streamed or chunked data processing** where characters may be split across chunks.
+
+| Method                        | Description                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `new StringDecoder(encoding)` | Creates a new decoder for a specified encoding (default: `"utf8"`).          |
+| `decoder.write(buffer)`       | Decodes a buffer chunk into a string while preserving multi-byte characters. |
+| `decoder.end([buffer])`       | Flushes remaining data in the buffer and clears internal state.              |
+
+```js
+const { StringDecoder } = require("string_decoder");
+const decoder = new StringDecoder("utf8");
+
+const buf1 = Buffer.from([0xe2, 0x82]); // Incomplete character
+const buf2 = Buffer.from([0xac]); // Remaining part
+
+console.log(decoder.write(buf1)); // ""
+console.log(decoder.write(buf2)); // "€"
+```
+
 ## URI
 
 | Method/Property                           | Description                                                                                    |
@@ -428,8 +450,6 @@ Not really used directly but it used under the hood for streams and other stuff.
 Run multiple instances of your app to distribute workload.
 However `woorker_threads` should be used when process isolation is not needed. `worker_threads` allows running multiple application threads within a single Node.js instance.
 IPC = inter process communication.
-
-# Frequently Used `cluster` Methods in Node.js
 
 | Method / Property                                | Description                                                     | Best Use Case                                                             |
 | ------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -606,7 +626,7 @@ if (isMainThread) {
 }
 ```
 
-## Cryptop
+## Crypto
 
 - hash: A one-way transformation, cannot be reverted.
 - encryption: Two-way transformation.
@@ -670,8 +690,6 @@ server.listen(3000, () => console.log("Server running on port 3000"));
 ## OS
 
 The `os` module provides useful system-related information like CPU, memory, and network details.
-
-## 🔹 Most Used Methods
 
 | Method                   | Description                                                  |
 | ------------------------ | ------------------------------------------------------------ |
