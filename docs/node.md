@@ -764,3 +764,33 @@ readStream.on("error", (err) => {
   console.error("Error reading file:", err);
 });
 ```
+
+## Zlib
+
+The `zlib` module provides **compression and decompression** using algorithms like Gzip, Deflate, and Brotli.
+
+| Method                                    | Type   | Description                                                     |
+| ----------------------------------------- | ------ | --------------------------------------------------------------- |
+| `zlib.createGzip()`                       | Stream | Creates a Gzip compression stream.                              |
+| `zlib.createGunzip()`                     | Stream | Creates a stream to decompress Gzip data.                       |
+| `zlib.createDeflate()`                    | Stream | Creates a Deflate compression stream.                           |
+| `zlib.createInflate()`                    | Stream | Creates a stream to decompress Deflate data.                    |
+| `zlib.createBrotliCompress()`             | Stream | Creates a Brotli compression stream (more efficient than Gzip). |
+| `zlib.createBrotliDecompress()`           | Stream | Decompresses Brotli-compressed data.                            |
+| `zlib.gzip(buffer, callback)`             | Async  | Compresses a buffer using Gzip.                                 |
+| `zlib.gunzip(buffer, callback)`           | Async  | Decompresses a Gzip-compressed buffer.                          |
+| `zlib.deflate(buffer, callback)`          | Async  | Compresses a buffer using Deflate.                              |
+| `zlib.inflate(buffer, callback)`          | Async  | Decompresses a Deflate-compressed buffer.                       |
+| `zlib.brotliCompress(buffer, callback)`   | Async  | Compresses a buffer using Brotli.                               |
+| `zlib.brotliDecompress(buffer, callback)` | Async  | Decompresses a Brotli-compressed buffer.                        |
+
+```js
+const fs = require("fs");
+const zlib = require("zlib");
+
+const gzip = zlib.createGzip();
+const input = fs.createReadStream("input.txt");
+const output = fs.createWriteStream("input.txt.gz");
+
+input.pipe(gzip).pipe(output);
+```
