@@ -722,3 +722,45 @@ rl.question("Enter your name: ", (name) => {
   rl.close();
 });
 ```
+
+## Stream
+
+Streams allow handling **large amounts of data efficiently** by processing it in chunks.
+
+| Type          | Description                          | Example                               |
+| ------------- | ------------------------------------ | ------------------------------------- |
+| **Readable**  | Data flows _into_ the program.       | File reading (`fs.createReadStream`)  |
+| **Writable**  | Data flows _out of_ the program.     | File writing (`fs.createWriteStream`) |
+| **Duplex**    | Can both read and write.             | Network sockets (`net.Socket`)        |
+| **Transform** | Modifies data while passing through. | Compression (`zlib.createGzip()`)     |
+
+| Method                    | Type     | Description                                                  |
+| ------------------------- | -------- | ------------------------------------------------------------ |
+| `.readable`               | Readable | Boolean: Indicates if the stream is open for reading.        |
+| `.pipe(destination)`      | Readable | Pipes a readable stream into a writable stream.              |
+| `.unpipe(destination)`    | Readable | Stops piping data to the destination stream.                 |
+| `.write(chunk)`           | Writable | Writes data to a writable stream.                            |
+| `.end([chunk])`           | Writable | Ends the writable stream (optionally writing a final chunk). |
+| `.setEncoding(encoding)`  | Readable | Sets encoding for reading text data (`utf8`, `ascii`, etc.). |
+| `.on("data", callback)`   | Readable | Listens for data events and receives chunks.                 |
+| `.on("end", callback)`    | Readable | Fires when the stream finishes reading.                      |
+| `.on("error", callback)`  | All      | Handles stream errors.                                       |
+| `.on("finish", callback)` | Writable | Fires when a writable stream finishes writing.               |
+
+```js
+const fs = require("fs");
+
+const readStream = fs.createReadStream("largeFile.txt", "utf8");
+
+readStream.on("data", (chunk) => {
+  console.log("Received chunk:", chunk);
+});
+
+readStream.on("end", () => {
+  console.log("File reading completed.");
+});
+
+readStream.on("error", (err) => {
+  console.error("Error reading file:", err);
+});
+```
