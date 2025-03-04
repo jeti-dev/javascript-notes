@@ -858,3 +858,20 @@ dns.resolve4("example.com", (err, addresses) => {
   console.log(`IP addresses: ${addresses.join(", ")}`);
 });
 ```
+
+## Process
+
+The Process API provides access to the currently running process, enabling interaction with system resources, environment variables, and process control.
+
+| Method                                      | Description                                                |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `process.env`                               | Accesses environment variables (e.g., `process.env.PATH`). |
+| `process.argv`                              | Retrieves command-line arguments passed to the script.     |
+| `process.exit(code)`                        | Exits the process with a given exit code (default is `0`). |
+| `process.on("exit", callback)`              | Executes a callback when the process exits.                |
+| `process.on("uncaughtException", callback)` | Handles errors that would otherwise crash the process.     |
+| `process.cwd()`                             | Gets the current working directory of the process.         |
+| `process.chdir(path)`                       | Changes the working directory of the process.              |
+| `process.uptime()`                          | Returns the process uptime in seconds.                     |
+| `process.memoryUsage()`                     | Provides memory usage statistics.                          |
+| `process.hrtime()`                          | Measures high-resolution time intervals.                   |
