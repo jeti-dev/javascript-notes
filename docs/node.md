@@ -666,3 +666,28 @@ const server = net.createServer((socket) => {
 
 server.listen(3000, () => console.log("Server running on port 3000"));
 ```
+
+## OS
+
+The `os` module provides useful system-related information like CPU, memory, and network details.
+
+## 🔹 Most Used Methods
+
+| Method                   | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| `os.platform()`          | Returns the OS platform (`win32`, `linux`, `darwin`).        |
+| `os.version()`           | Returns the OS version.                                      |
+| `os.arch()`              | Returns the CPU architecture (`x64`, `arm`, `ia32`).         |
+| `os.type()`              | Returns the OS name (`Windows_NT`, `Linux`, `Darwin`).       |
+| `os.release()`           | Returns the OS release version.                              |
+| `os.uptime()`            | Returns system uptime in seconds.                            |
+| `os.totalmem()`          | Returns total system memory (RAM) in bytes.                  |
+| `os.freemem()`           | Returns available system memory (RAM) in bytes.              |
+| `os.cpus()`              | Returns an array of CPU core details (model, speed, times).  |
+| `os.homedir()`           | Returns the current user’s home directory.                   |
+| `os.tmpdir()`            | Returns the OS's temporary directory path.                   |
+| `os.userInfo()`          | Returns an object with details about the current user.       |
+| `os.hostname()`          | Returns the hostname of the operating system.                |
+| `os.networkInterfaces()` | Returns details of available network interfaces.             |
+| `os.endianness()`        | Returns the CPU endianness (`LE` or `BE`).                   |
+| `os.EOL`                 | Returns the system's end-of-line character (`\n` or `\r\n`). |
