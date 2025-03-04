@@ -832,3 +832,29 @@ const output = fs.createWriteStream("input.txt.gz");
 
 input.pipe(gzip).pipe(output);
 ```
+
+## DNS
+
+The DNS API allows Node.js applications to resolve domain names, perform reverse lookups, and manage DNS records.
+
+| Method                                 | Description                                                 |
+| -------------------------------------- | ----------------------------------------------------------- |
+| `dns.lookup(hostname, callback)`       | Resolves a domain to an IP address (like `ping`).           |
+| `dns.resolve4(hostname, callback)`     | Gets all IPv4 addresses for a domain.                       |
+| `dns.resolve6(hostname, callback)`     | Gets all IPv6 addresses for a domain.                       |
+| `dns.reverse(ip, callback)`            | Finds the hostname(s) for a given IP address.               |
+| `dns.resolveMx(hostname, callback)`    | Retrieves mail exchange (MX) records for a domain.          |
+| `dns.resolveTxt(hostname, callback)`   | Gets TXT records (used for domain verification, SPF, etc.). |
+| `dns.resolveCname(hostname, callback)` | Retrieves the CNAME record for a domain.                    |
+| `dns.resolveSrv(hostname, callback)`   | Gets SRV records (used for services like SIP, XMPP).        |
+| `dns.promises.resolve4(hostname)`      | **(Recommended)** Returns IPv4 addresses as a Promise.      |
+| `dns.promises.resolve6(hostname)`      | **(Recommended)** Returns IPv6 addresses as a Promise.      |
+
+```js
+const dns = require("dns");
+
+dns.resolve4("example.com", (err, addresses) => {
+  if (err) throw err;
+  console.log(`IP addresses: ${addresses.join(", ")}`);
+});
+```
