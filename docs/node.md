@@ -124,6 +124,38 @@ exports = {
 
 ## Async timing - more to come
 
+Event loop:
+
+There are 6 phases of the event loop, but in practice we need to use 4.
+Each of these 4 phases have their own task queue where the callbacks are stored.
+
+- **timers**: callbacks scheduled by setTimeout() or setInterval()
+- **pending callbacks**: I/O callbacks (e.g. file read, webserver)
+- idle, prepare: internal
+- poll: retrieve new I/O events
+- **check**: setImmediate() callbacks
+- **close callbacks**: some close callbacks, e.g. socket.on('close', fn).
+
+- promises and `process.nextTick()` callbacks have their own queues (micro task queues) which have priority over the macro task queues (nextTick comes first then promise callbacks)
+
+- When you call a function, it is put on the call stack.
+- When you call an asynchronous function, it is not put on the call stack. It just registers a callback function.
+- When the async function is ready, the callback function is put on the appropriate task queue.
+- When there are no more functions on the call stack, the event loop starts checking the 4 task queues for tasks. If there are tasks in a given queue, it starts putting those tasks on the stack and executes them.
+- When there are no more tasks in a queue, it moves to the next type of queue.
+- BUT: The microstask quesues are prioritized over the macro task queues. So the event loop always starts with checking the microtask queues and if there are no tasks, it checks the timer queue which is the first queue in the list of the 5 queues. After each macro task queue it checks again the microtask queues because the macrotask queue might have added something to the microtask queue!
+
+Example:
+
+- check microtask
+- check timers
+- check microtask
+- check pending callbacks
+- ...
+
+![Event loop](/assets/eventloop_node.png)
+[Source](https://www.builder.io/blog/visual-guide-to-nodejs-event-loop)
+
 Comparison of Asynchronous Execution Methods in Node.js
 
 | **Method**           | **Execution Timing**                                       | **Order in Event Loop**                                            | **Use Case**                                                                 |
@@ -134,22 +166,42 @@ Comparison of Asynchronous Execution Methods in Node.js
 | `setTimeout(fn, 0)`  | After at least the specified delay (0 ms means next cycle) | **Runs after timers phase**                                        | Delayed execution, runs in the **timers phase** after I/O.                   |
 
 ```js
+const fs = require("fs");
+
 console.log("Start");
 
-setTimeout(() => console.log("setTimeout"), 0);
-setImmediate(() => console.log("setImmediate"));
+fs.readFile("pg.html", () => {
+  console.log("IO callback");
+});
 
-process.nextTick(() => console.log("nextTick"));
-queueMicrotask(() => console.log("queueMicrotask"));
+setTimeout(() => {
+  console.log("Timeout callback");
+
+  process.nextTick(() => console.log("Next Tick inside Timeout"));
+}, 0);
+
+setImmediate(() => {
+  console.log("Immediate callback");
+});
+
+Promise.resolve().then(() => {
+  console.log("Promise callback");
+});
+
+process.nextTick(() => {
+  console.log("Next Tick callback");
+});
 
 console.log("End");
 
 // Start
 // End
-// nextTick
-// queueMicrotask
-// setImmediate
-// setTimeout
+// Next Tick callback         microtask prio 1
+// Promise callback           microtask prio 2
+// Timeout callback           macrotask 1
+// Next Tick inside Timeout   microtask created in the timeout queue!
+// Immediate callback         microtask 3
+// IO callback                tricky one, it was triggered in the second event loop cycle!
 ```
 
 ## Console

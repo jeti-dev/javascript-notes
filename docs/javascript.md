@@ -1281,3 +1281,14 @@ Properts descriptors:
 - set()
 - enumerable
 - configurable
+
+## Event loop
+
+- When you call a function, it is put on the call stack.
+- When you call an asynchronous function, it is not put on the call stack. It just registers a callback function.
+- When the async function is ready, the callback function is put on the task queue.
+- When there are no more functions on the call stack, the event loop checks if there are any tasks in the queue. If there is, it puts a callback from the task queue to the call stack to be executed.
+- A special case is when you work with promises. When a promise is ready, the callback is put on the microtask queue. The event loop prioritize the microtask queue to the task queue.
+
+![Event loop](/assets/eventloop.png)
+[Source](https://www.youtube.com/watch?v=28AXSTCpsyU)
