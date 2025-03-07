@@ -931,3 +931,22 @@ The Process API provides access to the currently running process, enabling inter
 | `process.uptime()`                          | Returns the process uptime in seconds.                     |
 | `process.memoryUsage()`                     | Provides memory usage statistics.                          |
 | `process.hrtime()`                          | Measures high-resolution time intervals.                   |
+
+## JSDoc
+
+It can also create a documentation.
+
+| Tag           | Description                                    | Example                               |
+| ------------- | ---------------------------------------------- | ------------------------------------- |
+| `@param`      | Describes a function parameter                 | `@param {string} name - User's name`  |
+| `@returns`    | Specifies the return value of a function       | `@returns {boolean} True if valid`    |
+| `@typedef`    | Defines a custom type alias                    | `@typedef {Object} User`              |
+| `@property`   | Describes properties inside an object          | `@property {string} email`            |
+| `@example`    | Provides an example usage of the function      | `@example console.log(add(2,3));`     |
+| `@throws`     | Indicates an error that a function might throw | `@throws {Error} If invalid`          |
+| `@async`      | Marks a function as asynchronous               | `@async`                              |
+| `@deprecated` | Marks a function as outdated                   | `@deprecated Use newMethod()`         |
+| `@see`        | References related documentation               | `@see https://developer.mozilla.org/` |
+| `@private`    | Marks a method as private                      | `@private`                            |
+| `@readonly`   | Marks a property as read-only                  | `@readonly`                           |
+| `@interface`  | Defines an interface for objects               | `@interface UserProfile`              |
