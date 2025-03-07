@@ -1036,3 +1036,7 @@ It can also create a documentation.
 | Passing Arguments               | Use `--` to pass extra arguments to scripts.                                        |
 | Common Shortcuts                | `npm start`, `npm test`, `npm restart` simplify script execution.                   |
 | Executing External Scripts      | Run external Node.js files via npm scripts.                                         |
+
+## profiling
+
+Start the app with `--prof` then make some load tests with e.g. ApacheBench.
