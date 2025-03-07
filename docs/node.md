@@ -992,3 +992,31 @@ It can also create a documentation.
 | `npm audit`                | Checks for security vulnerabilities            | `npm audit`               |
 | `npm audit fix`            | Fixes security issues automatically            | `npm audit fix`           |
 | `npm ci`                   | Installs dependencies from `package-lock.json` | `npm ci`                  |
+
+## package.json
+
+| Option                   | Type      | Description                                                                    |
+| ------------------------ | --------- | ------------------------------------------------------------------------------ |
+| `"name"`                 | `string`  | The name of the package (must be lowercase and URL-friendly).                  |
+| `"version"`              | `string`  | The version of the package (follows Semantic Versioning: `major.minor.patch`). |
+| `"description"`          | `string`  | A short description of the package.                                            |
+| `"main"`                 | `string`  | The entry point file of the package (e.g., `"index.js"`).                      |
+| `"type"`                 | `string`  | Defines the module system: `"commonjs"` (default) or `"module"` (for ESM).     |
+| `"scripts"`              | `object`  | Defines shortcut commands that can be run via `npm run <script-name>`.         |
+| `"dependencies"`         | `object`  | Lists production dependencies and their versions.                              |
+| `"devDependencies"`      | `object`  | Lists development dependencies.                                                |
+| `"peerDependencies"`     | `object`  | Defines dependencies that should be installed by the consumer of the package.  |
+| `"optionalDependencies"` | `object`  | Defines dependencies that can be skipped if installation fails.                |
+| `"engines"`              | `object`  | Specifies required Node.js and npm versions.                                   |
+| `"private"`              | `boolean` | If `true`, prevents the package from being published to npm.                   |
+| `"license"`              | `string`  | Defines the license type (e.g., `"MIT"`, `"ISC"`).                             |
+| `"repository"`           | `object`  | Contains metadata about the repository (e.g., GitHub URL).                     |
+| `"bugs"`                 | `object`  | URL for reporting package issues (e.g., GitHub Issues link).                   |
+| `"homepage"`             | `string`  | URL of the package homepage.                                                   |
+| `"bin"`                  | `object`  | Defines executable scripts that can be run globally.                           |
+| `"files"`                | `array`   | Lists files to include when publishing the package.                            |
+| `"config"`               | `object`  | Stores custom configuration values accessible in scripts.                      |
+| `"workspaces"`           | `array`   | Defines monorepo workspace directories.                                        |
+| `"exports"`              | `object`  | Defines entry points for different module formats.                             |
+| `"types"`                | `string`  | Specifies the TypeScript declaration file (`.d.ts`).                           |
+| `"author"`               | `string`  | Author's name and contact details.                                             |
