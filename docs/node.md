@@ -950,3 +950,26 @@ It can also create a documentation.
 | `@private`    | Marks a method as private                      | `@private`                            |
 | `@readonly`   | Marks a property as read-only                  | `@readonly`                           |
 | `@interface`  | Defines an interface for objects               | `@interface UserProfile`              |
+
+## CLI
+
+| Flag/Env Variable              | Description                                        | Example Usage                                          |
+| ------------------------------ | -------------------------------------------------- | ------------------------------------------------------ |
+| `--experimental`               | Enables experimental features                      | `node --experimental-vm-modules app.js`                |
+| `--require` / `-r`             | Preloads modules before execution                  | `node -r dotenv/config app.js`                         |
+| `--inspect[=host:port]`        | Enables debugging with Chrome DevTools             | `node --inspect app.js`                                |
+| `--inspect-brk`                | Pauses execution until a debugger is attached      | `node --inspect-brk app.js`                            |
+| `--trace-warnings`             | Shows stack traces for process warnings            | `node --trace-warnings app.js`                         |
+| `--max-old-space-size=<MB>`    | Sets the max memory usage for V8 heap              | `node --max-old-space-size=4096 app.js`                |
+| `--no-deprecation`             | Suppresses deprecation warnings                    | `node --no-deprecation app.js`                         |
+| `--trace-deprecation`          | Shows stack traces for deprecated functions        | `node --trace-deprecation app.js`                      |
+| `NODE_ENV`                     | Defines the environment (development, production)  | `NODE_ENV=production node app.js`                      |
+| `NODE_OPTIONS`                 | Passes runtime options to Node.js                  | `NODE_OPTIONS="--max-old-space-size=2048" node app.js` |
+| `NODE_PATH`                    | Sets module resolution paths                       | `NODE_PATH=/usr/local/lib/node_modules node app.js`    |
+| `NODE_NO_WARNINGS`             | Disables all warnings                              | `NODE_NO_WARNINGS=1 node app.js`                       |
+| `NODE_EXTRA_CA_CERTS`          | Loads extra CA certificates                        | `NODE_EXTRA_CA_CERTS=/path/to/cert.pem node app.js`    |
+| `--watch`                      | Automatically restarts the process on file changes | `node --watch app.js`                                  |
+| `--title=<title>`              | Sets a custom process title                        | `node --title="MyApp" app.js`                          |
+| `--eval "code"` / `-e "code"`  | Executes JavaScript from the command line          | `node -e "console.log(2 + 2)"`                         |
+| `--print "code"` / `-p "code"` | Evaluates code and prints the result               | `node -p "Math.random()"`                              |
+| `--check` / `-c`               | Syntax-checks the script without execution         | `node --check app.js`                                  |
