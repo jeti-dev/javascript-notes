@@ -973,3 +973,22 @@ It can also create a documentation.
 | `--eval "code"` / `-e "code"`  | Executes JavaScript from the command line          | `node -e "console.log(2 + 2)"`                         |
 | `--print "code"` / `-p "code"` | Evaluates code and prints the result               | `node -p "Math.random()"`                              |
 | `--check` / `-c`               | Syntax-checks the script without execution         | `node --check app.js`                                  |
+
+## NPM
+
+| Command                    | Description                                    | Example Usage             |
+| -------------------------- | ---------------------------------------------- | ------------------------- |
+| `npm init`                 | Initializes a new package.json                 | `npm init -y`             |
+| `npm install <package>`    | Installs a package locally                     | `npm install express`     |
+| `npm install -g <package>` | Installs a package globally                    | `npm install -g nodemon`  |
+| `npm uninstall <package>`  | Removes a package                              | `npm uninstall express`   |
+| `npm update <package>`     | Updates a package to the latest version        | `npm update lodash`       |
+| `npm list`                 | Lists installed dependencies                   | `npm list`                |
+| `npm list -g`              | Lists globally installed packages              | `npm list -g`             |
+| `npm run <script>`         | Runs a custom script defined in package.json   | `npm run start`           |
+| `npm publish`              | Publishes a package to the npm registry        | `npm publish`             |
+| `npm login`                | Logs into the npm registry                     | `npm login`               |
+| `npm cache clean --force`  | Clears npm cache                               | `npm cache clean --force` |
+| `npm audit`                | Checks for security vulnerabilities            | `npm audit`               |
+| `npm audit fix`            | Fixes security issues automatically            | `npm audit fix`           |
+| `npm ci`                   | Installs dependencies from `package-lock.json` | `npm ci`                  |
