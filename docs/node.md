@@ -156,7 +156,11 @@ Example:
 ![Event loop](/assets/eventloop_node.png)
 [Source](https://www.builder.io/blog/visual-guide-to-nodejs-event-loop)
 
-Comparison of Asynchronous Execution Methods in Node.js
+`queueMicrotask`
+[Source](https://nodejs.org/api/process.html#when-to-use-queuemicrotask-vs-processnexttick)
+
+- uses the same queue as promises
+- in ESM modules runs before `process.nextTick` callbacks!
 
 | **Method**           | **Execution Timing**                                       | **Order in Event Loop**                                            | **Use Case**                                                                 |
 | -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
@@ -201,7 +205,7 @@ console.log("End");
 // Timeout callback           macrotask 1
 // Next Tick inside Timeout   microtask created in the timeout queue!
 // Immediate callback         microtask 3
-// IO callback                tricky one, it was triggered in the second event loop cycle!
+// IO callback                tricky one, it was triggered in the second event loop cycle because it took more time! (?)
 ```
 
 ## Console
