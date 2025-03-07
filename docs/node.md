@@ -1020,3 +1020,19 @@ It can also create a documentation.
 | `"exports"`              | `object`  | Defines entry points for different module formats.                             |
 | `"types"`                | `string`  | Specifies the TypeScript declaration file (`.d.ts`).                           |
 | `"author"`               | `string`  | Author's name and contact details.                                             |
+
+## npm scripts
+
+| Feature                         | Description                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| Custom Scripts                  | Define commands in `package.json` to run tasks.                                     |
+| Built-in Lifecycle Scripts      | Automatically triggered scripts like `preinstall`, `postinstall`, `pretest`, etc.   |
+| Running Scripts Sequentially    | Use `&&` to chain commands.                                                         |
+| Running Scripts in Parallel     | Use `&` (Unix/macOS) or `start` (Windows).                                          |
+| Environment Variables           | Define runtime variables within scripts (`set` for Windows, inline for Unix/macOS). |
+| `npm-run-all` Utility           | Runs multiple scripts concurrently.                                                 |
+| Pre and Post Hooks              | Prefix scripts with `pre` and `post` for automated execution.                       |
+| Using Local `node_modules/.bin` | Automatically resolves executables without full paths.                              |
+| Passing Arguments               | Use `--` to pass extra arguments to scripts.                                        |
+| Common Shortcuts                | `npm start`, `npm test`, `npm restart` simplify script execution.                   |
+| Executing External Scripts      | Run external Node.js files via npm scripts.                                         |
