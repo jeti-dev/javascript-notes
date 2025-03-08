@@ -1040,3 +1040,23 @@ It can also create a documentation.
 ## profiling
 
 Start the app with `--prof` then make some load tests with e.g. ApacheBench.
+
+## JWT
+
+# JWT (JSON Web Token) Overview
+
+| Section                            | Description                                                                                                                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **What is JWT**                    | JWT (JSON Web Token) is an open standard (RFC 7519) used to securely transmit information as a JSON object.                                                                                                   |
+| **Structure**                      | A JWT consists of three parts: `HEADER.PAYLOAD.SIGNATURE`.                                                                                                                                                    |
+| **Header**                         | Metadata about the token (e.g., signing algorithm and token type).                                                                                                                                            |
+| **Payload**                        | Contains claims (data) like `iss`, `sub`, `exp`, and custom claims.                                                                                                                                           |
+| **Signature**                      | Encodes the header and the payload with base64 then using my secret it calls the defined signing algorithm. If the header or payload is changed, we can notice it by comparing them to the signature.         |
+| **Common Claims**                  | `iss` (issuer), `sub` (subject), `aud` (audience), `exp` (expiration), `nbf` (not before), `iat` (issued at), `jti` (JWT ID).                                                                                 |
+| **Signing Algorithms**             | - `HS256` – HMAC with SHA-256 (Symmetric) <br> - `RS256` – RSA with SHA-256 (Asymmetric) <br> - `ES256` – ECDSA with SHA-256 (Asymmetric)                                                                     |
+| **How JWT Works**                  | 1. User logs in → Server creates a JWT and sends it to the client. <br> 2. Client stores JWT and includes it in requests (`Authorization` header). <br> 3. Server verifies the JWT and processes the request. |
+| **Example (Using `jsonwebtoken`)** | `const token = jwt.sign({ userId: 123 }, secret, { expiresIn: '1h' });`                                                                                                                                       |
+| **Advantages**                     | ✅ Stateless <br> ✅ Compact <br> ✅ Portable                                                                                                                                                                 |
+| **Disadvantages**                  | ❌ Can't be invalidated easily <br> ❌ Large payloads increase token size <br> ❌ Security risks if mishandled                                                                                                |
+| **Security Best Practices**        | - Use HTTPS <br> - Short expiration times <br> - Store securely (HttpOnly, Secure cookies) <br> - Validate tokens properly                                                                                    |
+| **Refresh token**                  | There can be a refresh token too. If the access token lasts only for like 15 mins, then we can send our refresh token to the server to get a new access token.                                                |
