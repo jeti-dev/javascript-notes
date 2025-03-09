@@ -1060,3 +1060,29 @@ Start the app with `--prof` then make some load tests with e.g. ApacheBench.
 | **Disadvantages**                  | ❌ Can't be invalidated easily <br> ❌ Large payloads increase token size <br> ❌ Security risks if mishandled                                                                                                |
 | **Security Best Practices**        | - Use HTTPS <br> - Short expiration times <br> - Store securely (HttpOnly, Secure cookies) <br> - Validate tokens properly                                                                                    |
 | **Refresh token**                  | There can be a refresh token too. If the access token lasts only for like 15 mins, then we can send our refresh token to the server to get a new access token.                                                |
+
+## HTTPS
+
+[Source](https://www.youtube.com/watch?v=j9QmMEWmcfo)
+![Event loop](/assets/https.png)
+
+1. TCP handshake
+
+- client connects to the web server
+
+2. Certificate check
+
+- client asks what protocol, alorithm, etc is supported
+- server answers
+- client checks the certificate of the server using authorities
+- server send its public key
+
+3. Key exchange
+
+- client creates a session key and encrypts it with the server's public key
+- client send the encrypted key to the server
+- server decrypts the key with its private key
+
+4. Data transmission
+
+- now bot of the can use the session key to encryt data
