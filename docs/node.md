@@ -1086,3 +1086,5 @@ Start the app with `--prof` then make some load tests with e.g. ApacheBench.
 4. Data transmission
 
 - now bot of the can use the session key to encryt data
+
+TLS handshake: when they exchange the session key used to encrypt the data.
