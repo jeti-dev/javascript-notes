@@ -1043,8 +1043,6 @@ Start the app with `--prof` then make some load tests with e.g. ApacheBench.
 
 ## JWT
 
-# JWT (JSON Web Token) Overview
-
 | Section                            | Description                                                                                                                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **What is JWT**                    | JWT (JSON Web Token) is an open standard (RFC 7519) used to securely transmit information as a JSON object.                                                                                                   |
@@ -1192,8 +1190,6 @@ app.get("/dashboard", ensureAuthenticated, (req, res) => {
 
 ## Security best practices
 
-# Node.js Security Best Practices
-
 | Best Practice                                        | Description                                                                                   | Example                                                                                                       | Purpose                                        |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | **Use `helmet` for securing HTTP headers**           | Helmet helps protect the app from common vulnerabilities by setting appropriate HTTP headers. | `app.use(helmet())`                                                                                           | Prevents XSS, clickjacking, and other attacks. |
@@ -1215,8 +1211,6 @@ app.get("/dashboard", ensureAuthenticated, (req, res) => {
 
 ## Microservice
 
-# Microservices Overview
-
 | Feature                           | Description                                                                   | Example                                                                              | Pros                                                          | Cons                                                               |
 | --------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------ |
 | **Independent Deployment**        | Each microservice can be deployed independently without affecting others.     | Updating the user service without touching the payment service.                      | Faster updates and easier rollbacks.                          | Increased complexity in managing multiple services.                |
@@ -1229,3 +1223,33 @@ app.get("/dashboard", ensureAuthenticated, (req, res) => {
 | **Asynchronous Communication**    | Microservices can communicate through message queues (e.g., Kafka, RabbitMQ). | A payment service publishes a message when payment is complete.                      | Improved performance and decoupling.                          | Requires additional infrastructure and monitoring.                 |
 | **Service Discovery**             | Services register themselves and discover each other dynamically.             | Using tools like Consul or Eureka.                                                   | Reduces configuration effort and allows dynamic scaling.      | Adds complexity and potential network latency.                     |
 | **Load Balancing**                | Requests are distributed evenly across service instances.                     | A load balancer routes requests to the least busy instance.                          | Better resource utilization and higher availability.          | Can introduce additional latency and configuration complexity.     |
+
+## OAuth
+
+![Event loop](/assets/oauth.png)
+[Source](https://www.youtube.com/watch?v=ZV5yTm4pT8g)
+
+- we have photos in the SnapStore
+- we want PrintMagic to print our photos but we don't want to upload our images manually nor we want to add our username and password to PrintMagic
+- PrintMagic has already registered itself to SnapStore - it is like that PrintMagic is a "user" of Snapstore: PrintMagic has a **client id** and a **client secret** from the SnapStore that identifies PrintMagic
+- when we want to print with PrintMagic, we are redirected to the login screen of SnapStore where we can see what stuff PrintMagic wants access to (our photos in this case) - **client id** and **scope** (list of the stuff PrintMagic wants) are sent
+- if we approve the request, PrintMagic gets an **authorization code** from SnapStore
+- SnapStore now tries to get an **access token** from SnapStore by sending the **client id**, **client secret** and **authorization code**
+
+<hr>
+
+- As a first step you need to register your app with the OAuth provider. You need to define a redirect_url which is a URL the browser will be redirected to with the authorization code in the URL. During the registration process you get a client_id and a client_secret - these are like the username + password of your app to the OAuth provider.
+
+- The user clicks on your login button.
+
+- The user is redirected to the 3rd party OAuth provider login page. You have to send your client_id in order to open that page.
+
+- After the successful login the browser is redirected to the URL you specified at the registration. The authorization code is received in the URL. This is important: the user initiates the login process form the browser so when the OAuth provider makes a redirection it redirects your browser!
+
+- The authorization code is in the browser URL so it is not really safe it can be stolen. This is why the temporary authorization code is received at this step and not the access token.
+
+- So now your browser makes a request to your backend code with the authorization code .
+
+- Your backend can now ask for an access token from the OAuth provider using the authorization code + the client_id + client_secret.
+
+- Your client_secret lives only on your server so even if the attacker stole the authorization code the attacker is would not be able to create an access token because the attacker would need to have access to your client_secret too!
