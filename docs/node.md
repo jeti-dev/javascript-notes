@@ -1278,3 +1278,20 @@ app.get("/dashboard", ensureAuthenticated, (req, res) => {
 | `npm config get <key>`             | Displays a config value.                                                      | `npm config get init-author-name`            |
 | `npm link`                         | Creates a symlink to a local package for development purposes.                | `npm link`                                   |
 | `npm unlink`                       | Removes the symlink created by `npm link`.                                    | `npm unlink`                                 |
+
+## V8 optimization
+
+| Technique                          | Description                                                                                                                 | Benefit                                            |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Inline Caching**                 | V8 tracks the type of objects being accessed and optimizes repeated calls by caching the lookup results.                    | Speeds up property access and method calls.        |
+| **Hidden Classes**                 | V8 creates hidden classes internally to represent object shapes, which allows fast property access.                         | Reduces dynamic property lookup time.              |
+| **Just-In-Time (JIT) Compilation** | V8 compiles JavaScript code into machine code at runtime rather than interpreting it.                                       | Improves execution speed.                          |
+| **Optimizing Hot Code**            | V8 monitors frequently executed code and re-optimizes it using type information and hidden classes.                         | Enhances performance for common operations.        |
+| **Deoptimization**                 | If assumptions made by the optimizer are invalidated (e.g., type change), V8 falls back to the interpreter.                 | Ensures correctness when dynamic types change.     |
+| **Garbage Collection**             | V8 uses a generational garbage collector (new and old spaces) to efficiently manage memory.                                 | Reduces memory usage and prevents memory leaks.    |
+| **Lazy Compilation**               | Functions are compiled only when they are first called, rather than when the script loads.                                  | Reduces startup time and memory consumption.       |
+| **Escape Analysis**                | V8 determines whether an object is accessible outside a function; if not, it allocates it on the stack instead of the heap. | Reduces garbage collection overhead.               |
+| **Function Inlining**              | Frequently used small functions are directly inserted into the calling function’s code.                                     | Reduces function call overhead.                    |
+| **Optimizing Arrays**              | V8 treats small arrays of the same type as "packed" arrays, making them faster to access.                                   | Improves array performance.                        |
+| **Code Caching**                   | Compiled machine code is cached for faster subsequent execution.                                                            | Reduces loading time for frequently executed code. |
+| **Map Transitions**                | When object shapes change, V8 creates a new hidden class and caches the transition.                                         | Reduces property lookup time for evolving objects. |
