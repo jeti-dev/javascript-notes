@@ -1088,3 +1088,63 @@ Start the app with `--prof` then make some load tests with e.g. ApacheBench.
 - now bot of the can use the session key to encryt data
 
 TLS handshake: when they exchange the session key used to encrypt the data.
+
+## Passport.js
+
+| Section                 | Description                                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **What is Passport.js** | Passport.js is a flexible authentication middleware for Node.js that supports various authentication methods, including Local, OAuth, JWT, and OpenID.                                                                                                                                                                                                            |
+| **Core Concepts**       | - **Strategy** – Method for authenticating users (e.g., Local, OAuth). <br> - **Session** – Stores user data in a session or returns a token. <br> - **Authenticate** – Function used to authenticate requests. <br> - **Serialization** – Converts user data to session format. <br> - **Deserialization** – Converts session data back to a user object.        |
+| **How It Works**        | 1. User sends login request. <br> 2. Passport processes request using a strategy. <br> 3. If successful, Passport serializes user and starts a session. <br> 4. Subsequent requests deserialize user and attach it to `req.user`.                                                                                                                                 |
+| **Example Code**        | Install: `npm install passport passport-local` <br> Local strategy example: <br>`js<br>passport.use(new LocalStrategy((username, password, done) => {<br> if (username === 'admin' && password === 'secret') {<br> return done(null, { id: 1, name: 'Admin' });<br> } else {<br> return done(null, false, { message: 'Invalid credentials' });<br> }<br>}));<br>` |
+| **Common Strategies**   | - **Local** – Authenticate using username and password (`passport-local`) <br> - **OAuth** – Authenticate using Google, Facebook, Twitter, etc. <br> - **JWT** – Token-based authentication (`passport-jwt`) <br> - **OpenID** – OpenID Connect-based authentication (`passport-openidconnect`) <br> - **Custom** – Create your own strategy                      |
+
+```js
+// 1. setting up local strategy
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+
+passport.use(
+  new LocalStrategy((username, password, done) => {
+    if (username === "admin" && password === "secret") {
+      return done(null, { id: 1, name: "Admin" });
+    } else {
+      return done(null, false, { message: "Invalid credentials" });
+    }
+  })
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+  // Look up user in DB here
+  done(null, { id: 1, name: "Admin" });
+});
+
+// 2. login
+const express = require("express");
+const app = express();
+
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/dashboard",
+    failureRedirect: "/login",
+    failureFlash: true,
+  })
+);
+
+// 3. protected route
+const ensureAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect("/login");
+};
+
+app.get("/dashboard", ensureAuthenticated, (req, res) => {
+  res.send(`Welcome, ${req.user.name}`);
+});
+```
