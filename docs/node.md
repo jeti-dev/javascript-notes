@@ -1253,3 +1253,28 @@ app.get("/dashboard", ensureAuthenticated, (req, res) => {
 - Your backend can now ask for an access token from the OAuth provider using the authorization code + the client_id + client_secret.
 
 - Your client_secret lives only on your server so even if the attacker stole the authorization code the attacker is would not be able to create an access token because the attacker would need to have access to your client_secret too!
+
+## NPM CLI
+
+| Command                            | Description                                                                   | Example                                      |
+| ---------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| `npm init`                         | Initializes a new `package.json` file in the current directory.               | `npm init`                                   |
+| `npm install <package>`            | Installs a package and adds it to `dependencies` in `package.json`.           | `npm install express`                        |
+| `npm install <package> --save-dev` | Installs a package and adds it to `devDependencies` in `package.json`.        | `npm install jest --save-dev`                |
+| `npm install`                      | Installs all dependencies listed in `package.json`.                           | `npm install`                                |
+| `npm update`                       | Updates all packages to the latest version compatible with `package.json`.    | `npm update`                                 |
+| `npm uninstall <package>`          | Removes a package and its reference from `dependencies` or `devDependencies`. | `npm uninstall express`                      |
+| `npm list`                         | Lists installed packages and their dependencies.                              | `npm list`                                   |
+| `npm run <script>`                 | Runs a script defined in `package.json`.                                      | `npm run build`                              |
+| `npm test`                         | Runs the test script defined in `package.json`.                               | `npm test`                                   |
+| `npm start`                        | Runs the start script defined in `package.json`.                              | `npm start`                                  |
+| `npm audit`                        | Scans dependencies for known security vulnerabilities.                        | `npm audit`                                  |
+| `npm audit fix`                    | Attempts to automatically fix security vulnerabilities.                       | `npm audit fix`                              |
+| `npm cache clean --force`          | Clears the npm cache.                                                         | `npm cache clean --force`                    |
+| `npm login`                        | Logs into npm to publish or access private packages.                          | `npm login`                                  |
+| `npm publish`                      | Publishes a package to the npm registry.                                      | `npm publish`                                |
+| `npm whoami`                       | Displays the currently logged-in user.                                        | `npm whoami`                                 |
+| `npm config set <key> <value>`     | Sets a config value.                                                          | `npm config set init-author-name "John Doe"` |
+| `npm config get <key>`             | Displays a config value.                                                      | `npm config get init-author-name`            |
+| `npm link`                         | Creates a symlink to a local package for development purposes.                | `npm link`                                   |
+| `npm unlink`                       | Removes the symlink created by `npm link`.                                    | `npm unlink`                                 |
