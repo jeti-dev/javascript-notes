@@ -35,4 +35,36 @@ layout: default
 
 ## Structural - assemble objects
 
+### Adapter
+
+- You have XMLData and you want to use a lib that uses JSONData
+- As they are not compatible, you need to write an XNLToJSONAdapter
+- It accepts an XMLData as an input then it acts as a JSONData
+
+### Composite
+
+- You have a webshop
+- You have Boxes and Items
+- Each Box can contain any number of Items and Boxes
+- So you can have a tree-like structure: in the Boxes there are Boxes which also contain Boxes and Items
+- So how do you calculate the sum of the price?
+- Each Item returns its price. Each box returns the sum of its Items price plus the package price
+- You need a common interface that defines e.g. the getPrice() method
+
+### Decorator/Wrapper
+
+- You have Car class
+- You want to log every action some of the Car objects do
+- As you don't want to add this feature to all of the Car objects you can't use inheritance, also you can't extend the functionalities of a class runtime
+- So you create a CarLogger class that expects a Car as input and implements the same shape as the Car
+- Your CarLogger should act as be used as a Car - you just add some logs and call the real Car object methods
+- So it doesn't matter to the client code if it's a CarLogger because it behaves exactly like a Car
+
+### Facade
+
+- You downloaded a professional video editing package
+- But your team only needs to create a simple 3 seconds video in 1 format
+- You can create a facade class which exposes only the necessary functions of the video editing package to your app
+- This way you can also be less dependent on the whole video editing package
+
 ## Behavioral - algorithms and object responsibilities
