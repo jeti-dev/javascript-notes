@@ -118,3 +118,15 @@ layout: default
 - So the base class creates methods that can be overriden or implemented by the child classes
 - These methods are called at specific steps during the complex algorithm
 - This way the child classes can alter the behavior of the algorithm
+
+## SOLID
+
+# SOLID Principles
+
+| Principle                                     | Description                                                                                                        | Example                                                                                            |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| **S - Single Responsibility Principle (SRP)** | A class should have one and only one reason to change, meaning it should only have one job.                        | A `User` class should handle user data, but authentication logic should be in an `Auth` class.     |
+| **O - Open/Closed Principle (OCP)**           | Software entities should be open for extension but closed for modification.                                        | Use interfaces or inheritance to add new functionality without changing existing code.             |
+| **L - Liskov Substitution Principle (LSP)**   | Objects of a superclass should be replaceable with objects of a subclass without affecting the program's behavior. | A `Rectangle` class should work when replaced with a `Square` subclass without breaking the logic. |
+| **I - Interface Segregation Principle (ISP)** | A client should not be forced to implement an interface it does not use.                                           | Create smaller, specific interfaces instead of large, general ones.                                |
+| **D - Dependency Inversion Principle (DIP)**  | High-level modules should not depend on low-level modules. Both should depend on abstractions.                     | Use dependency injection to provide dependencies rather than creating them internally.             |
