@@ -7,7 +7,7 @@ layout: default
 
 ## Creational - creating objects
 
-### Factory
+### Factory/Virtual constructor
 
 - You have a Factory base class
 - You have a ShipFactory and CarFactory child classes that return Vehicles
@@ -33,15 +33,20 @@ layout: default
 - Add a static private variable which holds a reference to the single instance
 - Add a getter/method to the class: this getter will create the object only on the first time and after that it'll always return that instance.
 
+### Prototype
+
+- You want to clone an object - but you don't necessarily know the exact type of the object, only the interface it implements
+- So you implement the clone() method on your class and make the class responsible for creating a new object and initialize the properties
+
 ## Structural - assemble objects
 
-### Adapter
+### Adapter/Wrapper
 
 - You have XMLData and you want to use a lib that uses JSONData
 - As they are not compatible, you need to write an XNLToJSONAdapter
 - It accepts an XMLData as an input then it acts as a JSONData
 
-### Composite
+### Composite/Object tree
 
 - You have a webshop
 - You have Boxes and Items
@@ -68,3 +73,48 @@ layout: default
 - This way you can also be less dependent on the whole video editing package
 
 ## Behavioral - algorithms and object responsibilities
+
+### Command/Transaction
+
+- You have a save button next to a text area and a save icon in the toolbar
+- Both components need to do the same - save the document
+- Normally you would emit the event from your button then call the save() method in your business layer
+- But instead you create a SaveCommand object and share it with both components
+- SaveCommand has only 1 method: execute() - all other details are hidden in the command class
+- SaveCommand will call your save() method in the business layer under the hood
+
+### Observer
+
+- Exactly like in rxjs
+- You have a producer object that can emit a specific piece of information
+- Subscriber object subject to the producer and they get notified when the given event occurs
+
+### Strategy
+
+- You have different solutions with the same interface for a problem
+- Your Map has a reference to a NavigationStrategy which can be either a BikeNavigationStrategy or CarNavigationStrategy
+
+### Iterator
+
+- When you want to hide the underlying data structure you can use an Iterator interface that defines methods like next()
+- e.g. You have an array but then want to use a map - by using them as objects implementing your Iterator you can swap them without causing any errors
+
+### Mediator/Controller
+
+- Like services in Angular
+- Objects can communicate with each other through a Mediator object
+
+### State
+
+- Your app has different states like edit mode and read mode
+- There is a big if-else in the code that changes the behavior of your class based on the active mode
+- You extract these behaviors to EditState and ReadState objects
+- Now your class can delegate all the state related work to these state objects after selecting the correct state object based on the mode
+
+### Template method
+
+- You have a complex algorithm in your base class
+- Your subclasses could reuse most part of the logic - but they want to change some steps
+- So the base class creates methods that can be overriden or implemented by the child classes
+- These methods are called at specific steps during the complex algorithm
+- This way the child classes can alter the behavior of the algorithm
