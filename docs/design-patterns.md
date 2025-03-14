@@ -121,8 +121,6 @@ layout: default
 
 ## SOLID
 
-# SOLID Principles
-
 | Principle                                     | Description                                                                                                        | Example                                                                                            |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
 | **S - Single Responsibility Principle (SRP)** | A class should have one and only one reason to change, meaning it should only have one job.                        | A `User` class should handle user data, but authentication logic should be in an `Auth` class.     |
