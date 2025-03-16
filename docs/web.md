@@ -64,3 +64,29 @@ layout: default
 - Use `requestAnimationFrame()` for animations.
 - Use `classList.add()` instead of modifying CSS properties one by one.
 - Avoid setting `innerHTML` repeatedly.
+
+### Tips
+
+| Area         | Technique                                      | Description                                                            | Impact | Example                                                      |
+| ------------ | ---------------------------------------------- | ---------------------------------------------------------------------- | ------ | ------------------------------------------------------------ |
+| **Frontend** | **Minify CSS, JS, and HTML**                   | Reduces file size by removing unnecessary characters and whitespace.   | High   | Use tools like `Terser` for JS and `cssnano` for CSS.        |
+| **Frontend** | **Lazy Loading**                               | Defers loading of non-essential resources until they are needed.       | High   | `html<br><img loading="lazy" src="image.jpg" />`             |
+| **Frontend** | **Code Splitting**                             | Breaks large JS files into smaller chunks to load only what's needed.  | High   | Use Webpack’s `import()` for dynamic imports.                |
+| **Frontend** | **Use Content Delivery Network (CDN)**         | Serve static assets from servers close to the user.                    | High   | Use `Cloudflare` or `AWS CloudFront`.                        |
+| **Frontend** | **Reduce HTTP Requests**                       | Combine files and use image sprites to reduce server requests.         | Medium | Combine CSS files and use `data URIs` for small images.      |
+| **Frontend** | **Use Gzip/Brotli Compression**                | Compress resources before sending them to the client.                  | High   | Configure Nginx or Apache to enable compression.             |
+| **Frontend** | **Optimize Critical Rendering Path (CRP)**     | Optimize the loading order of CSS, JS, and HTML.                       | High   | Load CSS before JS and minimize render-blocking resources.   |
+| **Frontend** | **Use HTTP/2 or HTTP/3**                       | Enables multiplexing and faster parallel requests.                     | High   | Configure server to support HTTP/2 or HTTP/3.                |
+| **Frontend** | **Reduce Render-Blocking Resources**           | Load JS and CSS asynchronously where possible.                         | High   | `html<br><link rel="preload" href="style.css" as="style" />` |
+| **Frontend** | **Image Optimization**                         | Compress and resize images for faster loading.                         | High   | Use `WebP` or `AVIF` format instead of JPEG or PNG.          |
+| **Frontend** | **Use `requestAnimationFrame()`**              | Synchronize animations with the browser’s refresh rate.                | Medium | `js<br>requestAnimationFrame(() => {...});`                  |
+| **Backend**  | **Use Caching**                                | Cache responses to reduce server load and response time.               | High   | Use `Redis`, `Memcached`, or HTTP caching.                   |
+| **Backend**  | **Optimize Database Queries**                  | Use indexes and avoid `SELECT *` queries.                              | High   | `sql<br>SELECT id, name FROM users WHERE id = ?;`            |
+| **Backend**  | **Reduce Payload Size**                        | Minimize the size of API responses.                                    | High   | Return only necessary fields in JSON.                        |
+| **Backend**  | **Use Connection Pooling**                     | Maintain a pool of database connections to reduce connection overhead. | Medium | Configure `pg-pool` for PostgreSQL.                          |
+| **Backend**  | **Use HTTP Keep-Alive**                        | Keep connections open to reduce handshake time.                        | Medium | Enable `keep-alive` on the server.                           |
+| **Backend**  | **Avoid Synchronous Code in Request Handling** | Use async code to avoid blocking the event loop.                       | High   | `js<br>const data = await fetchData();`                      |
+| **Backend**  | **Optimize Middleware and Routing**            | Minimize the number of middleware and simplify routing.                | Medium | Use `Express.js` with efficient routing.                     |
+| **Backend**  | **Reduce Memory Leaks**                        | Avoid holding references to unused objects.                            | High   | Use `WeakMap` or `WeakSet` for temporary data.               |
+| **Backend**  | **Use Load Balancing**                         | Distribute requests across multiple servers.                           | High   | Use `NGINX` or `HAProxy` for load balancing.                 |
+| **Backend**  | **Enable Gzip/Brotli Compression**             | Compress API responses to reduce bandwidth.                            | High   | Configure server to enable Gzip/Brotli.                      |
