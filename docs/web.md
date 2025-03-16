@@ -147,3 +147,59 @@ layout: default
 |                      | `X-Content-Type-Options`    | Prevents MIME type sniffing.                                          | `X-Content-Type-Options: nosniff`                                |
 |                      | `X-Frame-Options`           | Prevents clickjacking attacks.                                        | `X-Frame-Options: DENY`                                          |
 |                      | `X-XSS-Protection`          | Enables cross-site scripting (XSS) protection.                        | `X-XSS-Protection: 1; mode=block`                                |
+
+## Web Workers Overview
+
+| Feature                   | Description                                                                                | Example                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **What is a Web Worker?** | A Web Worker allows JavaScript to run in the background without blocking the main thread.  | `const worker = new Worker('worker.js');`                    |
+| **Creating a Worker**     | You create a worker using the `Worker` constructor and pass the script URL.                | `const worker = new Worker('worker.js');`                    |
+| **Sending Messages**      | You use `postMessage()` to send messages from the main thread to the worker.               | `worker.postMessage('Hello Worker');`                        |
+| **Receiving Messages**    | Use the `onmessage` event handler to handle messages in the worker.                        | `worker.onmessage = (event) => console.log(event.data);`     |
+| **Terminating a Worker**  | You can stop a worker using the `terminate()` method.                                      | `worker.terminate();`                                        |
+| **Importing Scripts**     | You can use `importScripts()` to import other scripts into a worker.                       | `importScripts('script1.js', 'script2.js');`                 |
+| **Error Handling**        | Use the `onerror` event handler to catch errors in a worker.                               | `worker.onerror = (event) => console.error(event.message);`  |
+| **Dedicated Worker**      | A worker that communicates with a single script.                                           | `const worker = new Worker('worker.js');`                    |
+| **Shared Worker**         | A worker that can be accessed by multiple scripts from the same origin.                    | `const sharedWorker = new SharedWorker('shared-worker.js');` |
+| **Worker Scope**          | Workers have access to the `self` object, but not to the DOM.                              | `self.onmessage = (e) => console.log(e.data);`               |
+| **Transferrable Objects** | Use `postMessage()` with `Transferable` objects like `ArrayBuffer` to improve performance. | `worker.postMessage(arrayBuffer, [arrayBuffer]);`            |
+| **Limitations**           | No access to the DOM, `window`, `document`, or `localStorage`.                             | N/A                                                          |
+
+```js
+// Create a new Worker
+const worker = new Worker("worker.js");
+
+// Send a message to the worker
+worker.postMessage("Hello from main thread");
+
+// Listen for messages from the worker
+worker.onmessage = (event) => {
+  console.log(`Message from worker: ${event.data}`);
+};
+
+// Handle errors
+worker.onerror = (error) => {
+  console.error(`Worker error: ${error.message}`);
+};
+
+// Terminate the worker
+setTimeout(() => {
+  worker.terminate();
+  console.log("Worker terminated");
+}, 5000);
+```
+
+```js
+// Receive messages from the main thread
+self.onmessage = (event) => {
+  console.log(`Message from main thread: ${event.data}`);
+
+  // Send a message back to the main thread
+  self.postMessage(`Worker received: ${event.data}`);
+};
+
+// Example of using setInterval in a worker
+setInterval(() => {
+  self.postMessage("Worker is still working...");
+}, 1000);
+```
