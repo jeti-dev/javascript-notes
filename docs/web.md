@@ -122,3 +122,28 @@ layout: default
 | **No Head-of-Line (HOL) Blocking**          | QUIC streams are independent at the transport level.                             | Avoids blocking caused by packet loss.                                             | A slow-loading image doesn’t block other resources.          |
 | **Forward Error Correction (FEC)**          | Can recover from packet loss without retransmission.                             | Improves performance over poor networks.                                           | Streaming video remains smooth even with packet loss.        |
 | **Simplified Handshake**                    | Combines transport and encryption handshake.                                     | Reduces handshake time and latency.                                                | Faster initial connection setup.                             |
+
+## HTTP Headers
+
+| Header Type          | Header                      | Description                                                           | Example                                                          |
+| -------------------- | --------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **General Headers**  | `Cache-Control`             | Specifies caching rules for the response.                             | `Cache-Control: no-cache`                                        |
+|                      | `Connection`                | Controls whether the connection stays open after the current request. | `Connection: keep-alive`                                         |
+|                      | `Date`                      | The date and time the message was sent.                               | `Date: Wed, 21 Oct 2023 07:28:00 GMT`                            |
+| **Request Headers**  | `Accept`                    | Informs the server about the type of content the client accepts.      | `Accept: text/html`                                              |
+|                      | `Authorization`             | Provides credentials for authentication.                              | `Authorization: Bearer <token>`                                  |
+|                      | `Host`                      | Specifies the host and port of the server.                            | `Host: example.com`                                              |
+|                      | `User-Agent`                | Provides information about the client’s software.                     | `User-Agent: Mozilla/5.0`                                        |
+|                      | `Referer`                   | Identifies the URL of the referring page.                             | `Referer: https://example.com`                                   |
+| **Response Headers** | `Location`                  | Specifies the URL for redirection.                                    | `Location: https://example.com/new-page`                         |
+|                      | `Server`                    | Describes the software used by the server.                            | `Server: Apache/2.4.1`                                           |
+|                      | `Set-Cookie`                | Sends cookies from the server to the client.                          | `Set-Cookie: sessionId=abc123; HttpOnly`                         |
+|                      | `WWW-Authenticate`          | Indicates the authentication method that should be used.              | `WWW-Authenticate: Basic`                                        |
+| **Entity Headers**   | `Content-Type`              | Describes the media type of the response.                             | `Content-Type: application/json`                                 |
+|                      | `Content-Length`            | Indicates the size of the response body in bytes.                     | `Content-Length: 1234`                                           |
+|                      | `Last-Modified`             | Date and time when the resource was last modified.                    | `Last-Modified: Tue, 20 Jul 2023 10:00:00 GMT`                   |
+| **Security Headers** | `Strict-Transport-Security` | Enforces HTTPS for future requests.                                   | `Strict-Transport-Security: max-age=31536000; includeSubDomains` |
+|                      | `Content-Security-Policy`   | Restricts allowed sources for content.                                | `Content-Security-Policy: default-src 'self'`                    |
+|                      | `X-Content-Type-Options`    | Prevents MIME type sniffing.                                          | `X-Content-Type-Options: nosniff`                                |
+|                      | `X-Frame-Options`           | Prevents clickjacking attacks.                                        | `X-Frame-Options: DENY`                                          |
+|                      | `X-XSS-Protection`          | Enables cross-site scripting (XSS) protection.                        | `X-XSS-Protection: 1; mode=block`                                |
