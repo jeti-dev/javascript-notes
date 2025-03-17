@@ -203,3 +203,76 @@ setInterval(() => {
   self.postMessage("Worker is still working...");
 }, 1000);
 ```
+
+## Service Workers
+
+| Feature                       | Description                                                                                                                  | Example                                                           |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **What is a Service Worker?** | A script that runs in the background, separate from the web page, handling caching, push notifications, and offline support. | `navigator.serviceWorker.register('/sw.js')`                      |
+| **Registration**              | Use `navigator.serviceWorker.register()` to register a service worker.                                                       | `navigator.serviceWorker.register('/sw.js')`                      |
+| **Lifecycle**                 | Service workers have an `install`, `activate`, and `fetch` lifecycle.                                                        | `self.addEventListener('install', event => { /* logic */ })`      |
+| **Caching**                   | You can use the Cache API to store and serve assets.                                                                         | `caches.open('my-cache').then(cache => cache.add('/index.html'))` |
+| **Fetching from Cache**       | Intercept network requests and serve from cache if available.                                                                | `event.respondWith(caches.match(event.request))`                  |
+| **Background Sync**           | Service workers can sync data in the background when the network is available.                                               | `self.addEventListener('sync', event => { /* sync logic */ })`    |
+| **Push Notifications**        | Service workers can receive and display push notifications.                                                                  | `self.addEventListener('push', event => { /* push logic */ })`    |
+| **Message Passing**           | Communicate between the main thread and the service worker using `postMessage()`.                                            | `navigator.serviceWorker.controller.postMessage('Hello')`         |
+| **Scope**                     | Controls which pages the service worker can intercept requests for.                                                          | `navigator.serviceWorker.register('/sw.js', { scope: '/' })`      |
+| **Clients**                   | The `clients` API allows the service worker to communicate with all controlled pages.                                        | `self.clients.matchAll().then(clients => { /* logic */ })`        |
+| **Limitations**               | No DOM access, only runs over HTTPS (except localhost).                                                                      | N/A                                                               |
+
+```js
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register("/sw.js")
+    .then((registration) => {
+      console.log("Service Worker registered with scope:", registration.scope);
+    })
+    .catch((error) => {
+      console.log("Service Worker registration failed:", error);
+    });
+}
+```
+
+```js
+// Install event: Cache files
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("my-cache-v1").then((cache) => {
+      return cache.addAll(["/", "/index.html", "/styles.css", "/script.js"]);
+    })
+  );
+});
+
+// Activate event: Clean up old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys
+          .filter((key) => key !== "my-cache-v1")
+          .map((key) => caches.delete(key))
+      );
+    })
+  );
+});
+
+// Fetch event: Serve files from cache or network
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
+  );
+});
+
+// Push Notification Example
+self.addEventListener("push", (event) => {
+  const options = {
+    body: event.data ? event.data.text() : "Default message",
+    icon: "/icon.png",
+  };
+  event.waitUntil(
+    self.registration.showNotification("Push Notification Title", options)
+  );
+});
+```
