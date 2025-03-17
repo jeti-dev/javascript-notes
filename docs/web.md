@@ -276,3 +276,22 @@ self.addEventListener("push", (event) => {
   );
 });
 ```
+
+## gRPC
+
+| Feature                                 | Description                                                                                             | Example                                          |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **What is gRPC?**                       | gRPC (gRPC Remote Procedure Call) is a high-performance RPC framework developed by Google using HTTP/2. | `grpc.loadPackageDefinition()`                   |
+| **Protocol**                            | Uses HTTP/2 for transport, Protobuf for serialization.                                                  | `protoLoader.loadSync()`                         |
+| **IDL (Interface Definition Language)** | Defines service methods and messages using `.proto` files.                                              | `syntax = "proto3";`                             |
+| **Serialization**                       | Uses Protocol Buffers (Protobuf) for compact and fast data serialization.                               | `message User { string name = 1; }`              |
+| **Unary RPC**                           | Simple request-response model.                                                                          | `client.getUser({ id: 1 }, callback)`            |
+| **Server Streaming RPC**                | Server sends multiple responses for a single request.                                                   | `client.getUserStream({ id: 1 })`                |
+| **Client Streaming RPC**                | Client sends multiple messages to the server and gets a single response.                                | `call.write({ id: 1 })`                          |
+| **Bidirectional Streaming RPC**         | Both client and server exchange multiple messages.                                                      | `call.on('data', response => { ... })`           |
+| **Authentication**                      | Supports TLS encryption and token-based authentication.                                                 | `grpc.credentials.createSsl()`                   |
+| **Load Balancing**                      | Built-in support for load balancing.                                                                    | Configured at server setup                       |
+| **Deadlines and Timeouts**              | Clients can set timeouts for calls.                                                                     | `call = client.getUser({ id: 1 }, { deadline })` |
+| **Interceptors**                        | Middleware to modify request/response behavior.                                                         | `grpc.interceptors.use(...)`                     |
+| **Error Handling**                      | Status codes for specific gRPC errors.                                                                  | `grpc.status.NOT_FOUND`                          |
+| **Language Support**                    | Supports multiple languages (JavaScript, Go, Python, etc.).                                             | `grpc.loadPackageDefinition()`                   |
