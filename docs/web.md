@@ -295,3 +295,24 @@ self.addEventListener("push", (event) => {
 | **Interceptors**                        | Middleware to modify request/response behavior.                                                         | `grpc.interceptors.use(...)`                     |
 | **Error Handling**                      | Status codes for specific gRPC errors.                                                                  | `grpc.status.NOT_FOUND`                          |
 | **Language Support**                    | Supports multiple languages (JavaScript, Go, Python, etc.).                                             | `grpc.loadPackageDefinition()`                   |
+
+## GraphQL
+
+| Feature | Description | Example |
+|---------|-------------|---------|
+| **What is GraphQL?** | A query language for APIs, allowing clients to request exactly the data they need. | `query { user(id: 1) { name, email } }` |
+| **Schema** | Defines the data structure and relationships in GraphQL. | `type User { id: ID!, name: String!, email: String! }` |
+| **Query** | Requests specific fields on objects. | `query { user(id: 1) { name, email } }` |
+| **Mutation** | Modifies data on the server. | `mutation { createUser(name: "John") { id, name } }` |
+| **Subscription** | Allows real-time updates from the server. | `subscription { onUserAdded { id, name } }` |
+| **Resolvers** | Functions that resolve queries and return data. | `const resolvers = { Query: { user: () => {...} } }` |
+| **Type System** | Strongly typed system with scalar and object types. | `type User { id: ID!, name: String! }` |
+| **Directives** | Special instructions for modifying query behavior. | `@skip, @include` |
+| **Fragments** | Reusable units of fields in queries. | `fragment UserFields on User { id, name }` |
+| **Interfaces** | Abstract types used to define common fields for objects. | `interface Person { id: ID!, name: String! }` |
+| **Unions** | A type that can represent multiple types. | `union SearchResult = User | Post` |
+| **Input Types** | Special types used for passing complex objects into queries or mutations. | `input UserInput { name: String! }` |
+| **Introspection** | Ability to query the schema itself for metadata. | `__schema { types { name } }` |
+| **Authentication** | Tokens or API keys used to secure queries. | `Authorization: Bearer <token>` |
+| **Batching and Caching** | Reduces network requests by combining multiple queries. | `apollo-client` |
+| **Error Handling** | Structured error responses from the server. | `{ errors: [{ message, locations, path }] }` |
