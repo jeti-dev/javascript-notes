@@ -316,3 +316,22 @@ self.addEventListener("push", (event) => {
 | **Authentication** | Tokens or API keys used to secure queries. | `Authorization: Bearer <token>` |
 | **Batching and Caching** | Reduces network requests by combining multiple queries. | `apollo-client` |
 | **Error Handling** | Structured error responses from the server. | `{ errors: [{ message, locations, path }] }` |
+
+
+## Rendering Strategies Overview
+
+- hydration: server side rendering or static rendering the page and send it to the user then switch to CSR
+- incremental static regeneration: you have static sites but the server re-creates them based on some rules
+- partial hydration: e.g. render the footer only when the user scrolls there
+- streaming rendering: render the server-side rendered parts on the fly, concurrently
+
+| Strategy | Description | Pros | Cons | Example |
+|----------|-------------|------|------|---------|
+| **Client-Side Rendering (CSR)** | Renders the page on the client side using JavaScript. | - Fast initial load after first request<br>- Lower server load | - Slower initial load<br>- Poor SEO (without hydration) | React with `useEffect()` |
+| **Server-Side Rendering (SSR)** | Renders the page on the server and sends HTML to the client. | - Faster initial load<br>- Better SEO<br>- Works without JavaScript | - Increased server load<br>- Slower TTFB (Time to First Byte) | Next.js `getServerSideProps` |
+| **Static Site Generation (SSG)** | Pre-renders pages at build time. | - Fast load times<br>- Good SEO<br>- Cached for quick delivery | - Stale data unless revalidated<br>- Long build times with large content | Next.js `getStaticProps` |
+| **Incremental Static Regeneration (ISR)** | Rebuilds static pages in the background when needed. | - Fast load times<br>- Keeps content fresh<br>- Reduced build times | - Cache invalidation complexity | Next.js `revalidate: 10` |
+| **Progressive Hydration** | Loads and renders critical parts of the page first, then hydrates others. | - Faster perceived load<br>- Better user experience | - Complex to implement<br>- Potential race conditions | React.lazy() + Suspense |
+| **Partial Rendering** | Renders only specific parts of a page instead of the whole page. | - Faster load times<br>- Lower memory usage | - State inconsistency<br>- More complex logic | React `lazy()` and `Suspense` |
+| **Streaming Rendering** | Renders and sends HTML in chunks while it's still generating. | - Faster initial content display<br>- Improved UX | - Requires HTTP/2 or higher<br>- Complexity | `ReactDOMServer.renderToNodeStream()` |
+| **Hybrid Rendering** | Combines CSR, SSR, and SSG as needed. | - Flexibility<br>- Optimized performance | - Increased implementation complexity | Next.js mixed strategy |
