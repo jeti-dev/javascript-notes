@@ -762,7 +762,7 @@ If `?` is used immediately after any of the quantifiers \*, +, ?, or {}.
 | `"bigint"`    | The value is a `BigInt`.                                               | `typeof 123n` → `"bigint"`                                                         |
 | `"symbol"`    | The value is a `Symbol`.                                               | `typeof Symbol("foo")` → `"symbol"`                                                |
 | `"function"`  | The value is a function (or a class, which is technically a function). | `typeof function() {}` → `"function"`                                              |
-| `"object"`    | The value is an object (including `null`, arrays, and objects).        | `typeof {}` → `"object"`<br>`typeof null` → `"object"`<br>`typeof []` → `"object"` |
+| `"object"`    | The value is an object (including `null`, arrays, and objects).        | `typeof {}` → `"object"``typeof null` → `"object"``typeof []` → `"object"` |
 
 ## Symbol
 
@@ -1262,7 +1262,7 @@ Similar methods
 
 ## `getter` and `setter`
 
-```js
+``` js
 let user = {
   _age: 22,
   get age() {
@@ -1275,7 +1275,7 @@ let user = {
 };
 ```
 
-Properts descriptors:
+Property descriptors:
 
 - get()
 - set()
@@ -1292,3 +1292,16 @@ Properts descriptors:
 
 ![Event loop](/assets/eventloop.png)
 [Source](https://www.youtube.com/watch?v=28AXSTCpsyU)
+
+## Functional programming
+
+| **Concept** | **Description** | **Advantages** | **Challenges** |
+|------------|-----------------|----------------|----------------|
+| **Pure Function** | A function that always produces the same output for the same input and has no side effects | Predictable, easy to test, no side effects | Cannot modify state directly |
+| **Immutability** | State cannot be changed once created; instead, new state is created when changes are made | Prevents unexpected mutations, makes debugging easier | Requires more memory for creating new objects |
+| **Function Composition** | Combining multiple functions to create a new function | Code reuse, modular design | Debugging composed functions can be hard |
+| **Higher-Order Function** | A function that takes a function as an argument or returns a function | Encourages code reuse, reduces duplication | Can lead to complex code |
+| **Recursion** | A function that calls itself to solve a problem | Elegant solution for certain problems | Can cause stack overflow if not handled properly |
+| **Currying** | Transforming a function with multiple arguments into a sequence of functions, each taking a single argument | Increases flexibility, helps with partial application | Can make code harder to read |
+| **Memoization** | Caching the result of a function call to avoid redundant calculations | Improves performance, reduces computation time | Consumes memory for caching |
+
