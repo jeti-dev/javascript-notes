@@ -392,3 +392,18 @@ self.addEventListener("push", (event) => {
 | **XSS (Cross-Site Scripting)** | Malicious scripts accessing cookies. | Use `HttpOnly` and `Secure` attributes. |
 | **CSRF (Cross-Site Request Forgery)** | Unauthorized actions using cookies. | Use `SameSite=Lax` or `Strict`. |
 | **Session Hijacking** | Stolen session cookies. | Use `Secure`, `HttpOnly`, and proper session management. |
+
+
+## Progressive Web Apps (PWA)
+
+| **Category** | **Description** |
+|-------------|-----------------|
+| **Core Principles** | Responsive, Reliable, Installable, Engaging, Secure |
+| **Manifest Properties** | `name`, `short_name`, `start_url`, `display`, `background_color`, `theme_color`, `icons` |
+| **Display Modes** | `browser`, `minimal-ui`, `standalone`, `fullscreen` |
+| **Caching Strategies** | **Cache First** – Serve from cache, fallback to network<br>**Network First** – Try network first, fallback to cache<br>**Stale While Revalidate** – Serve from cache, update in background<br>**Cache Only** – Serve from cache only<br>**Network Only** – Always request from network |
+| **Service Worker Lifecycle** | `install` – Register service worker<br>`activate` – Clean up old caches<br>`fetch` – Handle network requests |
+| **Offline Handling** | **Service Workers** – Handle caching and background syncing<br>**Cache Storage** – Save files and assets for offline use<br>**IndexedDB** – Store structured data locally<br>**Background Sync** – Sync data when the connection is restored |
+| **Security Requirements** | HTTPS for service workers and installation<br>Explicit permissions for notifications, geolocation<br>Content Security Policy (CSP) to prevent XSS attacks |
+| **App Install Prompt** | Trigger installation prompt using `beforeinstallprompt` event |
+| **Best Practices** | Optimize assets, Use lazy loading, Responsive design, Secure HTTPS, Offline fallback UI |
