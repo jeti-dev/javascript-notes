@@ -335,3 +335,60 @@ self.addEventListener("push", (event) => {
 | **Partial Rendering** | Renders only specific parts of a page instead of the whole page. | - Faster load times<br>- Lower memory usage | - State inconsistency<br>- More complex logic | React `lazy()` and `Suspense` |
 | **Streaming Rendering** | Renders and sends HTML in chunks while it's still generating. | - Faster initial content display<br>- Improved UX | - Requires HTTP/2 or higher<br>- Complexity | `ReactDOMServer.renderToNodeStream()` |
 | **Hybrid Rendering** | Combines CSR, SSR, and SSG as needed. | - Flexibility<br>- Optimized performance | - Increased implementation complexity | Next.js mixed strategy |
+
+
+## 🍪 Cookies Overview
+
+| **Type** | **Description** | **Example Use Case** |
+|---------|----------------|---------------------|
+| **Session Cookies** | Temporary cookies deleted when the browser is closed. | User login session |
+| **Persistent Cookies** | Stored on the user's device for a set period. | "Remember me" feature |
+| **Secure Cookies** | Sent only over HTTPS to prevent interception. | Storing session tokens securely |
+| **HttpOnly Cookies** | Accessible only by the server (not readable by JavaScript). | Prevents XSS attacks |
+| **SameSite Cookies** | Restrict cross-site request behavior. | Protects against CSRF attacks |
+| **First-Party Cookies** | Created by the domain the user is visiting. | User authentication |
+| **Third-Party Cookies** | Created by external domains (like ads). | Tracking and advertising |
+
+---
+
+### 📌 Common Attributes
+
+| **Attribute** | **Description** | **Example** |
+|-------------|----------------|-------------|
+| **name** | Name of the cookie. | `session_id` |
+| **value** | Value stored in the cookie. | `abc123` |
+| **domain** | Domain where the cookie is available. | `.example.com` |
+| **path** | URL path where the cookie is accessible. | `/account` |
+| **expires** | Expiration date of the cookie. | `Tue, 19 Jan 2038 03:14:07 GMT` |
+| **max-age** | Lifetime in seconds from creation. | `3600` (1 hour) |
+| **secure** | Only sent over HTTPS. | `Secure` |
+| **httponly** | Inaccessible to JavaScript (`document.cookie`). | `HttpOnly` |
+| **samesite** | Controls cross-site behavior (`Lax`, `Strict`, `None`). | `SameSite=Lax` |
+
+---
+
+### 🌐 HTTP Header Example
+
+| **Header** | **Example** |
+|------------|-------------|
+| **Set-Cookie** | `Set-Cookie: session_id=abc123; Path=/; HttpOnly; Secure; SameSite=Strict` |
+
+---
+
+### 🔒 SameSite Values
+
+| **Value** | **Description** | **Example Use Case** |
+|----------|----------------|----------------------|
+| **Strict** | Only sent in a first-party context. | Highest security but may break some cross-site flows. |
+| **Lax** | Sent for top-level navigation only. | Good balance between security and usability. |
+| **None** | Sent in all contexts but requires `Secure`. | For third-party cookies. |
+
+---
+
+### ⚠️ Common Security Risks
+
+| **Risk** | **Description** | **Solution** |
+|---------|----------------|-------------|
+| **XSS (Cross-Site Scripting)** | Malicious scripts accessing cookies. | Use `HttpOnly` and `Secure` attributes. |
+| **CSRF (Cross-Site Request Forgery)** | Unauthorized actions using cookies. | Use `SameSite=Lax` or `Strict`. |
+| **Session Hijacking** | Stolen session cookies. | Use `Secure`, `HttpOnly`, and proper session management. |
