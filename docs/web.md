@@ -407,3 +407,18 @@ self.addEventListener("push", (event) => {
 | **Security Requirements** | HTTPS for service workers and installation<br>Explicit permissions for notifications, geolocation<br>Content Security Policy (CSP) to prevent XSS attacks |
 | **App Install Prompt** | Trigger installation prompt using `beforeinstallprompt` event |
 | **Best Practices** | Optimize assets, Use lazy loading, Responsive design, Secure HTTPS, Offline fallback UI |
+
+
+## Time Complexity of Common Algorithms
+
+
+| **Algorithm Type** | **Best Case** | **Average Case** | **Worst Case** | **Description** | **Example** |
+|-------------------|--------------|------------------|----------------|----------------|-------------|
+| **Constant Time (O(1))** | O(1) | O(1) | O(1) | The operation takes the same amount of time regardless of input size | `arr.push(1)` → Adding an element to the end of an array |
+| **Logarithmic Time (O(log n))** | O(1) | O(log n) | O(log n) | The number of operations increases logarithmically with the input size | `arr.indexOf(value)` → Binary search (if sorted) |
+| **Linear Time (O(n))** | O(n) | O(n) | O(n) | The number of operations increases linearly with input size | `arr.forEach(el => console.log(el))` → Iterating over an array |
+| **Linearithmic Time (O(n log n))** | O(n log n) | O(n log n) | O(n log n) | The number of operations increases with input size times a logarithmic factor | `arr.sort()` → Sorting an array (uses quicksort or mergesort) |
+| **Quadratic Time (O(n²))** | O(n) | O(n²) | O(n²) | The number of operations increases with the square of the input size | Nested loops: `for (let i of arr) { for (let j of arr) {} }` |
+| **Cubic Time (O(n³))** | O(n²) | O(n³) | O(n³) | The number of operations increases with the cube of the input size | Triple nested loops: `for (let i of arr) { for (let j of arr) { for (let k of arr) {} } }` |
+| **Exponential Time (O(2ⁿ))** | O(1) | O(2ⁿ) | O(2ⁿ) | The number of operations doubles with each additional input size | Recursive Fibonacci: `const fib = n => n < 2 ? n : fib(n - 1) + fib(n - 2)` |
+| **Factorial Time (O(n!))** | O(1) | O(n!) | O(n!) | The number of operations increases with the factorial of the input size | Generating permutations using recursion |
