@@ -194,3 +194,37 @@ export default function App() {
 }
 
 ```
+
+### Flexbox Table  
+| Property | Description | Example | Notes |  
+|----------|-------------|---------|-------|  
+| `display: flex` | Enables flexbox layout on an element | `display: flex;` | Applied to the container |  
+| `flex-direction` | Defines the main axis direction | `flex-direction: row;` | `row`, `row-reverse`, `column`, `column-reverse` |  
+| `justify-content` | Aligns items along the main axis | `justify-content: center;` | `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `space-evenly` |  
+| `align-items` | Aligns items along the cross axis | `align-items: center;` | `flex-start`, `flex-end`, `center`, `stretch`, `baseline` |  
+| `align-self` | Aligns a specific item on the cross axis | `align-self: flex-end;` | Overrides `align-items` for an individual item |  
+| `flex-wrap` | Defines if items should wrap onto multiple lines | `flex-wrap: wrap;` | `nowrap`, `wrap`, `wrap-reverse` |  
+| `flex-grow` | Specifies how much a flex item can grow | `flex-grow: 1;` | `0` (no growth), `1` (grow equally), or custom value |  
+| `flex-shrink` | Specifies how much a flex item can shrink | `flex-shrink: 1;` | `0` (no shrink), `1` (shrink equally), or custom value |  
+| `flex-basis` | Defines the initial size of a flex item | `flex-basis: 200px;` | Works with `width` and `height` |  
+| `order` | Defines the order of flex items | `order: 2;` | Default is `0` |  
+| `gap` | Defines the space between flex items | `gap: 10px;` | Works with `row-gap` and `column-gap` |  
+
+---
+
+### CSS Grid Table  
+| Property | Description | Example | Notes |  
+|----------|-------------|---------|-------|  
+| `display: grid` | Enables grid layout on an element | `display: grid;` | Applied to the container |  
+| `grid-template-columns` | Defines the number and size of columns | `grid-template-columns: 1fr 2fr;` | `fr` is a fractional unit |  
+| `grid-template-rows` | Defines the number and size of rows | `grid-template-rows: 100px auto;` | Can use fixed or dynamic values |  
+| `grid-auto-flow` | Defines the automatic flow of items | `grid-auto-flow: row;` | `row`, `column`, `dense` |  
+| `grid-gap` | Defines the gap between grid items | `grid-gap: 10px;` | Works with `row-gap` and `column-gap` |  
+| `justify-items` | Aligns grid items along the row axis | `justify-items: center;` | `start`, `end`, `center`, `stretch` |  
+| `align-items` | Aligns grid items along the column axis | `align-items: stretch;` | `start`, `end`, `center`, `stretch` |  
+| `justify-content` | Aligns the entire grid along the row axis | `justify-content: space-between;` | `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly` |  
+| `align-content` | Aligns the entire grid along the column axis | `align-content: center;` | `start`, `end`, `center`, `space-between`, `space-around`, `space-evenly` |  
+| `grid-column` | Specifies the start and end position of a grid item (columns) | `grid-column: 1 / 3;` | Can use `span` to stretch |  
+| `grid-row` | Specifies the start and end position of a grid item (rows) | `grid-row: 1 / span 2;` | Can use `span` to stretch |  
+| `place-items` | Shorthand for `align-items` and `justify-items` | `place-items: center;` | Combines two properties into one |  
+| `place-content` | Shorthand for `align-content` and `justify-content` | `place-content: center;` | Combines two properties into one |  
