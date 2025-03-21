@@ -228,3 +228,23 @@ export default function App() {
 | `grid-row` | Specifies the start and end position of a grid item (rows) | `grid-row: 1 / span 2;` | Can use `span` to stretch |  
 | `place-items` | Shorthand for `align-items` and `justify-items` | `place-items: center;` | Combines two properties into one |  
 | `place-content` | Shorthand for `align-content` and `justify-content` | `place-content: center;` | Combines two properties into one |  
+
+
+## SASS  
+| Feature | Description | Example | Notes |  
+|---------|-------------|---------|-------|  
+| **Variables** | Store reusable values (like colors, fonts, etc.) | `$primary-color: #ff5733;` | Can store any value (color, size, string, etc.) |  
+| **Nesting** | Nest selectors within each other | `.nav { .item { color: red; } }` | Reduces repetitive code and improves readability |  
+| **Partials** | Create reusable SASS files and import them | `_variables.scss` → `@import 'variables';` | `_` prefix prevents compiling into CSS |  
+| **Mixins** | Create reusable blocks of CSS with parameters | `@mixin border($size) { border: $size solid black; }` | Can take arguments and be included in selectors |  
+| **Inheritance** | Share styles between selectors using `@extend` | `%button { padding: 10px; } .primary { @extend %button; }` | Reduces duplication and improves organization |  
+| **Operators** | Perform math operations within styles | `width: (100% / 3);` | Supports `+`, `-`, `*`, `/`, and `%` |  
+| **Control Directives** | Use `@if`, `@else`, `@for`, `@each`, and `@while` for logic | `@if $theme == dark { background: black; }` | Enables conditional and loop-based styling |  
+| **Functions** | Define reusable functions | `@function double($n) { @return $n * 2; }` | Returns computed values |  
+| **Color Manipulation** | Adjust colors dynamically | `darken($color, 10%)` | Supports `lighten`, `darken`, `saturate`, `desaturate`, `adjust-hue`, etc. |  
+| **Maps** | Store key-value pairs | `$theme: (primary: #ff5733, secondary: #ccc);` | Use `map-get($theme, primary)` to retrieve values |  
+| **Interpolation** | Use variables inside selectors or properties | `#{$class-name} { color: red; }` | Allows dynamic property names and values |  
+| **Placeholder Selectors** | Define non-rendering selectors for `@extend` | `%button { padding: 10px; }` | Saves CSS output size |  
+| **Import** | Import SASS files into other files | `@import 'variables';` | Helps organize code into smaller modules |  
+| **Modules** | Use `@use` to load modules with namespace | `@use 'colors' as c;` | Replaces `@import` for better organization |  
+| **@forward** | Re-export styles from another file | `@forward 'base';` | Improves modularization |  
