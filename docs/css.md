@@ -248,3 +248,22 @@ export default function App() {
 | **Import** | Import SASS files into other files | `@import 'variables';` | Helps organize code into smaller modules |  
 | **Modules** | Use `@use` to load modules with namespace | `@use 'colors' as c;` | Replaces `@import` for better organization |  
 | **@forward** | Re-export styles from another file | `@forward 'base';` | Improves modularization |  
+
+## PostCSS  
+| Feature | Description | Example | Notes |  
+|---------|-------------|---------|-------|  
+| **Plugins** | Modular plugins that add or modify CSS behavior | `postcss([autoprefixer])` | Most PostCSS features are implemented as plugins |  
+| **Autoprefixing** | Automatically add vendor prefixes for better browser support | `autoprefixer` → `display: flex;` → `-webkit-display: flex;` | Simplifies handling cross-browser compatibility |  
+| **Nesting** | Use nested selectors like in SASS | `postcss-nested` → `.nav { .item { color: red; } }` | Allows cleaner, organized CSS |  
+| **CSS Variables** | Support for native CSS variables | `postcss-custom-properties` → `--main-color: #ff5733;` | Enables dynamic theming and reusable styles |  
+| **Custom Media Queries** | Define custom media queries and reuse them | `postcss-custom-media` → `@custom-media --small-viewport (max-width: 600px);` | Makes media queries easier to maintain |  
+| **Color Functions** | Manipulate colors with functions | `postcss-color-mod-function` → `color: color-mod(var(--main-color) lightness(+10%));` | Dynamic color adjustments |  
+| **Mixins** | Use reusable code blocks | `postcss-mixins` → `@mixin border { border: 1px solid black; }` | Reduces repetition and improves consistency |  
+| **Imports** | Import CSS files within CSS | `postcss-import` → `@import 'styles.css';` | Combines multiple CSS files into one |  
+| **Preset Env** | Use future CSS features today | `postcss-preset-env` | Transforms modern CSS to be compatible with older browsers |  
+| **PurgeCSS** | Remove unused CSS from final bundle | `@fullhuman/postcss-purgecss` | Reduces final CSS size |  
+| **PostCSS CLI** | Command-line interface for PostCSS | `npx postcss input.css -o output.css` | Automates PostCSS processing |  
+| **Scope Isolation** | Isolate styles to avoid conflicts | `postcss-modules` → `@scope(.component) { color: red; }` | Improves component-based styling |  
+| **Linter** | Catch and fix CSS errors | `stylelint` → `postcss([stylelint])` | Ensures consistent code quality |  
+| **Source Maps** | Generate source maps for debugging | `postcss-sourcemaps` | Helps with debugging compiled CSS |  
+| **RTL Support** | Generate right-to-left (RTL) styles | `postcss-rtl` → `float: left;` → `float: right;` | Improves multi-language support |  
