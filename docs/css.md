@@ -267,3 +267,32 @@ export default function App() {
 | **Linter** | Catch and fix CSS errors | `stylelint` → `postcss([stylelint])` | Ensures consistent code quality |  
 | **Source Maps** | Generate source maps for debugging | `postcss-sourcemaps` | Helps with debugging compiled CSS |  
 | **RTL Support** | Generate right-to-left (RTL) styles | `postcss-rtl` → `float: left;` → `float: right;` | Improves multi-language support |  
+
+## CSS Transition vs Animation Table  
+| Aspect | CSS Transition | CSS Animation |  
+|--------|----------------|---------------|  
+| **Definition** | Enables smooth changes between two states over a defined duration | Allows keyframe-based, complex, multi-step animations |  
+| **Syntax** | `transition: property duration timing-function delay;` | `@keyframes` and `animation` properties |  
+| **Trigger** | Triggered by user interaction (e.g., hover, focus, click) or DOM state change | Can start automatically or based on user interaction |  
+| **Complexity** | Simple, limited to starting and ending states | Can define multiple steps using keyframes |  
+| **Control** | Limited control over intermediate states | Full control over intermediate states using keyframes |  
+| **Repeatability** | Cannot repeat; ends once the state change finishes | Can loop indefinitely using `animation-iteration-count` |  
+| **Performance** | High performance when using `transform` and `opacity` | High performance when using `transform` and `opacity` |  
+| **Example** | 
+``` css  
+#box {  
+  transition: transform 0.5s ease-in-out;  
+}  
+#box:hover {  
+  transform: translateX(100px);  
+}  
+``` | ```css  
+@keyframes slide {  
+  from { transform: translateX(0); }  
+  to { transform: translateX(100px); }  
+}  
+#box {  
+  animation: slide 1s forwards;  
+}  
+``` 
+
