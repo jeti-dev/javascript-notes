@@ -9,6 +9,10 @@ layout: default
 - keyof: Returns a string or number union of the keys of an object. `type Point = { x: number; y: number }; type P = keyof Point;` it's the same as `type P = "x" | "y"`
 - typeof: Get the type of a value. E.g. the "signature" of a function.
 - discriminating unions: `type Animal = Dog | Cat` and both have a common property `species`. If you `switch` or `if-else` `species` then TS lets you use the  Cat or Dog props in that block.
+- nominal types: Each type is different even if the properties are the same.
+- structural types (TS is like this): If two types have the same properties they are considered compatible.
+- named tuple: `type NewLocation = [lat: number, long: number]`
+- auto accessor: Uses the `accessor` keyword and creates a getter() and setter() under the hood. Subclasses can modify these methods without changing the original shape.
 
 
 ## Mapped types
@@ -83,40 +87,6 @@ function myDecorator() {
 }
  
 ```
-
-## Type guard
-`pet if Fish` - when this guard is called, TS will know if in the block we have a fish or a bird.
-
-``` ts
-function isFish(pet: Fish | Bird): pet is Fish {
-  return (pet as Fish).swim !== undefined;
-}
-
-let pet = getSmallPet();
- 
-if (isFish(pet)) {
-  pet.swim();
-} else {
-  pet.fly();
-}
-```
-
-## satisfies
-The values of the object can be an array of a string. `satisfies` ensures correct types but it is also aware of the types so it knows that green is indeed a string.
-
-``` ts
-type Colors = "red" | "green" | "blue";
-type RGB = [red: number, green: number, blue: number];
-const palette = {
-    red: [255, 0, 0],
-    green: "#00ff00",
-    blue: [0, 0, 255]
-//  ~~~~ The typo is now caught!
-} satisfies Record<Colors, string | RGB>;
-// toUpperCase() method is still accessible!
-const greenNormalized = palette.green.toUpperCase();
-```
-
 ## Config
 
 | Property | Description | Example |
@@ -158,3 +128,106 @@ const greenNormalized = palette.green.toUpperCase();
 | **Isolated Modules** | Ensures each file can be transpiled separately, improving incremental builds and compatibility with Babel. | `"isolatedModules": true` |
 | **No Emit** | Compiles the code without generating output files, useful for type-checking only. | `"noEmit": true` |
 | **Emit Declaration Only** | Only generates `.d.ts` files without producing `.js` files, useful for library builds. | `"emitDeclarationOnly": true` |
+
+## Static block
+- to init static properties
+- can ha ve more than 1
+```ts
+class MyClass {
+  static count = 0;
+
+  // Static block for complex initialization
+  static {
+    console.log("Initializing class...");
+    MyClass.count = 42;
+  }
+
+  static getCount() {
+    return MyClass.count;
+  }
+}
+
+```
+
+
+## Type guard
+`pet if Fish` - when this guard is called, TS will know if in the block we have a fish or a bird.
+
+``` ts
+function isFish(pet: Fish | Bird): pet is Fish {
+  return (pet as Fish).swim !== undefined;
+}
+
+let pet = getSmallPet();
+ 
+if (isFish(pet)) {
+  pet.swim();
+} else {
+  pet.fly();
+}
+```
+
+## satisfies
+The values of the object can be an array of a string. `satisfies` ensures correct types but it is also aware of the types so it knows that green is indeed a string.
+
+``` ts
+type Colors = "red" | "green" | "blue";
+type RGB = [red: number, green: number, blue: number];
+const palette = {
+    red: [255, 0, 0],
+    green: "#00ff00",
+    blue: [0, 0, 255]
+//  ~~~~ The typo is now caught!
+} satisfies Record<Colors, string | RGB>;
+// toUpperCase() method is still accessible!
+const greenNormalized = palette.green.toUpperCase();
+```
+
+## Assert function
+Throws an error if the condition is false otherwise "casts" the value to the return type.
+```ts
+function assertIsNumber(value: unknown): asserts value is number {
+  if (typeof value !== 'number') {
+    throw new Error('Value must be a number');
+  }
+}
+
+function double(value: unknown) {
+  assertIsNumber(value);
+  // Now TypeScript knows that value is a number
+  return value * 2;
+}
+
+console.log(double(10)); // ✅ Output: 20
+console.log(double('abc')); // ❌ Throws Error: Value must be a number
+```
+
+## Type guard vs assert function
+| Feature               | Assert Functions                                            | Type Guards                                               |
+|-----------------------|-------------------------------------------------------------|----------------------------------------------------------|
+| **Purpose**            | To validate a value at runtime and narrow its type          | To narrow down the type of a value based on a boolean condition |
+| **Syntax**             | `asserts value is Type`                                      | `value is Type`                                           |
+| **Return Type**        | `void` (throws an error if assertion fails)                  | `boolean` (returns true or false)                         |
+| **Example**            | ```typescript<br>function assertIsNumber(value: unknown): asserts value is number {<br>  if (typeof value !== 'number') {<br>    throw new Error('Value must be a number');<br>  }<br>}<br>``` | ```typescript<br>function isNumber(value: unknown): value is number {<br>  return typeof value === 'number';<br>}<br>``` |
+| **Effect on TypeScript** | TypeScript refines the type after the assertion if it passes | TypeScript refines the type based on the return value of the guard |
+| **Error Handling**      | Throws an error if the assertion fails                       | Does not throw an error, just returns `true` or `false`   |
+| **Use Case**            | When you want to **force** a specific type or validate input from an external source | When you want to **conditionally** check a type before proceeding |
+| **Flexibility**         | Can validate complex shapes and refine types                 | Best for simple type checks                                |
+| **Example Use Case**     | Validating API response objects                              | Checking if a value is a specific type before using it     |
+
+## Virtual directory
+``` ts
+import Comp from "@components/comp"
+
+
+{
+  "compilerOptions": {
+    "baseUrl": "./src", // Base directory for resolving paths
+    "paths": {
+      "@components/*": ["components/*"],
+      "@utils/*": ["utils/*"]
+    }
+  }
+}
+
+```
