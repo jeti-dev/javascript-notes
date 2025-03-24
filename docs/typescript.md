@@ -116,3 +116,35 @@ const palette = {
 // toUpperCase() method is still accessible!
 const greenNormalized = palette.green.toUpperCase();
 ```
+
+## Config
+
+| Property | Description | Example |
+|----------|-------------|---------|
+| **path aliases** | Allows creating short import paths using the `paths` option under `compilerOptions`. | `"paths": { "@utils/*": ["src/utils/*"] }` |
+| **extends** | Inherits configurations from another `tsconfig.json` file. Useful for sharing configs across projects. | `"extends": "./base-tsconfig.json"` |
+| **lib** | Specifies a list of library files to include in the compilation. | `"lib": ["ESNext", "DOM"]` |
+| **noImplicitAny** | Throws an error if a variable's type is not explicitly defined. | `"noImplicitAny": true` |
+| **strict** | Enables all strict type-checking options. | `"strict": true` |
+| **strictNullChecks** | Forces explicit handling of `null` and `undefined` types. | `"strictNullChecks": true` |
+| **noImplicitOverride** | Ensures that a method marked as `override` exists in the parent class. | `"noImplicitOverride": true` |
+| **noImplicitReturns** | Ensures that all code paths in a function return a value. | `"noImplicitReturns": true` |
+| **noImplicitThis** | Reports an error if `this` is implicitly of type `any`. | `"noImplicitThis": true` |
+| **strictPropertyInitialization** | Ensures that class properties are initialized in the constructor or marked as optional. | `"strictPropertyInitialization": true` |
+| **useUnknownInCatch** | Makes the `catch` clause variable of type `unknown` instead of `any`. | `"useUnknownInCatch": true` |
+| **downLevelIteration** | Enables full support for iteration in `for...of` loops in ES5/ES3. | `"downlevelIteration": true"` |
+| **target** | Specifies the ECMAScript version to compile to. | `"target": "ESNext"` |
+| **module** | Specifies the module system to use (`CommonJS`, `ESNext`, etc.). | `"module": "ESNext"` |
+| **outDir** | Specifies the output directory for compiled files. | `"outDir": "./dist"` |
+| **rootDir** | Specifies the root directory for TypeScript files. | `"rootDir": "./src"` |
+| **moduleResolution** | Determines how modules are resolved (`node`, `classic`). | `"moduleResolution": "node"` |
+| **sourceMap** | Generates `.map` files for easier debugging. | `"sourceMap": true` |
+| **declaration** | Generates `.d.ts` declaration files for type definitions. | `"declaration": true` |
+| **skipLibCheck** | Skips type-checking of declaration files. | `"skipLibCheck": true` |
+| **removeComments** | Removes comments in the compiled output. | `"removeComments": true` |
+| **jsx** | Specifies how JSX syntax is compiled. | `"jsx": "react"` |
+| **baseUrl** | Specifies the base directory for resolving non-relative imports. | `"baseUrl": "./src"` |
+| **esModuleInterop** | Enables compatibility with `import` syntax in CommonJS modules. | `"esModuleInterop": true` |
+| **experimentalDecorators** | Enables experimental support for decorators. | `"experimentalDecorators": true` |
+| **emitDecoratorMetadata** | Emits metadata for decorators at runtime. | `"emitDecoratorMetadata": true` |
+| **isolatedModules** | Ensures that each file is treated as a separate module. | `"isolatedModules": true` |
