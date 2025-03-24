@@ -148,3 +148,13 @@ const greenNormalized = palette.green.toUpperCase();
 | **experimentalDecorators** | Enables experimental support for decorators. | `"experimentalDecorators": true` |
 | **emitDecoratorMetadata** | Emits metadata for decorators at runtime. | `"emitDecoratorMetadata": true` |
 | **isolatedModules** | Ensures that each file is treated as a separate module. | `"isolatedModules": true` |
+
+## Compiler optimization
+
+| **Optimization Technique** | **Description** | **Example** |
+|---------------------------|----------------|-------------|
+| **Skip Lib Check** | Skips type checking of declaration files (`.d.ts`) to speed up the build process. | `"skipLibCheck": true` |
+| **Incremental Compilation** | Reuses information from previous compilations to speed up the next one. | `"incremental": true` |
+| **Isolated Modules** | Ensures each file can be transpiled separately, improving incremental builds and compatibility with Babel. | `"isolatedModules": true` |
+| **No Emit** | Compiles the code without generating output files, useful for type-checking only. | `"noEmit": true` |
+| **Emit Declaration Only** | Only generates `.d.ts` files without producing `.js` files, useful for library builds. | `"emitDeclarationOnly": true` |
