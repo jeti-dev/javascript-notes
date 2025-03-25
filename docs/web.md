@@ -537,3 +537,36 @@ request.onsuccess = (event) => {
 | **orientation** | Preferred screen orientation. | `"orientation": "portrait"` |
 | **scope** | Defines the navigation scope of the app. | `"scope": "/app/"` |
 | **description** | Short description of the app. | `"description": "This is a demo app."` |
+
+## WebRTC API
+
+| **Component** | **Description** | **Example** |
+|--------------|----------------|-------------|
+| **RTCPeerConnection** | Handles the connection between peers. Responsible for negotiating and managing the peer-to-peer connection. | `const pc = new RTCPeerConnection();` |
+| **RTCSessionDescription** | Represents the local or remote description of a connection. Contains SDP (Session Description Protocol) data. | `const desc = new RTCSessionDescription(offer);` |
+| **RTCIceCandidate** | Represents a candidate for network connectivity during connection establishment. | `const candidate = new RTCIceCandidate({...});` |
+| **getUserMedia** | Captures audio and video from the user’s device. Returns a `MediaStream` object. | `navigator.mediaDevices.getUserMedia({ video: true, audio: true });` |
+| **addTrack** | Adds a media track to the peer connection. | `pc.addTrack(track, stream);` |
+| **onicecandidate** | Event handler triggered when an ICE candidate is available. | `pc.onicecandidate = event => {...};` |
+| **ontrack** | Event handler triggered when a new media track is received. | `pc.ontrack = event => {...};` |
+| **createOffer** | Creates an SDP offer to start a connection. | `const offer = await pc.createOffer();` |
+| **setLocalDescription** | Sets the local SDP description. | `await pc.setLocalDescription(offer);` |
+| **setRemoteDescription** | Sets the remote SDP description. | `await pc.setRemoteDescription(answer);` |
+| **createAnswer** | Creates an SDP answer to accept a connection. | `const answer = await pc.createAnswer();` |
+| **close** | Closes the connection and releases resources. | `pc.close();` |
+
+
+## WebSocket Overview
+
+| Feature | Description |
+|---------|-------------|
+| **Protocol** | Follows the `ws://` or `wss://` protocol (WebSocket Secure). |
+| **Full Duplex** | Allows bidirectional communication between client and server simultaneously. |
+| **Persistent Connection** | Keeps a single connection open for real-time data exchange. |
+| **Event-Driven** | Uses events like `onopen`, `onmessage`, `onclose`, and `onerror` to handle connection states. |
+| **Low Latency** | Lower overhead compared to HTTP; ideal for real-time applications like chat and gaming. |
+| **Binary and Text Support** | Can send and receive both text and binary data (e.g., JSON, ArrayBuffer). |
+| **Security** | `wss://` uses TLS encryption for secure communication. |
+| **API Methods** | - `WebSocket.send()` – Send data to server.<br>- `WebSocket.close()` – Close the connection.<br>- `WebSocket.readyState` – Connection status. |
+| **Events** | - `onopen` – Triggered when connection opens.<br>- `onmessage` – Triggered when message is received.<br>- `onclose` – Triggered when connection closes.<br>- `onerror` – Triggered on connection error. |
+| **Use Cases** | - Chat applications<br>- Online gaming<br>- Real-time stock updates<br>- Live streaming<br>- IoT device communication |
