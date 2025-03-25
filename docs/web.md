@@ -5,6 +5,9 @@ layout: default
 
 # Web
 
+- `stopPropagation` vs `stopImmediatePropagation`: the second one also disables the other events of the same type on the target
+- `requestAnimationFrame`: it is a browser API that tells the browser to call a specified function before the next repaint
+
 ## Performance
 
 - FCP - first contenful paint: the first stuff the browser draws
@@ -570,3 +573,33 @@ request.onsuccess = (event) => {
 | **API Methods** | - `WebSocket.send()` – Send data to server.<br>- `WebSocket.close()` – Close the connection.<br>- `WebSocket.readyState` – Connection status. |
 | **Events** | - `onopen` – Triggered when connection opens.<br>- `onmessage` – Triggered when message is received.<br>- `onclose` – Triggered when connection closes.<br>- `onerror` – Triggered on connection error. |
 | **Use Cases** | - Chat applications<br>- Online gaming<br>- Real-time stock updates<br>- Live streaming<br>- IoT device communication |
+
+## Browser Event Phases
+
+| Phase | Description | Order |
+|-------|-------------|-------|
+| **Capturing Phase** | The event starts at the root and travels down to the target element. | First |
+| **Target Phase** | The event reaches the target element and triggers the event listener on the target. | Second |
+| **Bubbling Phase** | The event travels back up the DOM tree from the target element to the root. | Third |
+| **Use Cases** | - Use `addEventListener(type, listener, **true**)` to capture events in the capturing phase.<br>- Use `addEventListener(type, listener, **false**)` to listen in the bubbling phase.<br>- Not all events bubble (e.g., `focus`, `blur`, `mouseenter`, `mouseleave`). | |
+
+## multipart/form-data vs application/x-www-form-urlencoded
+
+| Feature | `multipart/form-data` | `application/x-www-form-urlencoded` |
+|---------|-----------------------|-------------------------------------|
+| **Definition** | Used for sending files and binary data along with form fields. | Used for sending key-value pairs in the request body. |
+| **Encoding** | Data is divided into parts using boundaries. | Data is encoded as `key=value&key=value`. |
+| **Binary Data Support** | ✅ Yes (can send files, images, etc.) | ❌ No (only text data) |
+| **Text Data Support** | ✅ Yes | ✅ Yes |
+| **File Uploads** | ✅ Yes (supports file uploads) | ❌ No (does not support files) |
+| **Request Size** | Larger due to boundary overhead. | Smaller due to simple format. |
+| **Complexity** | More complex to parse on the server. | Simple to parse. |
+| **Use Case** | File uploads, mixed binary and text data submission. | Simple form data submission, login forms, etc. |
+| **Example** | `enctype="multipart/form-data"` | `enctype="application/x-www-form-urlencoded"` |
+
+## JSONP
+It is used to bypass the same-origin policy when making HTTP requests from the browser to a different domain. It works by loading data through a script tag instead of using XMLHttpRequest or fetch, since script tags are not restricted by the same-origin policy.
+- The client creates a script tag dynamically and sets the src attribute to a URL on the external server.
+- The URL includes a query parameter specifying a callback function.
+- The server responds with JavaScript code that calls the specified callback function with the data as an argument.
+- The browser executes the response as a script, which triggers the callback and processes the data.
