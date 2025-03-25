@@ -422,3 +422,118 @@ self.addEventListener("push", (event) => {
 | **Cubic Time (O(n³))** | O(n²) | O(n³) | O(n³) | The number of operations increases with the cube of the input size | Triple nested loops: `for (let i of arr) { for (let j of arr) { for (let k of arr) {} } }` |
 | **Exponential Time (O(2ⁿ))** | O(1) | O(2ⁿ) | O(2ⁿ) | The number of operations doubles with each additional input size | Recursive Fibonacci: `const fib = n => n < 2 ? n : fib(n - 1) + fib(n - 2)` |
 | **Factorial Time (O(n!))** | O(1) | O(n!) | O(n!) | The number of operations increases with the factorial of the input size | Generating permutations using recursion |
+
+## Local and session storage
+| Feature                   | localStorage                                               | sessionStorage                                             |
+|-------------------------- |------------------------------------------------------------|----------------------------------------------------------|
+| **Scope**                 | Accessible across all windows and tabs from the same origin | Accessible only within the same tab                      |
+| **Persistence**           | Data persists even after closing and reopening the browser  | Data is lost when the tab or window is closed             |
+| **Storage Limit**         | Approximately **5-10MB** depending on the browser           | Approximately **5-10MB** depending on the browser         |
+| **Data Type**             | Only stores strings (must manually serialize objects)        | Only stores strings (must manually serialize objects)      |
+| **Access**                | Can be accessed using `localStorage.getItem()` and `localStorage.setItem()` | Can be accessed using `sessionStorage.getItem()` and `sessionStorage.setItem()` |
+| **Security**              | Stored data is accessible from any window or tab under the same origin | Data is isolated to a single tab                          |
+| **Example Usage**         | Saving user preferences, tokens, or theme settings          | Temporary session data like form input or state management within a session |
+| **Supported Events**      | `storage` event triggers when data is changed in other tabs | `storage` event does **not** trigger for sessionStorage   |
+
+## IndexedDB
+| Feature                            | Description                                                                                      |
+|------------------------------------|--------------------------------------------------------------------------------------------------|
+| **Scope**                          | Accessible across multiple windows, tabs, and worker threads within the same origin               |
+| **Persistence**                    | Data persists even after the browser is closed                                                    |
+| **Data Type**                      | Can store any type of data, including objects, arrays, and files (binary data)                   |
+| **Structure**                      | Uses object stores (similar to tables) and keys to store data                                     |
+| **Transactions**                   | Supports atomic transactions to ensure data consistency                                           |
+| **Indexing**                       | Supports creating indexes to enable fast data lookup                                              |
+| **Performance**                    | Designed for handling large amounts of structured data efficiently                                |
+| **API Type**                       | Asynchronous API based on Promises                                                                |
+| **Access Method**                  | Uses `indexedDB.open()` to create or open a database                                              |
+| **Example Usage**                  | Storing cached data, offline-first web apps, and structured data management                        |
+| **Limitations**                    | Not supported in all browsers; handling complex transactions can be difficult                      |
+| **Events**                         | Supports `onsuccess`, `onerror`, `onupgradeneeded`, and other lifecycle events                   |
+| **Versioning**                     | Each database is versioned; upgrades require handling `onupgradeneeded` event                     |
+
+``` ts
+const request = indexedDB.open('myDatabase', 1);
+
+request.onupgradeneeded = (event) => {
+  const db = request.result;
+  if (!db.objectStoreNames.contains('users')) {
+    db.createObjectStore('users', { keyPath: 'id' });
+  }
+};
+
+request.onsuccess = (event) => {
+  console.log('Database opened successfully');
+};
+
+request.onerror = (event) => {
+  console.error('Error opening database', event);
+};
+```
+
+``` ts
+const request = indexedDB.open('myDatabase', 1);
+
+request.onsuccess = (event) => {
+  const db = request.result;
+  const transaction = db.transaction('users', 'readwrite');
+  const store = transaction.objectStore('users');
+
+  const user = { id: 1, name: 'John Doe', age: 30 };
+  store.add(user);
+
+  transaction.oncomplete = () => {
+    console.log('User added');
+  };
+
+  transaction.onerror = (event) => {
+    console.error('Error adding user', event);
+  };
+};
+
+```
+
+## Offline
+| **Feature** | **Description** | **Example** |
+|------------|----------------|------------|
+| **Service Workers** | Background script that acts as a proxy between the browser and network, allowing caching and offline access. | Use `self.addEventListener('install', (event) => {...})` to cache resources. |
+| **Cache API** | Provides a way to store network responses and assets for offline use. | `caches.open('my-cache').then(cache => cache.addAll(['/index.html', '/styles.css']));` |
+| **IndexedDB** | Client-side NoSQL database for structured data storage, used for offline data storage and syncing. | Create a database using `indexedDB.open('myDB', 1)`. |
+| **LocalStorage** | Stores key-value pairs in the browser, data persists even after the browser is closed. | `localStorage.setItem('key', 'value');` |
+| **SessionStorage** | Similar to LocalStorage but persists only for the duration of the session. | `sessionStorage.setItem('key', 'value');` |
+| **Background Sync** | Allows the app to retry failed network requests when the connection is restored. | `registration.sync.register('mySyncTag');` |
+| **Web Manifest** | JSON file that provides metadata about the app (e.g., name, icons, start URL). | `{"name": "My App", "start_url": "/index.html"}` |
+| **Network Information API** | Allows the app to detect network status and adjust functionality accordingly. | `navigator.onLine` returns `true` or `false`. |
+| **Progressive Web Apps (PWAs)** | Apps that use Service Workers and Web Manifest to work offline and provide a native app-like experience. | `install` event in the Service Worker to cache assets. |
+| **AppCache** *(Deprecated)* | Legacy API that allowed caching of resources for offline use. | No longer supported in modern browsers. |
+
+## Cache API
+
+| **Method** | **Description** | **Example** |
+|------------|----------------|------------|
+| **caches.open(name)** | Opens a new cache or returns an existing one. | `caches.open('my-cache').then(cache => {...})` |
+| **cache.add(request)** | Fetches and adds a response to the cache. | `cache.add('/index.html');` |
+| **cache.addAll(requests)** | Fetches and adds multiple responses to the cache. | `cache.addAll(['/index.html', '/styles.css']);` |
+| **cache.put(request, response)** | Adds a custom response to the cache. | `cache.put('/data', new Response('Custom Data'));` |
+| **cache.match(request)** | Returns a cached response if it exists. | `cache.match('/index.html').then(response => {...})` |
+| **cache.delete(request)** | Deletes a cached response. | `cache.delete('/index.html');` |
+| **caches.keys()** | Returns a list of cache names. | `caches.keys().then(keys => console.log(keys));` |
+| **caches.match(request)** | Returns a cached response from any cache. | `caches.match('/index.html').then(response => {...})` |
+| **caches.delete(name)** | Deletes a specific cache. | `caches.delete('my-cache');` |
+
+---
+
+## Web Manifest
+
+| **Property** | **Description** | **Example** |
+|-------------|----------------|-------------|
+| **name** | Name of the app. | `"name": "My App"` |
+| **short_name** | Short name displayed on the home screen. | `"short_name": "App"` |
+| **start_url** | URL to load when the app is launched. | `"start_url": "/index.html"` |
+| **display** | Controls how the app is displayed (fullscreen, standalone, etc.). | `"display": "standalone"` |
+| **icons** | Array of icon objects for different sizes and resolutions. | `"icons": [{"src": "/icon.png", "sizes": "192x192", "type": "image/png"}]` |
+| **theme_color** | Color of the browser UI elements (e.g., address bar). | `"theme_color": "#ffffff"` |
+| **background_color** | Background color of the splash screen. | `"background_color": "#000000"` |
+| **orientation** | Preferred screen orientation. | `"orientation": "portrait"` |
+| **scope** | Defines the navigation scope of the app. | `"scope": "/app/"` |
+| **description** | Short description of the app. | `"description": "This is a demo app."` |
