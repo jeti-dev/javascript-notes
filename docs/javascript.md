@@ -1305,3 +1305,13 @@ Property descriptors:
 | **Currying** | Transforming a function with multiple arguments into a sequence of functions, each taking a single argument | Increases flexibility, helps with partial application | Can make code harder to read |
 | **Memoization** | Caching the result of a function call to avoid redundant calculations | Improves performance, reduces computation time | Consumes memory for caching |
 
+## Module types
+
+| Module Type | Syntax | Loading Method | Scope | Use Cases | Limitations |
+|------------|--------|---------------|-------|-----------|-------------|
+| **CommonJS (CJS)** | `const module = require('module')` | Synchronous (`require`) | Module scope | Node.js (default module system) | Not supported in browsers directly; requires bundlers like Webpack |
+| **ES Modules (ESM)** | `import { module } from './module.js'` | Asynchronous (`import`) | Strict mode by default | Modern JavaScript, browsers, Node.js | Static structure; must use `.mjs` or `"type": "module"` in Node.js |
+| **AMD (Asynchronous Module Definition)** | `define(['module'], function(module) { ... })` | Asynchronous (`define`) | Module scope | Browser-based modules, RequireJS | Verbose syntax, less common today |
+| **UMD (Universal Module Definition)** | Supports both `require()` and `define()` | Synchronous or asynchronous | Module scope | Works in both browsers and Node.js | Complexity in defining modules |
+| **IIFE (Immediately Invoked Function Expression)** | `(function() { ... })();` | Synchronous (immediately invoked) | Global scope (unless explicitly scoped) | Encapsulating code, avoiding global pollution | No modular features; hard to manage dependencies |
+| **SystemJS** | `System.import('module')` | Asynchronous (`import`) | Module scope | Loading modules dynamically in browsers | Larger library size; less common today |
