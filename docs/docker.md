@@ -4,6 +4,7 @@ layout: default
 ---
 
 # Docker
+## From a tutorial - TBD
 [Notes of this video](https://www.youtube.com/watch?v=RqTEHSBrYFw&t=165s)
 
 - container image: like a class
@@ -23,3 +24,55 @@ layout: default
 - dockerfile: what and how to build
     - build context: other files included in the build
     - .dockerignore
+
+
+## 🟢 Beginner Docker Concepts
+
+| Concept             | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `Dockerfile`        | A script with instructions to build a Docker image.                         |
+| `docker build`      | Builds an image from a Dockerfile.                                          |
+| `docker run`        | Runs a container based on an image.                                         |
+| `docker ps`         | Lists running containers.                                                   |
+| `docker images`     | Lists available images.                                                     |
+| `docker stop`       | Stops a running container.                                                  |
+| `docker rm`         | Removes a stopped container.                                                |
+| `docker rmi`        | Removes an image.                                                           |
+| `docker pull`       | Downloads an image from Docker Hub.                                        |
+| `docker exec`       | Runs a command inside a running container.                                  |
+| `.dockerignore`     | File listing paths to exclude from the image build context.                 |
+| `docker-compose.yml`| Defines multi-container applications.                                       |
+
+---
+
+## 🟡 Intermediate Docker Concepts
+
+| Concept                    | Description                                                                 |
+|----------------------------|-----------------------------------------------------------------------------|
+| Multi-stage builds         | Optimize Dockerfile by using multiple `FROM` statements for smaller images.|
+| Docker volumes             | Persist or share data between containers using `-v` flag or `volumes`.     |
+| Named and anonymous volumes| Named volumes persist beyond container lifecycle; anonymous do not.        |
+| Networking                 | Custom bridges allow inter-container communication by name.                |
+| Environment variables      | Use `-e VAR=value` or `env_file` to inject env vars into containers.       |
+| Docker Compose             | Define and manage multi-container apps with `docker-compose`.              |
+| Healthchecks               | Specify a command in the Dockerfile to check container health.             |
+| Port binding               | Map host ports to container ports with `-p`.                               |
+| `.env` in Compose          | Load environment variables into Compose files.                             |
+| `docker logs`              | View container stdout/stderr logs.                                         |
+
+---
+
+## 🔴 Advanced Docker Concepts
+
+| Concept                     | Description                                                                 |
+|-----------------------------|-----------------------------------------------------------------------------|
+| Dockerfile best practices   | Minimize layers, pin versions, clean cache to reduce image size.           |
+| BuildKit                    | Enhanced image build engine with better caching and features.              |
+| Layer caching               | Docker caches unchanged layers during builds for speed.                   |
+| Container orchestration     | Tools like Docker Swarm or Kubernetes manage many containers.              |
+| Security scanning           | Use `docker scan` to detect vulnerabilities in images.                     |
+| Image signing and provenance| Use tools like Notary or `cosign` to sign and verify images.              |
+| Secrets management          | Store sensitive data securely outside of images using tools like `docker secrets`. |
+| Docker context              | Work with remote Docker hosts using different contexts.                    |
+| Custom networks             | Isolate and control communication between containers.                      |
+| Resource limits             | Use `--memory`, `--cpus` to constrain resource usage.                      |
