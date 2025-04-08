@@ -61,3 +61,53 @@ layout: default
 | **SSR (Server-Side Rendering)** | Renders the app on the server for better SEO and performance. | `ng add @nguniversal/express-engine` |
 | **Testing** | Unit and integration testing with Jasmine and Karma. | `TestBed.createComponent()` |
 | **Internationalization (i18n)** | Supports multiple languages. | `ng add @angular/localize` |
+
+## Signals
+
+| API              | Description                                                                 |
+|------------------|-----------------------------------------------------------------------------|
+| `signal()`       | Creates a reactive state signal.                                            |
+| `computed()`     | Creates a derived value that auto-updates based on dependencies.           |
+| `effect()`       | Triggers side effects when dependent signals change.                       |
+| `input()`        | Binds a signal to an `@Input()` for reactive component inputs.             |
+| `output()`       | Binds a signal to an `@Output()` to emit values reactively.                |
+| `model()`        | Two-way binding: combines `input()` and `output()` signals.                |
+| `untracked()`    | Accesses a signal value without registering it as a dependency.            |
+| `set()`          | Sets a new value for a signal.                                              |
+| `update()`       | Updates a signal’s value based on its current state.                       |
+| `asReadonly()`   | Returns a readonly version of a signal to prevent external modifications.  |
+| `isSignal()`     | Checks whether a given value is a signal.                                  |
+
+
+## `signal()`
+
+| Feature / Concept       | Description                                                                                   | Example                                                                                   |
+|-------------------------|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| `signal()`              | Creates a reactive signal (a special kind of state variable).                                 | `const counter = signal(0);`                                                              |
+| `computed()`            | Creates a derived signal that updates automatically based on other signals.                  | `const double = computed(() => counter() * 2);`                                           |
+| `effect()`              | Runs a side-effect when one or more signals change.                                           | `effect(() => console.log(counter()));`                                                   |
+| Reading a signal        | Invoke the signal like a function to read its current value.                                 | `counter()`                                                                               |
+| Writing a signal        | Use `.set()`, `.update()` or `.mutate()` to change the signal's value.                       | `counter.set(10);` / `counter.update(v => v + 1);`                                        |
+| `set()`                 | Replaces the signal's value.                                                                 | `counter.set(5);`                                                                         |
+| `update()`              | Updates the signal based on its current value.                                               | `counter.update(c => c + 1);`                                                             |
+| `mutate()`              | Mutates the value in-place (for arrays/objects) and notifies subscribers.                    | `list.mutate(arr => arr.push('item'));`                                                  |
+| `Signal` vs `BehaviorSubject` | Signals are synchronous, fine-grained, and optimized for UI.                      | Signals avoid manual subscriptions/unsubscriptions compared to RxJS subjects.            |
+| Signal Lifecycle        | Tied to component lifecycle, cleaned up automatically.                                        | No need to manually unsubscribe as with `Observable`.                                     |
+| Integration with DOM    | Used directly in templates with `signal()` properties or `computed()` values.                | `<div>{{ counter() }}</div>`                                                              |
+| Interoperability        | Works alongside existing Angular features (Inputs, Outputs, etc.)                            | Can use signals with `@Input()` and `@Output()` properties.                              |
+| Signal with Input       | Convert `@Input()` to signal via `inputSignal()` (experimental)                              | `const myInput = inputSignal(this, 'myInput');`                                           |
+| Use in Templates        | Call signal values directly in interpolation or bindings.                                    | `<span>{{ mySignal() }}</span>`                                                           |
+
+##  `effect()` 
+
+| Feature               | Description                                                                 | Example                                                                                   |
+|-----------------------|-----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| Purpose               | Registers side effects that run when dependent signals change               | `effect(() => console.log(mySignal()));`                                                  |
+| Automatic Dependency  | Tracks signal reads inside and re-runs effect when they change              |                                                                                           |
+| Cleanup Support       | Supports cleanup functions using return or `onCleanup()`                    | `effect(() => { const sub = obs$.subscribe(); return () => sub.unsubscribe(); })`         |
+| Lifecycle Aware       | Automatically destroyed when the component is destroyed                     | No need to manually unsubscribe                                                           |
+| `onCleanup()`         | Registers a cleanup function inside an effect                               | `effect(() => { onCleanup(() => console.log('cleaned up')); })`                          |
+| Multiple Dependencies | Can track multiple signals used within the effect body                      | `effect(() => console.log(signalA(), signalB()));`                                       |
+| Avoid Complex Logic   | Should not be used for complex control flows or async logic (prefer RxJS)   | Use for simple DOM updates, logging, or calling services                                  |
+| Return Value          | The return value is treated as a cleanup function                           | `return () => console.log('Effect cleanup');`                                             |
+| Execution Timing      | Executes immediately once, then again whenever any dependency changes       |                                                                                           |
