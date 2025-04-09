@@ -1,13 +1,11 @@
 ---
-title: Javascript Frameworks
+title: Angular
 layout: default
 ---
 
-# Javascript Frameworks
+# Angular
 
-## Angular Cheatsheet
-
-### 🟢 **Basic Features**
+## 🟢 **Basic Features**
 
 | Feature | Description | Example |
 |---------|-------------|---------|
@@ -25,7 +23,7 @@ layout: default
 
 ---
 
-### 🟡 **Intermediate Features**
+## 🟡 **Intermediate Features**
 
 | Feature | Description | Example |
 |---------|-------------|---------|
@@ -44,7 +42,7 @@ layout: default
 
 ---
 
-### 🔴 **Advanced Features**
+## 🔴 **Advanced Features**
 
 | Feature | Description | Example |
 |---------|-------------|---------|
