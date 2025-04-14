@@ -109,3 +109,108 @@ layout: default
 | Avoid Complex Logic   | Should not be used for complex control flows or async logic (prefer RxJS)   | Use for simple DOM updates, logging, or calling services                                  |
 | Return Value          | The return value is treated as a cleanup function                           | `return () => console.log('Effect cleanup');`                                             |
 | Execution Timing      | Executes immediately once, then again whenever any dependency changes       |                                                                                           |
+
+## Angular docs notes
+- signal()
+    - const val = signal('default value')
+    - val()
+    - val.set('new value')
+    - val.update(prevValue => prevValue + 1)
+    - works with onPush
+    - can have an equality function to decide if we need to rerender
+- computed()
+    - read only, changes when any of the used signals change
+    - const comp = computed(()=> val().toUpperCase())
+- inject(MyProvider)
+    - inject(ElementRef)
+- effect((onCleanup) => {})
+    - runs at least once
+    - async
+    - tracks dependencies as computed() does
+    - can be used only within the injection context: within a component, directive or srevice constructor OR use the Injector
+    - cleaned up automatically
+    - can be cleaned up by calling .destroy()
+    - untracked(mySignal): reads the signal value without creating a dependency on it OR if a function is given as a paramter, it won't track that functions' signals as dependency
+    - onCleanup: runs before the next effect or when the effect is destroyed
+- input.required<number>(defValue, {transform: trimString, alias: 'attrName'})
+    - @Input is still supported
+    - @Component() may have an inputs config which shows what inputs were inhertied from a base component
+- model(defValue)
+    - const myModel = model(): a myModelChanged output is automatically created
+    - can be customized as the input()
+- output()
+    - const myOutput = output<void>({alias: 'myAlias'}) -> myOutput.emit()
+    - when creating a component dynamically, you can subscribe() to the events manually
+        - these subscriptions will be cleaned up automaically
+        - you can still .unsubscribe()
+    - @Output is still supported
+    - @Component might have an outputs config which shows what outputs were inherited from a base component
+- viewChild(CompName)
+    - viewChild<ElementRef<HTMLButtonElement>>('save') where save is #save in the template
+- viewChildren(CompName)
+- contentChild(CompName): from inside <ng-content>
+    - {descendants: true}: allow to search for not direct children
+- contentChildren(CompName): from inside <ng-content>
+- @ViewChild, @ContentChild etc are still supported
+- directive template reference: the directive must use the exportAs config
+- programatically rendering components:
+    - <ng-container *ngComponentOutlet="getComp()" /> where getComp() returns a component class name: creates the comp in the container
+    - OR: inject(ViewContainerRef) then viewContainer.createComponent(MyComp): creates the component as the next sibling
+    - both can be lazy loaded
+
+- @if, @else-if, @else, @for, @empty, @switch, @let
+- @defer{ <my-comp></my-comp> }: create a separate js file for the comp and load only on some condition
+    - must be standalone, must not be referenced in the same file e.g. ViewChild
+    - by default it loads then the browser becomes idle
+    - @placeholder: what is shown before @defer loads the content, can set minimum time to show in case @defer is too fast
+    - @loading: while loading, can set minimum time to show and after that describes how much time after the loading started we should show the @loading block
+    - @error: when the @defer fails
+    - condition - on: idle, viewport, interaction, hover, immediate, timer
+    - condition - when: custom callback
+    - prefetch: we can define if we want to preload the js on some cindition before we show the content
+    - for SSG and SSR @placeholder is rendered by default but it can be changed to @defer
+- pipe: by default they are pure -> they are triggered only when their input changes
+- <ng-template></ng-template>: a reuseable template
+    - they are not rendered by default, so you needto reference them:
+        - <ng-template #myFragment></ng-template>
+        - @ViewChild(TemplateRef) myFragment: TemplateRef
+        - @ViewChild('fragmentOne', {read: TemplateRef}) fragmentOne: TemplateRef
+        - inject(TemplateRef): only for directives if they are on the template
+    - render:
+        - <ng-container *ngTemplateOutlet="myFragment"></ng-container>
+        - OR: this.viewContainer.createEmbeddedView(this.fragment);
+    - adding some parameters: 
+        - <ng-template let-pizzaTopping="topping"></ng-template>
+        - then: [ngTemplateOutletContext]="{topping: 'onion'}"
+        - OR: this.viewContainer.createEmbeddedView(this.myFragment, {topping: 'onion'})
+
+- ProviderToken: locate by component and directive providers
+- component selectors: my-comp, [type="reset"], .my-class, :not()
+- style scoping: emulated, shadow dom, none
+- content projection: <ng-content select="card-title">Default content to show</ng-content>
+    - it becomes: <card-title>...</card-title> in the parent component's tempalte
+        - OR: <h3 ngProjectAs="card-title">My title</h3>
+    - if you have an ng-content without a select attribute, all other injected content are rendered in that
+- you can bind stuff on the host element in the @Component's config using the host: {} config
+    - OR: @Hostbinding, @Hostlistener on the properties of the component
+- OnPush is triggered when:
+    - an input() changes which is binded in the template
+    - event listener in the component
+    - the component is ChangeDetextorRef.markForCheck or something that wraps it like AsyncPipe
+- create custom elements: use the package @angular/elements
+
+
+### Angular Component Lifecycle Hooks (Complete)
+
+| Hook Name                 | Timing of Execution                                                  | Purpose                                                                 |
+|---------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------|
+| `ngOnChanges(changes)`    | Before `ngOnInit()`, when any bound `@Input()` property changes      | Respond to changes in input properties.                                |
+| `ngOnInit()`              | Once after the first `ngOnChanges()`                                 | Initialize the component; ideal for fetching data or setting up state. |
+| `ngDoCheck()`             | During every change detection cycle                                  | Custom change detection beyond default mechanisms.                     |
+| `ngAfterContentInit()`    | Once after content (e.g. `<ng-content>`) is projected into the view  | Act after projected content is initialized.                            |
+| `ngAfterContentChecked()` | After every check of projected content                               | Respond after Angular checks the content projected into the component. |
+| `ngAfterViewInit()`       | Once after component's view (and its children) are initialized       | Perform DOM-dependent logic or interact with child views.              |
+| `ngAfterViewChecked()`    | After every check of component’s and children’s views                | Respond after Angular checks the component view and child views.       |
+| `ngOnDestroy()`           | Just before Angular destroys the component                           | Cleanup work like unsubscribing from observables or detaching handlers.|
+| `afterNextRender()`       | Runs once the next time that all components have been rendered to the DOM. | Cleanup work like unsubscribing from observables or detaching handlers.|
+| `afterRender()`           | Runs every time all components have been rendered to the DOM.        | Cleanup work like unsubscribing from observables or detaching handlers.|
