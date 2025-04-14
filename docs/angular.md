@@ -127,7 +127,7 @@ layout: default
     - runs at least once
     - async
     - tracks dependencies as computed() does
-    - can be used only within the injection context: within a component, directive or srevice constructor OR use the Injector
+    - can be used only within the injection context: within a component, directive or service constructor OR use the Injector
     - cleaned up automatically
     - can be cleaned up by calling .destroy()
     - untracked(mySignal): reads the signal value without creating a dependency on it OR if a function is given as a paramter, it won't track that functions' signals as dependency
@@ -198,6 +198,17 @@ layout: default
     - event listener in the component
     - the component is ChangeDetextorRef.markForCheck or something that wraps it like AsyncPipe
 - create custom elements: use the package @angular/elements
+- NgOptimizedImage: ensures that the LCP is prioritized e.g. sets fetchpriority on the <img>
+    - fill: when you don't know the exact size of the image
+    - a lot of other stuff https://angular.dev/guide/image-optimization
+- @Injectable:
+    - definition at:
+        - root level: preferred, can be tree-shaken
+        - component level
+        - app level with ApplicationConfig
+    - [{ provide: Logger, useClass: Logger }]
+        - or: useExisting, useFactory, useValue
+    - InjectionToken for non-class deps: const APP_CONFIG = new InjectionToken<AppConfig>('app.config description')
 
 
 ### Angular Component Lifecycle Hooks (Complete)
