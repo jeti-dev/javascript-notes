@@ -211,6 +211,17 @@ layout: default
     - InjectionToken for non-class deps: const APP_CONFIG = new InjectionToken<AppConfig>('app.config description')
     - lightweight injection token: Some stuff in a library can be added to the parent code even if that stuff is not used. e.g. @ContentChild (a card comp has an optional header comp)
         - solution: Don't use the header comp directly as an injection token, but use an abstract class that is implemented by the real header comp.
+- route guards: canActivate, canActivateChild, canDeactivate, canMatch, resolve, canLoad
+- reactive forms
+    - FormControl, FormGroup, FormRecord, FormArray, FormBuilder, Validators
+    - form.setValue(obj): replace the entire object
+    - form.patchValue(obj): only the defined props in the param are updated 
+- template-driven forms
+    - NgModel, NgForm, NgModelGroup
+    - valid, invalid, dirty, pristine, touched, untouched
+    - native HTML validation
+- http interceptors
+    - context: we can set info which is for the interceptors and not for the backend
 
 ### Angular Component Lifecycle Hooks (Complete)
 
@@ -258,3 +269,4 @@ layout: default
 
 - Use `viewProviders` for internal-only services (e.g., UI state, internal logic).
 - Use `providers` when the service must be available to content projected via `<ng-content>`.
+
