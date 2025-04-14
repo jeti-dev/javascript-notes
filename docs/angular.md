@@ -209,7 +209,8 @@ layout: default
     - [{ provide: Logger, useClass: Logger }]
         - or: useExisting, useFactory, useValue
     - InjectionToken for non-class deps: const APP_CONFIG = new InjectionToken<AppConfig>('app.config description')
-
+    - lightweight injection token: Some stuff in a library can be added to the parent code even if that stuff is not used. e.g. @ContentChild (a card comp has an optional header comp)
+        - solution: Don't use the header comp directly as an injection token, but use an abstract class that is implemented by the real header comp.
 
 ### Angular Component Lifecycle Hooks (Complete)
 
@@ -225,3 +226,35 @@ layout: default
 | `ngOnDestroy()`           | Just before Angular destroys the component                           | Cleanup work like unsubscribing from observables or detaching handlers.|
 | `afterNextRender()`       | Runs once the next time that all components have been rendered to the DOM. | Cleanup work like unsubscribing from observables or detaching handlers.|
 | `afterRender()`           | Runs every time all components have been rendered to the DOM.        | Cleanup work like unsubscribing from observables or detaching handlers.|
+
+### Hierarchical Injectors in Angular
+
+| Level                | Description                                                                 | Typical Use Cases                                         | Notes                                                                 |
+|----------------------|-----------------------------------------------------------------------------|-----------------------------------------------------------|-----------------------------------------------------------------------|
+| **Platform Injector** | Created by Angular itself, shared across all Angular applications           | Rarely used directly by developers                        | Provides services like DOM-related utilities                          |
+| **Root Injector**     | Created by `bootstrapApplication()` or `AppModule`                         | App-wide singleton services                               | Services provided in `@Injectable({ providedIn: 'root' })` are here   |
+| **Module Injector**   | Injector created for lazy-loaded feature modules                           | Services needed only in a lazy-loaded module              | Services are destroyed when module is unloaded                        |
+| **Component Injector**| Unique injector per component instance                                      | Provide component-specific or overridden service instances| Created via `providers: [...]` in component metadata                  |
+| **Directive Injector**| Exists for directives declared on a host element                           | Provide directive-specific services                       | Useful for customizing behavior via DI in shared directives           |
+| **Element Injector**  | Created for each DOM element with a directive/component                    | Platform-specific internal mechanics                      | Rarely interacted with directly                                       |
+
+
+- Angular injectors form a tree structure (hierarchy), and child injectors can **override** parent-provided services.
+- Angular resolves dependencies by **walking up the injector tree** until it finds the required provider.
+- Providing a service at a **lower level** creates a **new instance** and **overrides** higher-level singleton instances.
+
+### Comparison: `providers` vs `viewProviders` in Angular
+
+| Feature                  | `providers`                                              | `viewProviders`                                          |
+|--------------------------|----------------------------------------------------------|----------------------------------------------------------|
+| **Scope**                | Available to the component, its content children, and view children | Available only to the component and its view children     |
+| **Affects Content Projection (`<ng-content>`)** | ✅ Yes                                                   | ❌ No                                                     |
+| **Used In**              | `@Component`, `@Directive`, NgModules                    | Only in `@Component`                                     |
+| **Override Capability**  | Can override services from parent injectors              | Can also override, but only within the view hierarchy     |
+| **Typical Use Case**     | When projected content also needs access to the service  | When service should be isolated from projected content    |
+| **Example Use Case**     | Shared form services between component and projected content | Internal service for template logic only                 |
+| **Syntax**               | `providers: [MyService]`                                 | `viewProviders: [MyService]`                             |
+| **Visibility**           | Component + Content + View                              | Component + View only (not visible to projected content)  |
+
+- Use `viewProviders` for internal-only services (e.g., UI state, internal logic).
+- Use `providers` when the service must be available to content projected via `<ng-content>`.
