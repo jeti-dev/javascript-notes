@@ -116,7 +116,6 @@ layout: default
     - val()
     - val.set('new value')
     - val.update(prevValue => prevValue + 1)
-    - works with onPush
     - can have an equality function to decide if we need to rerender
 - computed()
     - read only, changes when any of the used signals change
@@ -222,8 +221,14 @@ layout: default
     - native HTML validation
 - http interceptors
     - context: we can set info which is for the interceptors and not for the backend
+- SSR
+    - browser APIs are not available on the server so they should be used in afterRender and afterNextRender
+- SSG works too
+- hydration: when the server rendered DOM is kept by Angular and not destroyed and recreated to work with Angular
+- zone pollution: when tasks or microstasks don't chage the UI -> the change detection should not run
+    - use ngZone.runOutsideAngular(), ngZone.isInAngularZone(), ngZone.run()
 
-### Angular Component Lifecycle Hooks (Complete)
+## Angular Component Lifecycle Hooks (Complete)
 
 | Hook Name                 | Timing of Execution                                                  | Purpose                                                                 |
 |---------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------|
@@ -238,7 +243,7 @@ layout: default
 | `afterNextRender()`       | Runs once the next time that all components have been rendered to the DOM. | Cleanup work like unsubscribing from observables or detaching handlers.|
 | `afterRender()`           | Runs every time all components have been rendered to the DOM.        | Cleanup work like unsubscribing from observables or detaching handlers.|
 
-### Hierarchical Injectors in Angular
+## Hierarchical Injectors in Angular
 
 | Level                | Description                                                                 | Typical Use Cases                                         | Notes                                                                 |
 |----------------------|-----------------------------------------------------------------------------|-----------------------------------------------------------|-----------------------------------------------------------------------|
@@ -254,7 +259,7 @@ layout: default
 - Angular resolves dependencies by **walking up the injector tree** until it finds the required provider.
 - Providing a service at a **lower level** creates a **new instance** and **overrides** higher-level singleton instances.
 
-### Comparison: `providers` vs `viewProviders` in Angular
+## Comparison: `providers` vs `viewProviders` in Angular
 
 | Feature                  | `providers`                                              | `viewProviders`                                          |
 |--------------------------|----------------------------------------------------------|----------------------------------------------------------|
@@ -269,4 +274,95 @@ layout: default
 
 - Use `viewProviders` for internal-only services (e.g., UI state, internal logic).
 - Use `providers` when the service must be available to content projected via `<ng-content>`.
+
+## Angular Testing Cheatsheet
+
+| Feature / Class / Method            | Description                                                                 |
+|------------------------------------|-----------------------------------------------------------------------------|
+| `TestBed`                          | Primary Angular testing API for configuring and initializing test modules. |
+| `ComponentFixture`                 | Wrapper around a component and its DOM for testing.                        |
+| `fakeAsync()`                      | Simulates asynchronous passage of time in a synchronous test.              |
+| `tick()`                           | Moves the virtual clock forward in `fakeAsync()` tests.                    |
+| `async()`                          | Waits for all asynchronous tasks to complete before continuing.            |
+| `flush()`                          | Flushes all pending timers in `fakeAsync()` zone.                          |
+| `waitForAsync()`                   | Waits for async operations, including Promises and observables.            |
+| `detectChanges()` (on fixture)     | Triggers change detection manually.                                        |
+| `autoDetectChanges()`              | Automatically detects changes in a fixture.                                |
+| `By.css()`                         | Utility to query DOM elements by CSS selectors.                            |
+| `DebugElement`                     | Abstraction around a DOM element with access to native element and data.   |
+| `spyOn()`                          | Creates a spy to monitor or stub method calls.                             |
+| `createComponent()` (TestBed)      | Creates a component instance for testing.                                  |
+| `configureTestingModule()`         | Configures test module with declarations, providers, etc.                  |
+| `inject()`                         | Injects a service or dependency for testing purposes.                      |
+| `HttpTestingController`            | Mocks and verifies HTTP requests made by `HttpClient`.                     |
+| `RouterTestingModule`              | Sets up routing configuration for unit tests.                              |
+| `HarnessLoader` (Angular Material) | Provides access to component harnesses in Angular Material testing.        |
+| `jasmine.createSpyObj()`           | Creates a mock object with spy methods.                                    |
+| `TestBed.inject()`                 | Preferred method to inject services in Angular 9+.                         |
+| `flushMicrotasks()`                | Flushes pending microtasks like resolved Promises.                         |
+| `whenStable()`                     | Waits for all pending async tasks (e.g. `ngModel`, Promises) to resolve    | Use when component has async changes (e.g. `ngModel`)  |
+
+
+- Use `fakeAsync` and `tick` when testing `setTimeout`, intervals, or Promises.
+- Use `HttpClientTestingModule` + `HttpTestingController` to isolate HTTP requests.
+- Prefer `TestBed.inject()` over legacy `inject()` for cleaner DI.
+
+## `fakeAsync` vs `waitForAsync` in Angular Testing
+
+| Feature         | `fakeAsync()`                                        | `waitForAsync()`                                      |
+|----------------|------------------------------------------------------|--------------------------------------------------------|
+| Purpose         | Simulates asynchronous passage of time in a **synchronous** manner | Waits for real asynchronous tasks to complete (like `Promises`) |
+| Use Case        | Ideal for testing code that uses `setTimeout`, `setInterval`, or `Promise` with time manipulation (`tick()`) | Ideal for testing `async` code (e.g., `HttpClient`, component async init) |
+| Time Control    | Provides precise control over time using `tick()`   | Time progresses naturally – no manual control         |
+| Execution Style | Synchronous test code that mimics async behavior    | Asynchronous test setup and execution                 |
+| Requires `tick()`? | Yes                                                 | No                                                     |
+| Common With     | `tick()`, `flush()`, `flushMicrotasks()`            | Promises, `fixture.whenStable()`                      |
+
+```ts
+it('should delay message', fakeAsync(() => {
+  let message = '';
+  setTimeout(() => message = 'hello', 1000);
+  expect(message).toBe('');
+  tick(1000);
+  expect(message).toBe('hello');
+}));
+
+it('should resolve async data', waitForAsync(() => {
+  myService.getData().then(data => {
+    expect(data).toEqual(expectedData);
+  });
+}));
+```
+
+## Angular Internationalization (i18n) - Technical Overview
+
+
+1. Add Angular localization support using the Angular CLI.
+2. Mark translatable texts in templates using the `i18n` attribute.
+3. Extract the default messages to an XLF file using the Angular CLI.
+4. Create a copy of the extracted file for each target language (e.g., German).
+5. Translate the content in the copied language files.
+6. Update `angular.json` to include each locale and its translation file path.
+7. Build the application using the `--localize` flag to generate per-locale builds.
+8. Deploy the builds to appropriate language-specific routes or subdirectories.
+9. (Optional) Register locale data and configure `LOCALE_ID` if needed for formatting.
+
+
+| Feature / Tool               | Description                                                                                 | Usage / Command / API                                                                 |
+|-----------------------------|---------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `@angular/localize`         | Core package enabling internationalization in Angular apps                                  | Install with `ng add @angular/localize`                                               |
+| i18n attribute               | Marks a text node or attribute for translation                                              | `<h1 i18n="@@homeTitle">Welcome</h1>`                                                 |
+| `ng extract-i18n`           | Extracts translatable text from source code into a translation file                         | `ng extract-i18n --output-path src/locale`                                             |
+| XLIFF / XMB formats         | Supported translation file formats                                                          | XLIFF (default): `messages.xlf`, XMB: `messages.xmb`                                  |
+| Translation files           | Contain the actual translations for different locales                                       | e.g., `messages.fr.xlf`, `messages.de.xlf`                                            |
+| `i18n-id` (`@@id`)          | Custom ID for translation unit                                                              | `<p i18n="@@greeting">Hello</p>`                                                       |
+| `i18n-description`          | Description for translators                                                                 | `<p i18n="site greeting|A friendly greeting.">Hello</p>`                              |
+| `ng build` with `--localize`| Builds the app with multiple locale variants                                                | `ng build --localize`                                                                 |
+| `locales` in `angular.json` | Defines the supported locales and their translation files                                   | See `"locales"` under the `"i18n"` section in `angular.json`                          |
+| `$localize` tag             | JavaScript tag for runtime translation (needed for dynamic content)                         | ```$localize`: Hello ${name}`;```                                                      |
+| ICU expressions             | Handles pluralization and gender cases                                                      | `{{ count | i18nPlural: pluralMap }}`                                                 |
+| `LOCALE_ID` token           | Angular DI token used to set the current locale                                             | Provide it manually or via i18n configuration                                         |
+| `registerLocaleData()`     | Registers locale-specific data (e.g., for dates and currencies)                             | `import localeFr from '@angular/common/locales/fr';`<br>`registerLocaleData(localeFr);`|
+| AOT requirement             | i18n requires AOT compilation (Ivy is supported)                                             | Used automatically with `ng build --localize`                                         |
+| `BrowserModule` i18n config | Must include i18n configuration during app bootstrapping                                    | Provided through CLI or manually in providers                                         |
 
