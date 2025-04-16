@@ -48,3 +48,42 @@
 | Domain Driven Design (DDD) | Structure your app into meaningful domain modules.                |
 | Testing (E2E & Mocks) | Advanced testing strategies using Jest and Supertest.                   |
 | Dynamic Modules   | Modules that are configured dynamically with different options.             |
+
+## Notes of the documentation
+### Controllers
+- express or fastify is under the hood
+- objects and arrays are automatically serialized on return from a controller method
+    - 200 for GET, 201 for POST
+    - you can use the underlying platform res with @Res - otherwise you don't need to use @Res!
+    - set passthrough: use the underlying @Res + the default Nest behavior
+- instead or @Req we can use @Param, @Body, @Query, @Headers
+- change status code: @HttpCode on controller method
+- custom res header: @Header
+- redirect: @Redirect
+- from an async controller method, you must return a Promise -> just set the return type and return a simple value, no need for creating a promise
+
+### Providers
+- @Optional can indicate a dependency is optional
+- injection type: constructor, property (to avoid passing dependency to the parent class)
+
+### Modules
+- imports: modules which export providers this module uses
+- exports: providers that I export for other modules to use
+- a module can inject providers e.g. to configure them
+- @Global on the module: makes the modul automatically global
+- dynamic module: config a module at runtime
+
+### Middleware
+- called before the route handler
+- @Injectable
+- class based (NestMiddleware interface) or function
+- apply it to a module (NestModule interface) and config to which routes to apply
+- global middleware: app.use() after create
+
+### Exception filters
+- catches unhandled exceptions and return a user friendly message
+- use the HttpException class with statusCode and message
+    - there is a property called cause that is not returned but can be used for logging
+- custom exception filter: implement ExceptionFilter interface + add @Catch(HttpException)
+- bind a filter: @UseFilters(MyFilter)
+- if you want to only customize the base filter a bit: extend it and call super.catch() in the end
