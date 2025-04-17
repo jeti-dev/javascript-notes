@@ -109,3 +109,26 @@
 ### Custom decorators
 - e.g. get the User object as a controller method parameter from the req object
 - applyDecorators can group decorators into 1
+
+### Custom providers
+- {
+    provide: MyClass/string/symbol/enum,
+    useValue: whatever,
+    useClass: whatever,
+    useFactory: factory function to create stuff dynamically,
+    useExisting: whatever2 -> aliasing an existing dependency
+}
+- the token or the whole object can be exported from the module to be used by other modules
+
+### Async providers
+- use an async function for useFactory
+
+### Dynamic modules
+- e.g. you have a config module that should behave differently in different environments -> you need to configure the module somehow
+- MyModule.register(config): it must return a DynamicModule object which has an extra property called module which is the module class (MyModule)
+    - then we add this config object as a custom provider to the module's providers array so it can be injected into our services
+- register: you would configure the same module multiple times in a different way in the app
+- forRoot: you would configure the module once and reuse that module
+- forFeature: you want to use the config set by a forRoot but want to customize it a bit
+- these have async versions too
+- ConfigurableModuleBuilder: helps with writing configurable modules
