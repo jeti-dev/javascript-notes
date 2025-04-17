@@ -87,3 +87,25 @@
 - custom exception filter: implement ExceptionFilter interface + add @Catch(HttpException)
 - bind a filter: @UseFilters(MyFilter)
 - if you want to only customize the base filter a bit: extend it and call super.catch() in the end
+
+### Pipes
+- PipeTransform interface
+- transform data, validate data
+- e.g. @Param('id', ParseIntPipe) but we could pass an instance that we configured
+- pipes throw an exception on receiving null or undefined -> use the DefaultValuePipe
+
+### Guards
+- @Injectable + CanActivate interface
+- authorization
+- executed after all middleware but before any interceptor or pipe
+- setting custom metadata e.g. roles: const Roles = Reflector.createDecorator<string[]>() (or @SetMetadata()) then use it like @Roles(['admin'])
+    - get the metadata value in the guard: this.reflector.get(Roles, context.getHandler())
+
+### Interceptors
+- @Injectable + NestInterceptor interface
+- can run code before or after the route handler
+- usage: @UseInterceptors(LoggingInterceptor)
+
+### Custom decorators
+- e.g. get the User object as a controller method parameter from the req object
+- applyDecorators can group decorators into 1
