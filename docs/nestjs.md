@@ -132,3 +132,26 @@
 - forFeature: you want to use the config set by a forRoot but want to customize it a bit
 - these have async versions too
 - ConfigurableModuleBuilder: helps with writing configurable modules
+
+### Injection scopes
+- by default everything is shared across incoming requests -> we might not want that every time
+- scopes:
+    - default: one instance in the whole app
+    - request: one instance per request
+    - transient: create a new instance when it's injected
+- usage: "scope" config in @Injectable or "scope" in the custom provider object
+- @INQUIRER: inject the class that our @Injectable was injected into -> e.g. log the class name which is using our logger service
+- durable providers: when we have a multi tenant app (e.g. mulitiple companies) we don't want to request scope (e.g. beacause of configs) the everything -> create durable providers that keep tenant specific sub trees
+
+### Circular dependency
+-  @Inject(forwardRef(() => ServiceA)) and do the same in ServiceA for ServiceB
+- OR in the @Module: imports: [forwardRef(() => CatsModule)] and do the same for the other module
+
+### Module reference
+- you can injest ModuleRef in the constructor then you can get stuff from the module e.g. the service objects
+- set {strict: false} to get global providers
+- moduleRef.resolve(MyService): get transient or request scoped service
+    - you can get the same instance every time from resolve() if you set the contextId
+    - to get a request scoped provider, we need to register it to a context first
+    - we can use the ContextIdFactory.getByRequest(req) to get the contextId
+- moduleRef.create(MyService): create dynamicaly a provider which wast not in the providers array of the module
