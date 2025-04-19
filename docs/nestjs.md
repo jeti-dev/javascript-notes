@@ -155,3 +155,54 @@
     - to get a request scoped provider, we need to register it to a context first
     - we can use the ContextIdFactory.getByRequest(req) to get the contextId
 - moduleRef.create(MyService): create dynamicaly a provider which wast not in the providers array of the module
+
+### Lazy loading modules
+- by default modules are eager loaded -> but it can be a problem in serverless apps where cold start is crucial
+    - if the startup time is not crucial, this feature is not really useful
+- LazyModuleLoader can be injected then its load() method can load a module -> moduleRef.get(MyService) can be used to get a provider from the lazy loaded module
+- a lazy loaded module can't be global -> it doesn't make sense
+
+### Execution context
+- contexts e.g. http, microservice, websocket, rpc, graphql
+    - host.getType() returns this value
+- ArgumentsHost: methods for getting the arguments passed to the handler
+    - e.g. when using express it contains [request, response, next]
+    - host.getArgs(), host.getArgByIndex()
+    - switchToRpc(), swtichToHttp(), etc. returns the associated AegumentsHost e.g. HttpArgumentsHost then you can use e.g. ctx.getRequest<MyReqType>()
+- ExecutionContext extends ArgumentsHost
+    -    getClass(), getHandler() refers to the method and controller which is going to be called -> we can get metadata we set on these
+    - Reflector: can be used to get the metadata       
+        - this.reflector.get(Roles, context.getHandler())
+        - this.reflector.get(Roles, context.getClass())
+
+### Lifecycle events
+- steps:
+    - onModuleInit() (can be async): Called once the host module's dependencies have been resolved.
+    - onApplicationBootstrap() (can be async): Called once all modules have been initialized, but before listening for connections.
+    - onModuleDestroy(): Called after a termination signal (e.g., SIGTERM) has been received.
+    - beforeApplicationShutdown(): Called after all onModuleDestroy() handlers have completed (Promises resolved or rejected);
+    once complete (Promises resolved or rejected), all existing connections will be closed (app.close() called).
+    - onApplicationShutdown(): Called after connections close (app.close() resolves).
+- onModuleDestroy, beforeApplicationShutdown, onApplicationShutdown: if you're not calling app.close() explicitly, you must opt-in to make them work with system signals such as SIGTERM
+    - we must also enable them: enableShutdownHooks()
+- they are interfaces so we need to implement in our controller, provider or module
+
+### Discovery service
+- we can get providers, controllers, metadata dynamically runtime
+- mostly for writing extensible frameworks, plugins etc
+- DiscoveryModule + DiscoveryService
+
+### Platform agnosticism
+- express vs fastify, http vs microservice vs websocket etc
+
+### Testing
+- @nestjs/testing, Jest is the default
+- Test.createTestingModule()
+    - useMocker(): helps mocking dependencies
+    - overrideModule(RealModule).useModule(MockedModule)
+- resolve(): get request or transient scoped dependency
+- mock global dependency: use useExisting not useClass + provide the class after that
+- use ContextIdFactory
+- e2e: createNestApplication() to create a full Nest runtime
+
+
