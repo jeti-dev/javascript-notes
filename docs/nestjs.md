@@ -205,4 +205,42 @@
 - use ContextIdFactory
 - e2e: createNestApplication() to create a full Nest runtime
 
+### Configuration
+- a dedicated package to deal with .env files, uses dotenv
+- ConfigModule.forRoot()
+    - use the load config property to use env factory functions in which we can make some validations too
+    - there is a cache config option
+    - validationSchema config: use with Joi for validation
+        - allowUnknown and abortEarly configs
+    - OR use a custom validate function
+    - create a configuration namespace with registerAs('namespaceName', ()=>{}) then you can load it by the name or inject it
+        - we can use asProvider() of a namespace config to use that as a config provider for another module's forRootAsync
+- ConfigModule.forFeature() for feature modules
+- before bootstrapping we can use --env-file (Node v20)
+- inject ConfigService to get the values
+    - use the infer config property to infer the types
+    - get nested values by using dot notation
+- await ConfigModule.envVariablesLoaded: use this if a module config depends on loading the .env file
+- ConditionalModule.registerWhen(FooModule, 'USE_FOO'): this is part of a module's import and that module is only loaded for FooModule whtn the USE_FOO env var is true; the condition can be a function too
+    - the ConfigModule must be used for this to work
+- expanded variable are supported: SUPPORT_EMAIL=support@${APP_URL} (uses dotenv-epanded)
+    - set expandVariables to true in the ConfigModule
+- usage in main.ts: app.get(ConfigService)
 
+### Validation
+- pipes: Validation, ParseInt, ParseBool, ParseArray, ParseUUID
+- class-validator + class-transformer
+- use classes not interfaces as DTOs
+- steps to apply:
+    - app.useGlobalPipes(new ValidationPipe()) to register globally
+    - use the DTOs (or primitives) as the types of e.g. @Body
+    - in the DTOs use decorators for the properties e.g. @IsEmail() from class-validator
+- some config options:
+    - whitelist: remove properties not having a decorator in the DTO
+    - transform: transform the incoming object to the DTO
+- helper types:
+    - create a type for update from the create DTO: PartialType makes the properties optional
+    - PickType: pick a few properties
+    - OmitType: remove a few properties
+    - IntersectionType: combine multiple types
+- when the DTO is an array, use ParseArrayPipe: @Body(new ParseArrayPipe({ items: CreateUserDto })) createUserDtos: CreateUserDto[]
