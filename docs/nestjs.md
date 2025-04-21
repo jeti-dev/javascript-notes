@@ -290,3 +290,37 @@
 - add a name prop to those above to handle them programatically
     - inject SchedulerRegistry and use the name to get them
     - SchedulerRegistry addCronJob(), interval, timeout
+
+### Queues
+- supports BullMQ (Redis under the hood)
+- producer: @InjectQueue('audio') private audioQueue: Queue
+- consumer: @Processor('audio') on a class that extends WorkerHost
+    - @OnWorkerEvent('active') for events in a queue
+
+### Logging
+- has a Logger class
+- config is set here: await NestFactory.create(AppModule, {} // config)
+    - disable, colors, prefix, json, timestamp etc.
+- levels: log, fatal, error, warn, debug, verbose
+- usually we create an instance of the Logger class in each service
+- custom logger: implement the LoggerService 
+    - OR extend the original and override the methods
+- we can also use DI with the logger
+
+### Cookies
+- cookie-parser is used (or @fastify/cookie)
+- app.use(cookieParser())
+    - we can config secret and options (for cookie.parse)
+- result: req.cookies and req.signedCookies
+- send cookie: response.cookie()
+
+### Events
+- EventEmitterModule from a dedicated package (uses EventEmitter2)
+- inject EventEmitter2 to emit
+    - use waitUntilReady to make the available to not trigger it before or during the onApplicationBootstrap lifecycle hook
+- listen to an event with @OnEvent('order.created')
+
+### Compression
+- usually a reverse proxy (e.g. Nginx) is used for this
+- compression or @fastify/compress
+- app.use(compression())
