@@ -244,3 +244,49 @@
     - OmitType: remove a few properties
     - IntersectionType: combine multiple types
 - when the DTO is an array, use ParseArrayPipe: @Body(new ParseArrayPipe({ items: CreateUserDto })) createUserDtos: CreateUserDto[]
+
+### Caching
+- a dedicated package + cache-manager
+- by default stuff is stored in memory but it can be changed
+- CacheModule.register()
+    - default TTL is 0 (never expires)
+- @Inject(CACHE_MANAGER) private cacheManager: Cache
+- async set, get, del and clear methods
+- @UseInterceptors(CacheInterceptor) to cache GET responses which don't se the native @Res
+- if it's globally enabled, CacheKey is based on the route path
+    - we can overwrite @CacheTTL and @CacheKey
+- not tracking by URL: extend CacheInterceptor and override trackBy
+
+### Serialization
+- ClassSerializerInterceptor + class-transformer
+- @UseInterceptors(ClassSerializerInterceptor)
+- e.g. @Exclude password in the response type class
+    - the return type must be an instance of our class
+    - OR use @UseInterceptors(ClassSerializerInterceptor) which creates an instance from our plain object to our return type class
+- @Expose: alias a property name or create a getter
+- @Transform: e.g. return the name of a child object and not the object itself
+- @SerializeOptions on the route to config the interceptor
+
+### Versioning
+- use different versions of the controllers or individual routes
+- URI (default), header, media type (Accept header like Accept: application/json;v=2), custom (create an extractor function, the requester might send an array of e.g. numbers)
+- app.enableVersioning({type: VersioningType.URI})
+- setting the version:
+    - @Controller({version: '1'})
+    - @Version('1') on a route
+    - VERSION_NEUTRAL is version doesn't matter
+- you can set default level(s) through the app variable
+- middlewares can be versioned too through MiddlewareConsumer.forRoutes() in a module
+
+### Task scheduling
+- like cron
+- ScheduleModule
+- use @Cron() on the method
+    - the method will be automatically wrapped in a try-catch
+- CronExpression.EVERY_30_SECONDS enum for common stuff
+- we can create a cron job dynamically by using the Dynamic API
+- @Interval(10000) on a method (automatically wrapped in try-catch)
+- @Timeout(5000) (also in try-catch)
+- add a name prop to those above to handle them programatically
+    - inject SchedulerRegistry and use the name to get them
+    - SchedulerRegistry addCronJob(), interval, timeout
