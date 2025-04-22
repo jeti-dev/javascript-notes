@@ -324,3 +324,45 @@
 - usually a reverse proxy (e.g. Nginx) is used for this
 - compression or @fastify/compress
 - app.use(compression())
+
+### File upload
+- uses the package multer, POST request must be multipart/form-data, doesn't work with Fastify
+- use @UseInterceptors(FileInterceptor('file')) on controller methond and get the file using @UploadedFile() file: Express.Multer.File as an argument
+- ParseFilePipe for validating the file
+- use @UseInterceptors(FilesInterceptor('files')) and @UploadedFiles() in case of an array of files (single field name)
+    - if there are more than 1 field names, use @UseInterceptors(FileFieldsInterceptor([{ name: 'avatar', maxCount: 1 },{ name: 'background', maxCount: 1 },]))
+    - if there us no field name: @UseInterceptors(AnyFilesInterceptor())
+- allow multipart/form-data but disable files beind uploaded: @UseInterceptors(NoFilesInterceptor())
+
+### Streaming files
+- use StreamableFile and pass a Buffer or a Stream
+
+### HTTP module
+- HttpModule and HttpService, uses axios
+
+### Session
+- uses express-session, apply its middleware globally
+    - @fastify/secure-session for fastify
+- read the value e.g. request.session.visits
+    - or @Session() session: Record<string, any> on an argument
+
+### Model View Controller
+- we have to install a tempalte engine e.g. hbs
+    - for fastify: @fastify/static @fastify/view
+- we have to set
+    - useStaticAssets
+    - setBaseViewsDir: where our views are
+    - setViewEngine
+- use @Render('index') no a controller method
+    - or use res.render() to dynamically return view on the same route
+
+### Performance (Fastify)
+- @nestjs/platform-fastify
+- use FastifyAdapter when calling NestFactory.create()
+
+### Server-Sent Events
+- use @Sse('sse') on a controller method
+- must return an Observable stream
+- on the FE:
+    - new EventSource('/sse')
+    - eventSource.onmessage(cb)
