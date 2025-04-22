@@ -366,3 +366,19 @@
 - on the FE:
     - new EventSource('/sse')
     - eventSource.onmessage(cb)
+
+### Database
+- tight integration with TypeORM, Sequelize and Mongoose
+- Repository pattern (TypeORM)
+    - we have @Entity() classes like User where the columns are defined
+    - create a service in which we inject the repository: @InjectRepository(User)
+    - use subscribers to listen to entity events like beforeInsert etc
+    - while testing we can use getRepositoryToken() to mock the repositories
+
+### Mongo
+- use TypeORM or mongoose + NestJs package (will talk about this)
+- use @Schema() to create a schema e.g. Cat
+- we can use the native Mongoose Connection: @InjectConnection() private connection: Connection
+- hooks/middleware: pre and post events like pre-save
+- while testing use getModelToken() to mock the models
+- @Virtual property in the schema: like a computed prop
