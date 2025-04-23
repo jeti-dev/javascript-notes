@@ -382,3 +382,45 @@
 - hooks/middleware: pre and post events like pre-save
 - while testing use getModelToken() to mock the models
 - @Virtual property in the schema: like a computed prop
+
+### Authentication
+- @nestjs/jwt
+- JwtModule.register({secret: ''}) etc
+- automatically checks the token expiration
+- @nestjs/passport
+- if we set our auth guard to be global, we have to create a custom decorator so we can check its value and skip auth based in the value e.g. @Public
+
+### Authorization
+- RBAC: role-based access control
+    - create a Role enum (user, admin)
+    - create a @Roles decorator
+    - then in the auth guard check if the user has the required roles
+- claims based: describes what the user can do and not what the user is (that is RBAC)
+- CASL (isomorphic authorization): create an ability about what a user can or cannot do on a resource
+- automatic 403 response on failure
+
+### Encryption and hashing
+- encryption: use the built in Node module
+- hashing: e.g. bcrypt or argon2
+    - bcrypt.hash(pw, salrOrRounds)
+    - bcrypt.genSalt()
+    - bcrypt.compare(pw, hash)
+
+### Helmet
+- sets some HTTP headers
+- must be registered before any routes are registered or app.use() is used
+
+### CORS
+- uses the cors package from Express
+- app.enableCors(): pass a config object or a callback
+
+### CSRF
+- csrf-csrf package: requires session middleware or cookie-parser
+
+### Rate limiting
+- @nestjs/throttler
+- ThrottlerModule: set name, ttl, limit
+    - ttl 1000 + limit 10 = in 1 sec 10 request is allwed
+- @SkipThrottle() to skip
+- @Throttle({ default: { limit: 3, ttl: 60000 } }) to change the global
+- by default it uses an in memory storage but it can be changed
