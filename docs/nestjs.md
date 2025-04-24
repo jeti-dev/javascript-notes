@@ -424,3 +424,22 @@
 - @SkipThrottle() to skip
 - @Throttle({ default: { limit: 3, ttl: 60000 } }) to change the global
 - by default it uses an in memory storage but it can be changed
+
+### Router module
+- use RouterModule and register the prefix for your controllers in a module and its child modules
+
+### Serve static
+- @nestjs/serve-static: use ServeStaticModule to configure the path to the static files
+
+### Passport
+- @nestjs/passport, @nestjs/jwt
+- local strategy
+    - need a custom class which extends PassportStrategy: has a validate() method that returns the user info (will be added to req) if the name and password is ok otherwise throws an error
+        - or returns an array where the first element is the user, the second element is an authInfo object
+    - call super() in the constructor if we need to config the strategy
+    - @UseGuards(AuthGuard('local')) on the login method invokes the Passport strategy
+    - use req.logout()
+- jwt strategy
+    - JwtModule and register e.g. secret, expiresIn etc
+    - jwtService.sign(payload)
+    - @UseGuards(AuthGuard('jwt'))
