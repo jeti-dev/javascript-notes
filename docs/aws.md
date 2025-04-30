@@ -100,3 +100,43 @@ layout: default
 - security groups: a firewall that controls traffic to and from an ENI or EC2 instance
 - peering: connect two VPC privately using AWS' network
 - endpoint: allows us to connect to AWS services using private network and not the internet
+
+### S3
+- bucket names must have a globally unique name: across regions and accounts
+- although the URL to a file looks like a folder structure, it is just a key to the object in the bucket
+- security:
+    - user: IAM policies
+    - resource: bucket policies, object and bucket access control list (ACL)
+- has versioning
+- replication: cross region or same region
+- lifecycle rules:
+    - transiton: move to a different storage class
+    - expiration: delete
+- events: e.g. ObjectCreated, ObjectRemoved
+- pre-signed URL: e.g. to delete a premium video for some time
+
+### CloudFron (CDN)
+- origin: S3 or HTTP (EC2, ALB etc)
+- caching on: headers, cookies, query strings
+- security:
+    - signed URL: 1 URL for a file to access
+    - signed cookies: access to multiple files
+
+### Containers
+- ECS
+    - EC2 launch type: I have to provision and maintain the infrastructure
+    - Fargate launch type: serverless, no EC2 instances to manage
+    - EFS as data volume
+        - or bind mounts to share data between containers in the same task definition
+    - auto scaling
+    - task definition: JSON blueprint for the containers
+    - task placement strategies:
+        - binpack: as less EC2 as possible
+        - random
+        - spread: containers are even on the EC2s
+- EKS: kubernetes - alternative to ECS
+
+### Beanstalk
+- managed service for EC2, ASG, ELB, RDS
+- deployment options: all at once, rolling, rolling with additional batches, immutable, blue green, traffic splitting
+- lifecycle policy: when to delete old versions of the app
