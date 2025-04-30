@@ -208,12 +208,26 @@ console.log(double('abc')); // ❌ Throws Error: Value must be a number
 | **Purpose**            | To validate a value at runtime and narrow its type          | To narrow down the type of a value based on a boolean condition |
 | **Syntax**             | `asserts value is Type`                                      | `value is Type`                                           |
 | **Return Type**        | `void` (throws an error if assertion fails)                  | `boolean` (returns true or false)                         |
-| **Example**            | ```typescript<br>function assertIsNumber(value: unknown): asserts value is number {<br>  if (typeof value !== 'number') {<br>    throw new Error('Value must be a number');<br>  }<br>}<br>``` | ```typescript<br>function isNumber(value: unknown): value is number {<br>  return typeof value === 'number';<br>}<br>``` |
+| **Example**            | Below | Below |
 | **Effect on TypeScript** | TypeScript refines the type after the assertion if it passes | TypeScript refines the type based on the return value of the guard |
 | **Error Handling**      | Throws an error if the assertion fails                       | Does not throw an error, just returns `true` or `false`   |
 | **Use Case**            | When you want to **force** a specific type or validate input from an external source | When you want to **conditionally** check a type before proceeding |
 | **Flexibility**         | Can validate complex shapes and refine types                 | Best for simple type checks                                |
 | **Example Use Case**     | Validating API response objects                              | Checking if a value is a specific type before using it     |
+
+``` ts
+function assertIsNumber(value: unknown): asserts value is number {
+  if (typeof value !== 'number') { 
+    throw new Error('Value must be a number'); 
+  }}
+```
+
+``` ts
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number';
+}
+```
+
 
 ## Virtual directory
 ``` ts
