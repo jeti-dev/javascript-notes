@@ -140,3 +140,45 @@ layout: default
 - managed service for EC2, ASG, ELB, RDS
 - deployment options: all at once, rolling, rolling with additional batches, immutable, blue green, traffic splitting
 - lifecycle policy: when to delete old versions of the app
+
+### Cloudformation
+- building blocks:
+    - resources
+    - parameters
+    - mappings: static variables in the template
+    - outputs
+    - conditionals: references to what has been created
+    - metadata
+- on fail, rollback
+- cross stacks: stacks reference each other
+- nested stacks: e.g. app stack = RDS, ASG and ELB stacks
+- stackset: manage stacks across accounts and regions
+- stack policy: what is allowed on the resources during stack updates
+
+### Messaging
+- SQS
+    - to decouple applications
+    - 256kb message, 4-14 days retention
+    - clients poll the que (get up to 10 messages) then delete them
+    - visibility timeout: for how much time a message is invisible to other clients when 1 client polled for that message -> if not processed, the message becomes visible again
+        - if a message returned to the queue X times, it is moved to the dead letter queue -> can be processed or debugged
+    - messages might be out of order + might be duplicates -> we can fix these by using a FIFO queue
+    - delay queue: for how much time a new message is not yet visible in the queue
+    - long polling: consumers can wait a bit for messages to appear in the queue if there is no message in the queue at the moment
+    - FIFO queue MessageGroupId: messages with the same MessageGroupID are always processed in order and only by 1 consumer
+- SNS
+    - send one message to many receivers
+    - the clients subscribe to topics
+    - SNS + SQS fan out: SQS queues are the subscribers of SNS topics
+    - filter policy: which topic to receive
+- Kinesis
+    - types:
+        - data stream: capture, process and store data streams
+        - data firehose: load data stream into AWS data stores
+        - data analytics: analyze data streams with SQL of Apache Flink
+        - video streams: capture, process and store video streams
+    - data streams
+        - shard: a unit of streaming throughput
+        - partition key: determines to which shard the data belongs
+        - shard splitting: I need more throughput for a particular partition key
+        - merging: make 1 shard from 2
