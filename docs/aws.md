@@ -5,13 +5,13 @@ layout: default
 
 # AWS
 
-### IAM
+## IAM
 - identity and access management
 - users, groups
 - users and groups can be assigned to JSON documents = policies which defines the permissions of the users
 - IAM role: how we assign permissions to AWS services
 
-### EC2
+## EC2
 - virtual machine
 - user data: script that runs when we first start the instance -> install updates, software etc dynamically
 - AMI (amazon machine image): blueprint for creating EC2 instances -> not dynamic
@@ -20,7 +20,7 @@ layout: default
     - can reference IP address or other security groups
     - all inbound traffic is blocked, all outbound is allowed by default
 
-### EC2 instance storage
+## EC2 instance storage
 - EBS: network drive
     - persist data even if the EC2 instance was terminated
     - can be mounted only to 1 instance at a time (but has option to attach to multi)
@@ -32,7 +32,7 @@ layout: default
     - can be attached to many EC2 instances
     - use case: storage for web servers, CMS -> e.g. access the same media files
 
-### Load balancers
+## Load balancers
 - classic
 - application: http/2, websocket, redirect, load balancing containers
     - route by path, hostname, query string
@@ -41,7 +41,7 @@ layout: default
 - sticky session: always send the client request to the same target
 - connection draining: when a target is getting shut down, traffic is not sent to it for some time
 
-### Auto scaling group
+## Auto scaling group
 - a Target Group is registered by the ASG
 - load balancers send traffic to the instances of the given Target Group
 - scaling policies:
@@ -50,14 +50,14 @@ layout: default
     - scheduled: set min capacity to 10 on every friday at 5pm
     - predictive: based on previous statistics
 
-### RDS
+## RDS
 - relational database service: managed, can handle many types of databases
 - auto scaling storage size
 - read replicas: eventually consistent
 - multi AZ: disaster recovery, sync replication
 - Aurora: their own DB
 
-### ElastiCache
+## ElastiCache
 - Redis or Memcached
 - caching strategies:
     - lazy loading: get data from cache, if data is not found in cache then get from DB then write back to cache
@@ -68,7 +68,7 @@ layout: default
     - memory is full + data is not used recently
 - MemoryDB for Redis: their own
 
-### Route53
+## Route53
 - record types:
     - A: hostname to IPv4
     - AAAA: hostname to IPv6
@@ -87,7 +87,7 @@ layout: default
     - multi-value answer: to multiple resources
     - geoproximity
 
-### VPC
+## VPC
 - subnet: to partition the network
     - public: accessible from the internet
     - private: not accessible from the internet
@@ -101,7 +101,7 @@ layout: default
 - peering: connect two VPC privately using AWS' network
 - endpoint: allows us to connect to AWS services using private network and not the internet
 
-### S3
+## S3
 - bucket names must have a globally unique name: across regions and accounts
 - although the URL to a file looks like a folder structure, it is just a key to the object in the bucket
 - security:
@@ -115,14 +115,14 @@ layout: default
 - events: e.g. ObjectCreated, ObjectRemoved
 - pre-signed URL: e.g. to delete a premium video for some time
 
-### CloudFron (CDN)
+## CloudFron (CDN)
 - origin: S3 or HTTP (EC2, ALB etc)
 - caching on: headers, cookies, query strings
 - security:
     - signed URL: 1 URL for a file to access
     - signed cookies: access to multiple files
 
-### Containers
+## Containers
 - ECS
     - EC2 launch type: I have to provision and maintain the infrastructure
     - Fargate launch type: serverless, no EC2 instances to manage
@@ -136,12 +136,12 @@ layout: default
         - spread: containers are even on the EC2s
 - EKS: kubernetes - alternative to ECS
 
-### Beanstalk
+## Beanstalk
 - managed service for EC2, ASG, ELB, RDS
 - deployment options: all at once, rolling, rolling with additional batches, immutable, blue green, traffic splitting
 - lifecycle policy: when to delete old versions of the app
 
-### Cloudformation
+## Cloudformation
 - building blocks:
     - resources
     - parameters
@@ -155,7 +155,7 @@ layout: default
 - stackset: manage stacks across accounts and regions
 - stack policy: what is allowed on the resources during stack updates
 
-### Messaging
+## Messaging
 - SQS
     - to decouple applications
     - 256kb message, 4-14 days retention
@@ -182,3 +182,23 @@ layout: default
         - partition key: determines to which shard the data belongs
         - shard splitting: I need more throughput for a particular partition key
         - merging: make 1 shard from 2
+## Monitoring
+- CloudWatch: collect and track key metrics, monitor, analyze, send events, react to metrics
+    - metrics e.g. CPU, disk, RAM, netstat, processes, swap spac
+    - alarms, composite alarms
+- X-Ray: microservice tracing
+- CloudTrail: monitoring of API calls, audit changes of AWS resources
+
+## Lambda
+- we have to use ALB to expose a function as a HTTP endpoint
+- 2 params: event and context objects
+- can use env vars
+- Lambda@Edge: execute some logic at the edge
+- increase RAM to increase CPU power
+- execution context: storage for external dependencies, after the function finished, it is kept for some time in case there is another function call soon
+    - syntax: write the code outside the function declaration
+- /tmp space: if the function needs space e.g. download files
+- layers: external dependencies for reuse
+- we can use container images to deploy the functions as containers
+- version: we always create a version when we want to publish
+    - alias: "pointer" to function versions
