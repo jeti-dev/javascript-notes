@@ -202,3 +202,51 @@ layout: default
 - we can use container images to deploy the functions as containers
 - version: we always create a version when we want to publish
     - alias: "pointer" to function versions
+
+## DynamoDB
+- serverless NoSQL DB
+- primary keys: partition key (hash) or partition key + sort key (e.g. same user id but different game id)
+    - partition key: determintes in which "shard" the row will be stored in
+    - partition key + sort key example: app name + timestamp of log entries where the 2 values are unique together
+- attributes = columns
+- max ro size is 400kb
+- data types
+    - scalar: string, number, binary, boolean, null
+    - document: list, map
+    - set type: string, number or binary set
+- read capacity units (RCU)
+- write capacity units (WCU)
+- eventually consistent by default: after writing we read stale data sometimes
+    - strongly consistent: we always read the latest data -> consumes 2x RCU
+- can batch read/write
+- conditions for write, edit and delete e.g. attribute_exists
+- local secondary index (LSI): an alternative sort key on the table, must be added at creation time
+- global secondary index (GSI): an alternative primary key on the table, can be added later
+- optimistic locking/conditional writes: each item has an attribute that acts as a version number -> if my save process notices that the version was changed since the beginning of my operation, it means that another operation changed that row in the meantime so my process will fail
+- TTL
+- streaming into DynamoDB e.g. kinesis, lambda
+- transactions
+
+## API gateway
+- API versioning, handle envs, auth, authz, create API keys, swagger, transform and validate req/res, cache response
+- integration with: lambda, http, AWS APIs
+- when we change the config, we need to make a deploy
+    - stage: a named reference to a deployed API config
+    - stage variable = env var
+- mapping templates: e.g. json to xml
+
+## CICD
+- CodeCommit
+- CodeBuild
+- CodeArtifact
+- CodeDeploy
+
+## Some deployment strategies
+| Strategy       | Description                                                                |
+| -------------- | -------------------------------------------------------------------------- |
+| **In-place**   | Replaces old version directly (downtime risk)                              |
+| **Rolling**    | Updates instances or containers in batches                                 |
+| **Immutable**  | Deploys new environment, then switches traffic                             |
+| **Blue/Green** | Standby environment (green) is created, traffic shifted after verification |
+| **Canary**     | Deploy to small % first, then gradually increase                           |
+| **Linear**     | Fixed size % updated at each interval                                      |
