@@ -250,3 +250,49 @@ layout: default
 | **Blue/Green** | Standby environment (green) is created, traffic shifted after verification |
 | **Canary**     | Deploy to small % first, then gradually increase                           |
 | **Linear**     | Fixed size % updated at each interval                                      |
+
+## SAM
+- serverless application model
+- framework for developing serverless apps: cloudformation, CodeDeploy, lambda, API gateway, DynamoDB
+
+## CDK
+- cloud development kit
+- define the infrastructure in a programming language
+- compiled into CloudFormation template
+- constructs
+    - layer 1: CfnBucket
+    - layer 2: bucket.addLifeCycleRule()
+    - layer 3: aws-apigateway.LambdaRestApi
+
+## Cognito
+- user pools (auth): sign in functionality for app users
+    - username + pw, federated identity (fb, google, etc), pw reset, email verification, MFA
+    - returns jwt
+    - has a hosted login UI
+- identity pools (authz): provide AWS credentials to users so they can access AWS resources directly
+
+## Advanced identity
+- STS (security token service): grant limited and tempporary access to AWS resources, 1-15 mins
+
+## Security and encryption
+- KMS (key management service)
+    - symmetric or assymetric keys
+    - types of KMS keys: 
+        - AWS owned: AWS handles everything 
+        - AWS managed: I create the key and import into KMS
+        - customer managed: I create the key and also I manage it in KMS
+    - envelope encryption: when we want to encrypt data bigger than 4kb
+        - I create a plaintext data key (DEK) and an encrypted DEK (encrypted by my KMS CMS (customer master key))
+        - I encrypt my data using the plaintext DEK
+        - I add the encrypted data + the encrpyted DEK to my "envelope"
+        - I discard the plaintext DEK
+        - When I need to decrypt the data, I get the encrypted DEK from the "envelop"
+        - I decrypt the DEK using my CMS
+        - I decrypt the data using the freshly decrypted DEK
+- SSM parameter store
+    - storing configs and secrets
+
+## Step functions
+- model the workflows as state machines
+- states: choice, fail/succeed/pass, wait, map (loop), parallel
+- wait for task token: stop a function and wait for a token to be returned e.g. another task, user approval
