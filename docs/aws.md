@@ -182,6 +182,7 @@ layout: default
         - partition key: determines to which shard the data belongs
         - shard splitting: I need more throughput for a particular partition key
         - merging: make 1 shard from 2
+
 ## Monitoring
 - CloudWatch: collect and track key metrics, monitor, analyze, send events, react to metrics
     - metrics e.g. CPU, disk, RAM, netstat, processes, swap spac
@@ -242,6 +243,7 @@ layout: default
 - CodeDeploy
 
 ## Some deployment strategies
+
 | Strategy       | Description                                                                |
 | -------------- | -------------------------------------------------------------------------- |
 | **In-place**   | Replaces old version directly (downtime risk)                              |
