@@ -196,6 +196,7 @@ export default function App() {
 ```
 
 ### Flexbox Table  
+
 | Property | Description | Example | Notes |  
 |----------|-------------|---------|-------|  
 | `display: flex` | Enables flexbox layout on an element | `display: flex;` | Applied to the container |  
@@ -213,6 +214,7 @@ export default function App() {
 ---
 
 ### CSS Grid Table  
+
 | Property | Description | Example | Notes |  
 |----------|-------------|---------|-------|  
 | `display: grid` | Enables grid layout on an element | `display: grid;` | Applied to the container |  
