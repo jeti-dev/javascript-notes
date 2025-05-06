@@ -233,6 +233,7 @@ export default function App() {
 
 
 ## SASS  
+
 | Feature | Description | Example | Notes |  
 |---------|-------------|---------|-------|  
 | **Variables** | Store reusable values (like colors, fonts, etc.) | `$primary-color: #ff5733;` | Can store any value (color, size, string, etc.) |  
@@ -252,6 +253,7 @@ export default function App() {
 | **@forward** | Re-export styles from another file | `@forward 'base';` | Improves modularization |  
 
 ## PostCSS  
+
 | Feature | Description | Example | Notes |  
 |---------|-------------|---------|-------|  
 | **Plugins** | Modular plugins that add or modify CSS behavior | `postcss([autoprefixer])` | Most PostCSS features are implemented as plugins |  
@@ -270,7 +272,8 @@ export default function App() {
 | **Source Maps** | Generate source maps for debugging | `postcss-sourcemaps` | Helps with debugging compiled CSS |  
 | **RTL Support** | Generate right-to-left (RTL) styles | `postcss-rtl` → `float: left;` → `float: right;` | Improves multi-language support |  
 
-## CSS Transition vs Animation Table  
+## CSS Transition vs Animation Table 
+
 | Aspect | CSS Transition | CSS Animation |  
 |--------|----------------|---------------|  
 | **Definition** | Enables smooth changes between two states over a defined duration | Allows keyframe-based, complex, multi-step animations |  
@@ -281,6 +284,7 @@ export default function App() {
 | **Repeatability** | Cannot repeat; ends once the state change finishes | Can loop indefinitely using `animation-iteration-count` |  
 | **Performance** | High performance when using `transform` and `opacity` | High performance when using `transform` and `opacity` |  
 | **Example** | 
+
 ``` css  
 #box {  
   transition: transform 0.5s ease-in-out;  
