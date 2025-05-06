@@ -115,7 +115,7 @@ layout: default
 - events: e.g. ObjectCreated, ObjectRemoved
 - pre-signed URL: e.g. to delete a premium video for some time
 
-## CloudFron (CDN)
+## CloudFront (CDN)
 - origin: S3 or HTTP (EC2, ALB etc)
 - caching on: headers, cookies, query strings
 - security:
