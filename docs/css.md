@@ -292,7 +292,9 @@ export default function App() {
 #box:hover {  
   transform: translateX(100px);  
 }  
-``` | ```css  
+```  
+
+```css  
 @keyframes slide {  
   from { transform: translateX(0); }  
   to { transform: translateX(100px); }  
