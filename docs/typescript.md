@@ -203,6 +203,7 @@ console.log(double('abc')); // ❌ Throws Error: Value must be a number
 ```
 
 ## Type guard vs assert function
+
 | Feature               | Assert Functions                                            | Type Guards                                               |
 |-----------------------|-------------------------------------------------------------|----------------------------------------------------------|
 | **Purpose**            | To validate a value at runtime and narrow its type          | To narrow down the type of a value based on a boolean condition |

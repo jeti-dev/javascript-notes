@@ -43,14 +43,14 @@ layout: default
 ### Adapter/Wrapper
 
 - You have XMLData and you want to use a lib that uses JSONData
-- As they are not compatible, you need to write an XNLToJSONAdapter
+- As they are not compatible, you need to write an XMLToJSONAdapter
 - It accepts an XMLData as an input then it acts as a JSONData
 
 ### Composite/Object tree
 
 - You have a webshop
 - You have Boxes and Items
-- Each Box can contain any number of Items and Boxes
+- Each Box can contain any number of items and Boxes
 - So you can have a tree-like structure: in the Boxes there are Boxes which also contain Boxes and Items
 - So how do you calculate the sum of the price?
 - Each Item returns its price. Each box returns the sum of its Items price plus the package price
