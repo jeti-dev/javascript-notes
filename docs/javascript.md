@@ -172,7 +172,28 @@ console.log("1" || 5); // 1 - string is coerced to boolean
 ## this
 
 `this` refers to an object or in other words `this` refers to the context where your code runs.
-Its value depends on how a function is _called_ and not how it is _defined_.
+Its value depends on how a function is _called_ and not how it is _defined_. The object through which we called the function.
+
+Common problem:
+```js
+const processor = {
+    on: function (cb) {
+        setTimeout(function () { cb('hi') }, 1000);
+    }
+}
+
+const obj = {
+    name: 'processor',
+    log: function (procc) {
+        procc.on(function (msg) {
+          // this.name is undefined because the cb was not called through an object so it became window (or unddefined in strict mode)
+            console.log(this.name + ' ' + msg);
+        });
+    }
+}
+
+obj.log(processor);
+```
 
 ```js
 const person = {
@@ -208,7 +229,7 @@ function cb() {
 
 ### `this` in arrow functions
 
-A closure is created over the `this` value so this always refers to the object where the function was defined. This is the opposite how `this` workf for normal functions (see the intro).
+A closure is created over the `this` value so this always refers to the object where the function was defined. This is the opposite how `this` works for normal functions (see the intro).
 
 ```js
 const cb = function () {
@@ -769,7 +790,7 @@ If `?` is used immediately after any of the quantifiers \*, +, ?, or {}.
 A `symbol` is a unique value usually used to create object keys.
 
 ```js
-const s = Symbol(); // using new throws an error!
+const s = new Symbol(); // using new throws an error!
 const sd = Symbol("description"); // just a description
 ```
 
@@ -859,6 +880,7 @@ Map-like objects:
 ### WeakSet
 
 Only objects and non-registered symbols can be stored. If the elements in the `WeakSet` are not referenced elsewhere they can be deleted by the garbage collector. Usage: e.g. recursive function where there are multiple identical objects so you can "tag" an object if that has been visited before. This is why it only has these methods:
+
 | Method | Description |
 |------------------------|-------------|
 | `WeakSet.prototype.add(value)` | Adds an object to the `WeakSet`. Returns the `WeakSet` itself. |
@@ -1251,6 +1273,7 @@ Object.defineProperties(user, {
 ```
 
 Similar methods
+
 | Method | Description | Example |
 |-----------------------|------------------------------------------------------|-----------------------------------------------------------|
 | `Object.freeze()` | Makes an object **immutable**. Cannot add, remove, or change properties. | `js\nconst obj = {name: 'John'};\nObject.freeze(obj);\nobj.name = 'Doe'; // No effect\nconsole.log(obj.name); // John\n` |
