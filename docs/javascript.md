@@ -923,7 +923,7 @@ document.querySelectorAll(".track-hover").forEach((element) => {
 
 ## `try...catch`
 
-- `finally` runs every time. In the example above it log "Finally" first then the return value 1.
+- `finally` runs every time. In the example below it logs "Finally" first then the return value 1.
 - If we returned a value from `finally` that would be the return value of the function (it even overrides a `throw` in the `catch`!) but it is a bad practice.
 - The exception usually has a name and a message property.
 - An exception is only caught once by the closest `catch` block.
@@ -989,7 +989,7 @@ Functions:
 - `catch(errorHandler)`
 - `finally(handler)`
 
-A promise cna be added to more than 1 chain:
+A promise can be added to more than 1 chain:
 
 ```js
 const a = new Promise(myExecutorFunc);
@@ -1057,6 +1057,8 @@ getDataPromisified("name").then((e) => console.log("result: ", e));
 | **Best Practice**     | Not recommended for chained promises.                             | Recommended for chaining with consistent error handling.    |
 | **Example**           | `promise.then(success, failure)`                                  | `promise.then(success).catch(failure)`                      |
 
+.then(succ, fail): after fail is triggered, catch is not called
+
 ## Iterator
 
 An object has to implement the `Symbol.iterator` method to be iterable.
@@ -1086,7 +1088,7 @@ for (const num of numbers) {
 
 ## Generators
 
-All generators are iterators but not all iterators all generators.
+All generators are iterators but not all iterators all generators. "A function that can be paused."
 Syntax:
 
 ```js
