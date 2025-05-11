@@ -15,7 +15,7 @@ layout: default
 | Services          | Classes with business logic, injected into controllers.                     |
 | Routing           | Define paths for controllers using decorators like `@Get()` or `@Post()`.   |
 | CLI               | The Nest CLI helps generate and manage project files.                       |
-| Lifecycle Hooks   | Hooks like `OnInit` and `OnDestroy` for handling component lifecycle.       |
+| Lifecycle Hooks   | Hooks like `onModuleInit` and `onModuleDestroy` for handling component lifecycle.       |
 | DTOs              | Define shapes of incoming data using TypeScript classes.                    |
 | Pipes             | Transform and validate input data.                                          |
 
@@ -152,13 +152,13 @@ layout: default
 - OR in the @Module: imports: [forwardRef(() => CatsModule)] and do the same for the other module
 
 ### Module reference
-- you can injest ModuleRef in the constructor then you can get stuff from the module e.g. the service objects
+- you can inject ModuleRef in the constructor then you can get stuff from the module e.g. the service objects
 - set {strict: false} to get global providers
 - moduleRef.resolve(MyService): get transient or request scoped service
     - you can get the same instance every time from resolve() if you set the contextId
     - to get a request scoped provider, we need to register it to a context first
     - we can use the ContextIdFactory.getByRequest(req) to get the contextId
-- moduleRef.create(MyService): create dynamicaly a provider which wast not in the providers array of the module
+- moduleRef.create(MyService): create dynamicaly a provider which was not in the providers array of the module
 
 ### Lazy loading modules
 - by default modules are eager loaded -> but it can be a problem in serverless apps where cold start is crucial
@@ -256,7 +256,7 @@ layout: default
     - default TTL is 0 (never expires)
 - @Inject(CACHE_MANAGER) private cacheManager: Cache
 - async set, get, del and clear methods
-- @UseInterceptors(CacheInterceptor) to cache GET responses which don't se the native @Res
+- @UseInterceptors(CacheInterceptor) to cache GET responses which don't use the native @Res
 - if it's globally enabled, CacheKey is based on the route path
     - we can overwrite @CacheTTL and @CacheKey
 - not tracking by URL: extend CacheInterceptor and override trackBy
@@ -273,7 +273,7 @@ layout: default
 
 ### Versioning
 - use different versions of the controllers or individual routes
-- URI (default), header, media type (Accept header like Accept: application/json;v=2), custom (create an extractor function, the requester might send an array of e.g. numbers)
+- types: URI (default), header, media type (Accept header like Accept: application/json;v=2), custom (create an extractor function, the requester might send an array of e.g. numbers)
 - app.enableVersioning({type: VersioningType.URI})
 - setting the version:
     - @Controller({version: '1'})
