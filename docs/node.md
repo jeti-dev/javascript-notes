@@ -104,7 +104,7 @@ exports = {
 | **Named Import/Export**   | `exports.key = value;` / `require('./file').key` | `export { key };` / `import { key } from './file.js';`             |
 | **Import Behavior**       | **Synchronous** (Blocking)                       | **Asynchronous** (Non-blocking)                                    |
 | **Execution**             | Runs immediately                                 | Runs only after parsing the module graph                           |
-| **Top-Level `await`**     | ❌ Not supported                                 | ✅ Supported                                                       |
+| **Top-Level `await`**     | ❌ Not supported                                 | ✅ Supported (async call at the top makes the importing modules wait)                                                       |
 | **Tree Shaking**          | ❌ Not optimized                                 | ✅ Optimized (unused exports are removed)                          |
 | **Dynamic Imports**       | ✅ Using `require()`                             | ✅ Using `import()`                                                |
 | **Re-exporting**          | ❌ Not built-in                                  | ✅ `export * from './other.js';`                                   |
@@ -122,12 +122,12 @@ exports = {
 | **Real-Time Capabilities**       | Well-suited for real-time applications like chat apps, online gaming, and live notifications.                       | **Potential Memory Leaks**            | If event listeners aren’t removed properly, memory consumption increases, leading to performance issues. |
 | **Decoupled Components**         | Components communicate via events, allowing for better modularity and separation of concerns.                       | **Complex Code Structure**            | Large applications may become difficult to manage without a well-structured event-driven architecture.   |
 
-## Async timing - more to come
+## Async timing
 
 Event loop:
 
 There are 6 phases of the event loop, but in practice we need to use 4.
-Each of these 4 phases have their own task queue where the callbacks are stored.
+Each of these 4 phases have their **own task queue** where the callbacks are stored.
 
 - **timers**: callbacks scheduled by setTimeout() or setInterval()
 - **pending callbacks**: I/O callbacks (e.g. file read, webserver)
@@ -160,7 +160,8 @@ Example:
 [Source](https://nodejs.org/api/process.html#when-to-use-queuemicrotask-vs-processnexttick)
 
 - uses the same queue as promises
-- in ESM modules runs before `process.nextTick` callbacks!
+- in ESM modules `queueMicrotask()` runs before `process.nextTick` callbacks!
+- it uses the same queue as promises so the order depends on which was added first!
 
 | **Method**           | **Execution Timing**                                       | **Order in Event Loop**                                            | **Use Case**                                                                 |
 | -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
@@ -432,8 +433,8 @@ saveToFile(
 
 ## StringDecoder
 
-The `string_decoder` module is used to decode buffers into strings **without losing multi-byte characters**.  
-It is ideal for **streamed or chunked data processing** where characters may be split across chunks.
+The `string_decoder` module is used to decode buffers into strings without losing multi-byte characters.  
+It is ideal for streamed or chunked data processing where characters may be split across chunks.
 
 | Method                        | Description                                                                  |
 | ----------------------------- | ---------------------------------------------------------------------------- |
@@ -524,7 +525,8 @@ Not really used directly but it used under the hood for streams and other stuff.
 ## Cluster
 
 Run multiple instances of your app to distribute workload.
-However `woorker_threads` should be used when process isolation is not needed. `worker_threads` allows running multiple application threads within a single Node.js instance.
+However `worker_threads` should be used when process isolation is not needed. `worker_threads` allows running multiple application threads within a single Node.js instance.
+Cluster is built on top of `child_process.fork` and `cluster.fork` just enables to listen to a shared port.
 IPC = inter process communication.
 
 | Method / Property                                | Description                                                     | Best Use Case                                                             |
@@ -675,7 +677,7 @@ process.on("message", (n) => {
 | `worker.resourceLimits`              | Object containing memory and CPU limits                  | Setting constraints to prevent resource overuse            |
 | `MessageChannel`                     | Creates a channel for communication between threads      | Efficient inter-worker communication                       |
 | `SharedArrayBuffer`                  | Shared memory buffer across threads                      | High-performance data sharing without copying              |
-| `Atomics`                            | Ensures safe concurrent memory operations                | Synchronizing access to shared memory                      |
+| `Atomics`                            | Ensures safe concurrent memory operations                | Synchronizing access to shared memory (js tuff not node)                      |
 
 ### Shared memory
 
