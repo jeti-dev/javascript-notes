@@ -131,7 +131,7 @@ function myDecorator() {
 
 ## Static block
 - to init static properties
-- can ha ve more than 1
+- can have more than 1
 ```ts
 class MyClass {
   static count = 0;
@@ -151,6 +151,7 @@ class MyClass {
 
 
 ## Type guard
+
 `pet if Fish` - when this guard is called, TS will know if in the block we have a fish or a bird.
 
 ``` ts
