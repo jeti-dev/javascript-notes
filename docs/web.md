@@ -427,6 +427,7 @@ self.addEventListener("push", (event) => {
 | **Factorial Time (O(n!))** | O(1) | O(n!) | O(n!) | The number of operations increases with the factorial of the input size | Generating permutations using recursion |
 
 ## Local and session storage
+
 | Feature                   | localStorage                                               | sessionStorage                                             |
 |-------------------------- |------------------------------------------------------------|----------------------------------------------------------|
 | **Scope**                 | Accessible across all windows and tabs from the same origin | Accessible only within the same tab                      |
@@ -439,6 +440,7 @@ self.addEventListener("push", (event) => {
 | **Supported Events**      | `storage` event triggers when data is changed in other tabs | `storage` event does **not** trigger for sessionStorage   |
 
 ## IndexedDB
+
 | Feature                            | Description                                                                                      |
 |------------------------------------|--------------------------------------------------------------------------------------------------|
 | **Scope**                          | Accessible across multiple windows, tabs, and worker threads within the same origin               |
@@ -497,6 +499,7 @@ request.onsuccess = (event) => {
 ```
 
 ## Offline
+
 | **Feature** | **Description** | **Example** |
 |------------|----------------|------------|
 | **Service Workers** | Background script that acts as a proxy between the browser and network, allowing caching and offline access. | Use `self.addEventListener('install', (event) => {...})` to cache resources. |
