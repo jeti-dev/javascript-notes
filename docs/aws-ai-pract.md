@@ -18,6 +18,7 @@ Artificial Intelligence > Machine Learning > Deep learning > Generative AI
     - training: add noise over time
     - generation: remove noise over time
 
+
 ## Bedrock
 - main service of GenAI
 - fully managed service
@@ -108,16 +109,44 @@ Artificial Intelligence > Machine Learning > Deep learning > Generative AI
 - logs are sent to CloudWatch, Alarms can be configured
 - pricing: on demand (base models), batch (discount up to 50%), provisioned throughput (with base, fine tuned or custom models)
 - model improvement techniques:
-    - $: prompt engineering
-    - $$ RAG: no model changes required
-    - $$$ instruction based fine tuning: model is fine tuned
-    - $$$$ domain adaptation fine tuning: model is trained on domain specific dataset
+    - \$: prompt engineering
+    - \$$ RAG: no model changes required
+    - \$$$ instruction based fine tuning: model is fine tuned
+    - \$$$$ domain adaptation fine tuning: model is trained on domain specific dataset
 - cost savings
     - on demand, batch, provisioned throughput
     - temperature, Top K, Top P: no impact on pricing
     - model size: usually smaller is cheaper
     - number of input and output tokens: main cost factor
 
+## Prompt Engineering
 
+Consists of:
+1. instructions: the task to do
+2. context: external information to guide the model
+3. input data
+4. output indicator
 
+- Negative prompting: explicitly instruct what not to include.
 
+### Performance Optimization
+LLMs select the next work randomly based on probability. E.g. After the rain my guarden was wet:0.4 | slippery:0.34
+
+- TopK: select from maximum the top K words e.g. the top 10
+- TopP: select from the top N words that have a sum of e.g. 0.8 probability
+    - e.g. 0.25: select from the 25% most likely words
+- Teperature: high T highlights the difference between the numbers
+    - high: more creative
+    - low: more conservative
+- latency is impacted by these parameters!
+
+### Techniques
+1. zero shot: no examples or training was provided for the model before the task
+2. few shots: one (one shot) or more examples provided
+3. chain of thought: divide the task into a sequence reasoning steps
+4. RAG: add an external knowledge base
+
+### Prompt Template
+- simplify and standardize the prompts, can be used with Bedrock Agents
+- ignoring the prompt template attack: "Ignore the above ..."
+    - protection: add explicit instructions to ignore any unrelated content
