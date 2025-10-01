@@ -150,3 +150,24 @@ LLMs select the next work randomly based on probability. E.g. After the rain my 
 - simplify and standardize the prompts, can be used with Bedrock Agents
 - ignoring the prompt template attack: "Ignore the above ..."
     - protection: add explicit instructions to ignore any unrelated content
+
+## Amazon Q 
+- GenAI assistant based on the company's knowledge
+- built on Bedrock
+- data connectors: S3, Microsoft 365, Gmail etc
+    - plugins: Jira, Service Now, etc
+    - custom plugins
+- users can be authenticated using IAM Identity Center
+    - while generating the content, only those documents are used that the user has access to
+- admin controls (~ guardrails): global control, topic level controls
+- Q Apps: create AI powered apps without coding
+- Q Developer: answers questions about AWS docs and services; about stuff in my account
+    - also a code companion like Copilot
+- Q for QuickSight: QuickSight is used to visualize data, with Q we can ask questions about the data or generate visuals
+- Q for EC2: guidance on the instance type to choose
+- Q for AWS chatbot: integrate a chatbot into Slack/Teams which is aware of my AWS account
+- Q for Glue: Glue is an ETL service, Q to answer questions, generate code
+- PartyRock: GenAI app building playground (based on Bedrock)
+
+
+
