@@ -169,5 +169,49 @@ LLMs select the next work randomly based on probability. E.g. After the rain my 
 - Q for Glue: Glue is an ETL service, Q to answer questions, generate code
 - PartyRock: GenAI app building playground (based on Bedrock)
 
+## AI and Machine Learning Overview
+- Artificial Intelligence > Machine Learning > Deep Learning > Generateive AI
+- AI components:
+    1. data layer
+    2. ML famework and algorithm layer
+    3. model layer: implement the model, train it, set parameters, functions, optimizer functions
+    4. application layer: how to serve the model and its capabilities
 
+### Machine learning
+Methods that allow machines to learn.
+
+### Deep learning
+- use neurons and synapses to train a model.
+- deep: more than 1 layer of learning e.g. object detection, image classification; natural language processing (NLP) like text classification
+- neural networks: nodes (even billions) are connected together and organized in layers
+    - when the neural netwrok sees a lot of data, it identifies patterns and changes the connections between the nodes
+    - nodes are communicating with each other by passing or not passing data to the next layer
+    - e.g. recognizing hand written numbers: each layer is able to recognize 1 property like 'curved bottom' or 'vertical lines'
+
+### GenAI
+- subset of deep learning
+- model types:
+    1. transofmer model (LLM): able to process a sentence as a whole instead of word by word
+    2. diffusion models: when creating an image: making an image more noisy step by step when training and reverse it when generating (from noise to image)
+    3. multi-modal models: does not rely on a single type of input and does not create a single type of input
+- training data: can be labeled or unlabeled, structured or unstructured
+    - labeled: data includes input features and output labels, used for supervised learning
+    - unlabeled data: data includes only input features, used for unsupervised learning
+    - structure: usually has a table like format
+    - unstructured: often text heavy or multimedia
+- supervised learning
+    - needs labeled data
+    - can predict the output for a new unseen input data
+    - regression: predict a numberic value based on the input; when we have to predict a quantity or a real value; the output variable is continous as it can take any value within a range
+    - classification: predict the categorical label of input data; the output variable is discrete meaning it falls into a speciic category; e.g. the email is spam or not; k-nearest neighbours algorithm (k-NN)
+
+Important terms
+- GPT (generative pre trained transformer): generate text or code
+- BERT (bidirectional encoder representations from transformers): similar to GPT but reads the text in two directions
+- RNN (recurrent neural network): meant for sequential data e.g. time series text, useful in speech recognition and time series prediction
+- ResNet (residual network): CNN (deep convolutional network) used for image recognition, detection
+- SVM (support vector machine): ML algorithm for classification and regression
+- WaveNet: generate audio waveform
+- GAN (generative adversarial network): models that help generate data (images, videos, sounds) similar to the training data to help data augmentation
+- XGBoost (extreme gradient boosting): an implementation of gradient boosting
 
