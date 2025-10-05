@@ -204,6 +204,19 @@ Methods that allow machines to learn.
     - can predict the output for a new unseen input data
     - regression: predict a numberic value based on the input; when we have to predict a quantity or a real value; the output variable is continous as it can take any value within a range
     - classification: predict the categorical label of input data; the output variable is discrete meaning it falls into a speciic category; e.g. the email is spam or not; k-nearest neighbours algorithm (k-NN)
+- data types
+    - training set: 60-80% of the data set, used to train the model
+    - validation set: 10-20%, to tune the model parameters and validate performance
+    - test set: 10-20%, to evaluate the final model performance
+
+Feature engineering:
+The process to select and transform raw data to meaningful features, useful for supervised learning
+- types
+    - feature extraction: e.g. derive age from date of birth
+    - feature selection: selecting a subset of relevant features e.g. use only the important data in a prediction model
+    - feature transformation: transforming data for better model performance e.g. normalize numerical data
+- feature engineernig on structured data
+
 
 Important terms
 - GPT (generative pre trained transformer): generate text or code
