@@ -212,11 +212,16 @@ Methods that allow machines to learn.
 Feature engineering:
 The process to select and transform raw data to meaningful features, useful for supervised learning
 - types
-    - feature extraction: e.g. derive age from date of birth
+    - feature extraction/creation: e.g. derive age from date of birth
     - feature selection: selecting a subset of relevant features e.g. use only the important data in a prediction model
     - feature transformation: transforming data for better model performance e.g. normalize numerical data
-- feature engineernig on structured data
-
+- feature engineernig on structured data e.g. predict house prices based on some features
+    - creation: deriving features like "price per square foot"
+    - selection: identifying and retaining important features e.g. location and number of bedrooms
+    - transformation: normalizing features to ensure they are on a similar scale
+- feature engineering on unstructured data e.g. sentiment analysis of customer reviews
+    - text data: convert text into numerical features (TF-IDF) or word embeddings
+    - image data: extract features such as edges or textures using e.g. convulational neural networks (CNNs)
 
 Important terms
 - GPT (generative pre trained transformer): generate text or code
@@ -228,3 +233,46 @@ Important terms
 - GAN (generative adversarial network): models that help generate data (images, videos, sounds) similar to the training data to help data augmentation
 - XGBoost (extreme gradient boosting): an implementation of gradient boosting
 
+### ML Algorithms
+#### Unsupervised learning 
+- to discover patterns in the input data
+- the machine creates the groups but the humans put labels on them
+- common techniques: clustering, association rule learning, anomaly detection
+1. clustering: group similar data points together into clusters
+    - e.g. customer segmentation with K-means Clustering
+2. association rule learning
+    - e.g. which products are often bought together to help us with promotions
+3. anomaly detection: detect fraudulent credit card usage using Isolation FOrest technique
+
+#### Semi-supervised learning
+- use a small amount of labeled data and a large amount of unlabeled data
+- then the partially trained algorithm itself labels the unlabeled data = pseudo labeling
+- lastly the model is re-trained on the resulting data
+
+#### Self-supervised learning
+- the model creates pseudo-labels for its own data without humans labeling data first
+- widely used in NLP and in image recognition
+- pre-text task e.g. let the model itself learn the rotation of images (while also learning about the images) -> but in the end we want the model to know stuff about images and not the rotation
+
+#### Reinforcement learning (RL)
+- an agent learns to make decisions by doing actions in an environment while maximizing rewards e.g. finding the door in a maze where every block has a score -> the more score the shorter is the route
+- key concepts
+    - agent: the learner
+    - environment: the external system the agent interacts with
+    - actions: the choices the agent makes
+    - reward: the feedback from the environment based on the actions
+    - state: the current situation of the environment
+    - policy: the strategy used by the agent to determine the actions based on the state
+- learning process
+    - the agent checks the current state of the environment
+    - makes an action based on the policy
+    - the environment transitions to a new state and gives a reward
+    - the agent updates its policy to improve future decisions
+    - goal: get max reward
+
+#### Reinforcement Learning from Human Feedback (RLHF)
+- use human feedback to help models self learn more efficiently
+- the human feedback is added to the rewards function to be more aligned with human goals
+- used in GenAI apps including LLM Models
+- significantly enchanes the model performance
+- e.g. grading transalations from "technically correct" to "human"
