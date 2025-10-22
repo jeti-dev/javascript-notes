@@ -234,6 +234,7 @@ Important terms
 - XGBoost (extreme gradient boosting): an implementation of gradient boosting
 
 ### ML Algorithms
+
 #### Unsupervised learning 
 - to discover patterns in the input data
 - the machine creates the groups but the humans put labels on them
@@ -276,3 +277,59 @@ Important terms
 - used in GenAI apps including LLM Models
 - significantly enchanes the model performance
 - e.g. grading transalations from "technically correct" to "human"
+- steps to create a company specific chatbot
+    1. data collection e.g. questions and answers
+    2. supervised fine tuning of a language model: fine tune an existing model with the data
+    3. build a separate reward model: humans can set which response they prefer for a given prompt -> the reward model can estimate which response would a human choose
+    4. use the reward model as a reward function for the reinforcement learning
+
+### Performance analysis
+- model fit:
+    - overfit: good performance on the training data, bad on the evaluation data (all dots are connected)
+    - underfitting: poor performance on training data (no dots are connected); maybe the model is too simple or the data is not good
+    - balanced: what we want (some dots are connected)
+- bias and variance:
+    - bias: difference or error between the predicted and the acutal value (high bias = underfitting) or in other words it can't learn the pattern; probably thanks to bad ML process choices -> use a more complex model, increase the number of features
+    - variance: how much the performance of a model changes if trained on a different set of data which has a similar distribution (high variance = overfitting); use feature selection (focus on more important features)
+    - low bias and low variance = balanced model fit
+- model evaluation
+
+#### Model evaluation 
+#### Confusion matrix
+- To evaluate a classification model.
+- metrics:
+    - precision: best when false positives are costly
+    - recall: best when false negatives are costly
+    - F1 score: best when we want balance in an imbalanced dataset
+    - accuracy: best for balanced datasets
+- AUC-ROC: area under the curve-receiver operator curve
+ - value is 0-1 (=perfect model)
+ - what the curve for true positives compared to false positives looks like at various thresholds -> we can decide which threshold to use
+
+2d matrix example (can be multi dimensional)
+
+|Metric|Calculation|Interpretation|
+|------|-----------|--------------|
+True Positive (TP)|Correctly predicted positive|Successes in identifying the target class.
+True Negative (TN)|Correctly predicted negative|Successes in identifying the non-target class.
+False Positive (FP)|Incorrectly predicted positive|Type I Error (False Alarm).
+False Negative (FN)|Incorrectly predicted negative|Type II Error (Missed Opportunity).
+
+|Metric|Formula|Focus/Goal|
+|------|-------|----------|
+|Accuracy|(TP+TN)/(FP+FN+TP+TN)​|Overall correctness. Good for balanced data.|
+Precision|TP/(FP+TP)​|Quality of Positive Predictions. Minimizing FP.
+|Recall (Sensitivity)|TP/(FN+TP)​|Completeness of Positive Identification. Minimizing FN.|
+|F1-Score|2\*Precision\*Recall/(Precision+Recall)​|Harmonic mean of Precision and Recall. Useful for imbalanced data.|
+
+#### Regressions metrics
+- for continous data (not for classification!)
+- types
+    - MAE (mean absolute error): between the predicted and the actual values
+    - MAPE (mean absolute percentage error)
+    - RMSE (root mean squared error)
+    - R2 (R squared): explains variance in the model, close to 1 means good
+- MAE, MAPE, RMSE measure the error, how accurate the model is
+    - e.g. if RMSE is 3 this means that on average the model predicts a student's score 3 points off
+- R2: what percentage of the problem's solution is explained by the variables I included in the model
+    - e.g. when trying to predict the final price of a house and I supply the house prices, then if R2 is 85% it means that the square foot is a good predictor. But if R2 is 15% is means that other factors are also important in the house price e.g. location, age
