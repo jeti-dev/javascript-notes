@@ -333,3 +333,41 @@ Precision|TP/(FP+TP)​|Quality of Positive Predictions. Minimizing FP.
     - e.g. if RMSE is 3 this means that on average the model predicts a student's score 3 points off
 - R2: what percentage of the problem's solution is explained by the variables I included in the model
     - e.g. when trying to predict the final price of a house and I supply the house prices, then if R2 is 85% it means that the square foot is a good predictor. But if R2 is 15% is means that other factors are also important in the house price e.g. location, age
+
+#### Inferencing
+- when a model is making prediciton on new data
+- can be real time or batch
+- inferencing at the edge: mobile, tablet, raspberry etc
+
+#### Phases of an ML project
+1. define business problem
+2. ML problem framing: convert the business problem to a ML problem
+3. data collection and preparation
+4. feature engineering
+5. model training and paramtere tuning
+6. model evaluation: if the result is not good, go back to step 3 or 4
+7. model testing and deployment
+8. monitoring and debugging
+9. add new data and retrain? go to step 3 or 5
+
+#### Hyperparameter tuning
+- definition: settings that define the model structure, leaning algorithm and process before the training begins
+- e.g.
+    - learning rate: how big are the steps when updating the model's weights during training: high can lead to faster convergence but risks overshooting the optimal solution; low causes slower convergence but more precision
+    - batch size: number of training examples to use to update the model's weight in one iteration: small lead to more stable learning but require more time to compute
+    - number of epochs: how many times the modell will iterate over the entire dataset: too few causes underfitting and too many causes overfitting
+    - regluarization: adjusting the balance between simple and complex model: increase to reduce overfitting
+- hyperparameter tuning: finding the best hyperparameters to optimize the model performance
+- how to do it e.g. use SageMaker Automatic Model Tuning (AMT)
+- what to do when overfitting
+    - symptom: good predictions on the training data but not good for the new data
+    - reason:
+        - too small training data, not representing all possible input values
+        - the model trains too long on a single sample set of data
+        - model complexity is high and learns also the noise in the training data
+    - fix:
+        - add more training data
+        - use less epochs
+        - data augmentation (to increase diversity)
+        - adjust hyperparameters
+
