@@ -371,3 +371,52 @@ Precision|TP/(FP+TP)​|Quality of Positive Predictions. Minimizing FP.
         - data augmentation (to increase diversity)
         - adjust hyperparameters
 
+## AWS manages AI services
+Pre-trained ML services.
+
+### Amazon Comprehend
+- natural language processing (NLP)
+- to find insights and relationships in text
+- we can make custom classification too
+- real time analysis (1 document, sync) or async analysis (batch, async)
+- named entity recognition (NER): extracts predefined, general purpose entities like people, dates, etc from text
+    - we can have custom entity recognition too
+
+### Amazon Transcribe
+- convert speech to text 
+- uses deep learning (automatic speech recognition (ASR))
+- removes PII using Redaction
+- automatically identificates multi lingual audio
+- toxicity detection
+- improve accuracy:
+    - custom vocabularies (for words)
+    - custom language models (for context)
+
+### Amazon Polly
+- text to speech
+- features:
+    - lexicons: defined how to read a specific piece of text e.g. AWS = amazon web services
+    - speech synthesis markup language (SSML): markup for the text, we can set how to pronounce the text e.g. \<break\>
+    - voice engine: long form, neutral, standard etc
+    - speech mark: encode where a sentence or word starts or ends in the audio e.g. for lip syncing
+
+### Amazon Rekognition
+- find objects, people, text, scenes in images and videos
+- facial analysis, facial search
+- custom labels: based on my images, AWS creates a custom model
+- content moderation: detect offensive image (we can have custo labels too)
+
+### GPU EC2
+- AWS Trainium (TRN): 50% off when training
+- AWS Inferentia (INF): for inference 70% off
+
+### Others
+- Amazon Translate
+- Amazon Lex: build chatbots using voice and text, can invoke Lambda
+- Amazon Personalize: to build apps with real time personalized recommendations; recipes can be used e.g. personalize dranking, popular items
+- Amazon Textract: extract text, handwriting from scanned docs
+- Amazon Kendra: document search; learns from the interactions/feedbacks (incremental learning)
+- Amazon Mechanical Turk: e.g. hire people to label images
+- Amazon Augmented AI (A2I): people can check low confidence predictions
+- Amazon Transcribe Medical: medical related speech to text
+- Amazon Comprehend Medical: for medical text; uses NLP to detect PHI
