@@ -571,5 +571,70 @@ Pre-trained ML services.
     - documenting data origin
     - cataloging
 
+## Other AWS services
+
+### IAM
+- global service
+- root account, users, groups
+- policy: JSON document, users and groups can be assigned to, defines the permissions
+- least privilige principle: add only the minimum necessary permissions
+- policy structure
+    - version
+    - statement: one or more; consists of:
+        - sid: id of the statement
+        - effect: allow or deny
+        - principal: account/user/role to which the policy is applied
+        - action: list of actions
+        - resource: list if resources
+        - condition
+- role: permissions assigned to AWS services
+    - e.g. EC2 instance roles, Lambda roles, roles for CloudFormation
+
+### S3
+- buckets must have a globally unique name accross all regions and accounts
+- region scoped
+- bucket name: no uppercase or underscore, 3-63 chars, lowercase letter or number as the first char, cannot start with xn--, cannot end with -s3alias
+- objects in the bucket have a key which is the full path
+    - there are no folders! it looks like folders but it's just the key
+- object is max 5TB 
+- above 5GB upload we must use multi-part upload
+- helpful
+    - metadata: key value pairs, system or user metadata e.g. content-type
+    - tags: key value pairs for security/lifecycle
+    - version id: if versioning is enabled
+- storage classes: we can move between the classes manually or by using S3 lifefcycles
+    - standard general purpose
+    - standard infrequent access (IA)
+    - one zone infrequent access
+    - glacier instant retrieval: min 90 days
+    - glacier flexible retrieval: min 90 days
+    - glacier deep archive: min 180 days
+    - intelligent tiering
+
+### VPC
+- subnet: partition my VPC (AZ bound)
+    - public: accessible from the internet
+    - private
+- internet gateway (2 way): helps my VPS instances connect with the internet
+    - public subnets have a route to this
+- NAT gateway (1 way): allows my instances in my private subnets to access the internet while remaining private
+- VPC endpoint: to access an AWS service privately and through the internet; usually powered by PrivateLink
+- S3 gateway endpoint: access S3 privately
+
+### Others
+- EC2
+    - user data: launching command when a machine starts for the first time, uses the root user
+- Lambda
+    - increasing RAM also increases CPU and network
+    - event driven
+- Macie: discover and protect sensitive data
+- Config: record configs and changes over time to help with auditing
+- Inspector: automated security assessments
+- CloudTrail: governance, compliance and audit for the AWS account; get the history of events
+- Artifact: a portal with AWS compliance documentation and agreements
+- Audit Manager: e.g. automatic evidence collection for a given audit type
+- Trusted Advisor: cost optimization, performance, security, fault tolerance, service limits, operational excellence; only for business and enterprise plans
+
+
 
     
