@@ -476,5 +476,100 @@ Pre-trained ML services.
 - MLFlow: an opensource tool to help manage the ML lifecycle
 - network isolation mode: run SageMaker job containers without internet access
 
-## Responsible AI
+## Responsible AI, Security, Compliance and Governance
+- responsible: AI systems are transparent and trustworthy, mitigating negative outcomes
+- security: confidentiality, integrity, availability
+- governance: AI systems align with legal and regulatory requirements
+- compliance: adhere to regulations, especially in healthcare, finance and legal
+
+### Responsible AI
+- e.g. fariness, explainability, privacy and security, transparency, veracity and robustness, governance, safety, controllability
+- service cards: documentation of AI stuff e.g. intended use case, limitations
+- services
+    - Bedrock: model evaluation
+    - guardrails: PII, harmful content
+    - Clarify: bias
+    - Data Wrangler: bias by balancing
+    - Model Monitor: analysis in production
+    - Augmented AI (A2I): human review of predictions
+    - governance: role manager, model cards, model dashboard
+- challenges
+    - toxicity: What is really toxic?
+    - hallucinations: due to the next work sampling in LLMs
+    - plagiarism and cheating
+
+#### Interpretability and explainability
+- interpretability: how easy it is to understand "how" the model predicted the result, e.g. easy to understand a decision tree but hard to understand a neural network
+    - decision tree e.g. classification or regression
+- explainability: how easy it is to understand "why" the model predicted the result e.g. some features were overrepresented
+    - some outer tools can be understand it
+- interpretability trade off: usually the less the interpretability, the higher the performance
+- partial dependence plots (PDP): shows how a single feature can influence the result
+- human centered design (HCD)
+    - amplified decision making: to minimize risk and errors in a stressful environment
+    - unbiased decision making: help to keep a bias free decision process
+    - human and AI learning: AI learns from humans; the AI system is personalized for the learner
+
+### Security 
+- prompt misuses
+    - poisoning: add bad data to the training data on purpose
+    - hijacking and prompt injection: hijack the models behavior
+    - exposure: accidentally leak sensitive information
+    - prompt leaking: acidentally leak prompts
+    - jailbreaking: trick the model to forget its constraints
+- types
+    - threat detection
+    - vulnerability management
+    - infrastructure protection
+    - prompt injection
+    - data encryption
+- monitoring
+    - performance
+        - model accuracy: ratio of positive predictions
+        - precision: ratio of true positive predictions
+        - recall: ratio of true positive predictions compared to actual positive
+        - F1 score: average of precision and recall (good balanced measure)
+        - latency: time to make a prediction
+    - infrastructure
+    - bias, fariness, compliance and responsible AI
+- data engineering best practices
+    - assess data quality: complete, accurate, timeliness, consistency etc
+    - enchance privacy e.g. obfuscation
+    - data access control
+    - data integrity
+
+### Compliance
+- complexity and opacity
+- dynamisn and adaptability
+- emergent capabilities
+- unique risks: algorithmic bias, human bias
+- algorithm accountability
+
+### Governance
+- framework
+    1. establish an AI committee
+    2. define roles and responsibilities
+    3. implement policies and procedures
+- strategies
+    - policies
+    - review strategy
+    - transparency standards
+    - team training requirements
+- data governance strategies
+    - responsible AI
+    - governance structure and roles
+    - data sharing and collaboration
+- data management concepts
+    - data lifecycles
+    - data logging
+    - data residency
+    - data monitoring
+    - data analysis
+    - data retention
+- data lineage
+    - source citation
+    - documenting data origin
+    - cataloging
+
+
     
