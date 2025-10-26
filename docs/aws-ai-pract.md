@@ -420,3 +420,61 @@ Pre-trained ML services.
 - Amazon Augmented AI (A2I): people can check low confidence predictions
 - Amazon Transcribe Medical: medical related speech to text
 - Amazon Comprehend Medical: for medical text; uses NLP to detect PHI
+
+## SageMaker
+- fully managed service to build ML models
+- some built in algorithms:
+    1. supervised 
+        - linear regressions and classifications 
+        - KNN for classification
+    2. unsupervised
+        - principal component analysis (PCA): reduce number of features
+        - K-means: find grouping within data
+        - anomaly detection
+    3. textual: NLP, summarization etc.
+    4. image processing: classification, detection, etc
+- automatic model tuning (AMT)
+    - define the Objective Metric
+    - AMT automatically chooses the parameters and strategies to get the desired result
+- model deployment and inference
+    - serverless: cold starts, max 4mb and 60 sec
+    - real-time: uses EC2, always on, max 6mb and 60 sec
+    - async: max 1gb and 1 hour
+    - batch: max 100mb and 1 hour
+- studio: team collab, UI, tune and debug models, deploy, automate
+- data wrangler: prepare tabular and image data for machine learning
+- feture store: ingest features from a variety of sources
+- clarify 
+    - evaluate foundation models, uses real people, built in metrics and algorithms
+    - model explainability: a set of tools to help explain how ML models make predictions
+    - detect bias: detect and explain biases in the datasets and in the models
+        - sampling bias: when the training data does not represent the full population fairly
+        - measurement bias: when the tools or measurements used in the data collection process are flawed
+        - observer bias: when the person preparing the data has biases
+        - confirmation bias: when the interpreter has biases
+- ground truth
+    - RLHF - reinforcement learning from human feedback
+    - model review, customization, evaluation
+    - plus: label data
+- ML governance
+    - model cards: essential model information e.g. risk ratings, training details
+    - model dashboard: information about all of the models and their statuses
+    - role manager: define roles for devs
+    - model monitor: monitor the quality of the models in prod e.g. alert when it starts to act incorrectly
+    - model registry: maange approval status of a model
+- pipelines: automate building, training and deploying models
+    - some pre defined steps:
+        - processing: data processing e.g. feature engineering
+        - training: training a model
+        - tuning: hyperparameters tuning
+        - auto ML: automatically train a model
+        - model: create or register a model
+        - clarify check: drift checks data and model bias
+        - quality check: drift checks data and model quality
+- jump start: hub to find pre trained models
+- canvas = no code for building models
+- MLFlow: an opensource tool to help manage the ML lifecycle
+- network isolation mode: run SageMaker job containers without internet access
+
+## Responsible AI
+    
