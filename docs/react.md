@@ -200,19 +200,7 @@ function MyForm() {
   return <MyInput ref={inputRef} />
 }
 ```
-- `useImperativeHandle`: expose only a subset of APIs of a DOM node e.g.
-```js
-function MyInput({ ref }) {
-  const realInputRef = useRef(null);
-  useImperativeHandle(ref, () => ({
-    // Only expose focus and nothing else
-    focus() {
-      realInputRef.current.focus();
-    },
-  }));
-  return <input ref={realInputRef} />;
-};
-```
+
 ### useEffect
 - to sync with an external system *after rendering* (or to specify side effects that are caused by the rendering itself and not by a particular event)
     - some stuff should only be triggered by a user event (e.g. buying an item) so don't put these type of events in an Effect!
@@ -295,3 +283,102 @@ const results = useData(`/api/search?${params}`);
 
 ### Custom Hooks
 - if they are used at 2 places, then those are 2 different variables! they are not shared = custom Hooks let us share stateful logic but not the state itself
+
+## Built-in components
+- `Suspense`: show thee fallback content while the children are loading
+  - child must be loading with e.g. `lazy` or `use`
+```js
+<Suspense fallback={<Loading />}>
+  <SomeComponent />
+</Suspense>
+```
+- `Activity`: hide a component but keep its state and update it in the background
+```js
+<Activity mode={visibility}>
+  <Sidebar />
+</Activity>
+```
+- `Profiler`: check performance of a subtree
+```js
+<Profiler id="App" onRender={onRender}>
+  <App />
+</Profiler>
+```
+- `<form>`: the action attribute can take a function too
+- `<input>` (and other input-like stuff): use `value` and `checked` to have a controlled component and `defaultValue` and `defaultChecked` for an uncontrolled component
+
+## Built-in hooks
+- `useCallback`: cache a function definition between re-renders
+```js
+  const handleSubmit = useCallback((orderDetails) => {
+    post('/product/' + productId + '/buy', {
+      referrer,
+      orderDetails,
+    });
+  }, [productId, referrer]);
+```
+- `useDebugValue`: add a debug label to my custom hook
+- `useDeferredValue`: 'show the old list of items while loading the new list instead of showing "loading..." again'
+  - must use `lazy` or `use`
+```js
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+```
+- `useId`: to generate ids for accessiblity stuff
+- `useImperativeHandle`: expose only a subset of APIs of a DOM node e.g.
+```js
+function MyInput({ ref }) {
+  const realInputRef = useRef(null);
+  useImperativeHandle(ref, () => ({
+    // Only expose focus and nothing else
+    focus() {
+      realInputRef.current.focus();
+    },
+  }));
+  return <input ref={realInputRef} />;
+};
+```
+- `useMemo`: cache the results of a calculation between rerenders
+```js
+const cachedValue = useMemo(calculateValue, dependencies)
+```
+- `useSyncExternalStore`: subscribe to an external store e.g. DOM APIs
+  - `subscribe`: has the event listener, calls a callback, return an unsub function
+  - `getSnapshot`: called by React when the callback is called
+``` js
+ const isOnline = useSyncExternalStore(subscribe, getSnapshot);
+```
+- `useTransition`: ?
+- `useFormStatus`: the component which uses this hook must be in a `<form>`
+```js
+const { pending, data, method, action } = useFormStatus();
+```
+- `useActionState`: allows you to update state based on the result of a form action
+
+## Built-in APIs
+- `lazy`: load a component lazily, loaded only when first displayed
+```js
+const MarkdownPreview = lazy(() => import('./MarkdownPreview.js'));
+// instead of import MarkdownPreview from './MarkdownPreview.js';
+```
+- `memo`: when a parent component rerenders, React rerenders the child components too -> you might only want to rerender a component when its props changed!
+```js
+const MemoizedComponent = memo(SomeComponent, arePropsEqual?)
+```
+- `use`: read the value of a resource like a Pomise or context ?
+- `createPortal`: render some children into a different part of the DOM
+```js
+<div>
+  <p>This child is placed in the parent div.</p>
+  {createPortal(
+    <p>This child is placed in the document body.</p>,
+    document.body
+  )}
+</div>
+```
+- `preconnect`: eagerly connect to a server
+- `prefetchDNS` 
+- `preinit`: eagerly fetch and evaluate a stylesheet or external script
+- `preinitModule`: eagerly fetch and evaluate an ESM module
+- `preload`: eagerly fetch a resource such as a stylesheet, font, or external script 
+- `preloadModule`: eagerly fetch an ESM module 
