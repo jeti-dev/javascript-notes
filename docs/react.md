@@ -225,9 +225,14 @@ function MyInput({ ref }) {
     ```
     - return a cleanup function: it is called before every new trigger of the Effect and on unmount
     - the second parameter is a reactive property that triggers a re-init of the effect
+- think about Effects like when to sync and when to unsync
 - if you don't have a dependency for the Effect, it runs on every render -> don't set state in the Effect because it causes an infinite loop
     - how to make it run only once: add an empty array as the dependency
+- a variable declared in the component body is also considered reactive -> if it's a dependecy of an Effect and or an object, array or a function, it can re-trigger the Effect
+  - so if you need a variable like that, you can put it outside of the component or if it uses a reactive value, put it inside the Effect
 - `useEffectEvent`: we can't use logStuff below because it might not have the latest num2 value AND num2 should be a dependency of our Effect but we don't want that, we only want to depend on num1
+  - in other words: use it when you want to use a reactive value in an Effect but you don't want your Effect to re-run on that value change
+- every reactive value inside an Effect is a dependency of the Effect -> use useEffectEvent when needed
 ```js
   const [num1, setNum1] = useState(0);
   const [num2, setNum2] = useState(0);
@@ -247,6 +252,14 @@ function MyInput({ ref }) {
   }, [num1])
 ```
 
+
+### useMemo
+- to not recaulculate expensive stuff on each render
+```js
+// getFilteredTodos only runs if the todos or the filter variables have changed, not if any other reactive variables changed
+const visibleTodos = useMemo(() => getFilteredTodos(todos, filter), [todos, filter]);
+```
+
 ### Other
 - `flushSync`: force a React update so before your next step, the UI is up to date
 ```js
@@ -256,3 +269,29 @@ flushSync(() => {
 // Otherwise the scroll would happen before setTodos updates the UI
 listRef.current.lastChild.scrollIntoView();
 ```
+- when we update a component during rendering, React throws aways the current JSX and retries rendering with the new values
+- custom hook for data fethcing:
+```js
+function useData(url) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let ignore = false;
+    fetch(url)
+      .then(response => response.json())
+      .then(json => {
+        if (!ignore) {
+          setData(json);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [url]);
+  return data;
+}
+
+const results = useData(`/api/search?${params}`);
+```
+
+### Custom Hooks
+- if they are used at 2 places, then those are 2 different variables! they are not shared = custom Hooks let us share stateful logic but not the state itself
