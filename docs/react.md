@@ -39,7 +39,7 @@ TODO
 - local variables don't persist between renders
 - a state variable's value never changes within a render even if there is an async code in it (e.g. setTimeout)
     - in other words, inside `render` a state variable has always has its current snapshot value
-- "impossible state": e.g. if I have two state variables like 'isSending' and 'isSent', 'isSendining=true' and 'IsSent=true' at the same time is impossbile -> try to use 1 state variable to handle this e.g. status: 'typing' | 'sending'
+- impossible state" e.g. if I have two state variables like 'isSending' and 'isSent', 'isSendining=true' and 'IsSent=true' at the same time is impossbile -> try to use 1 state variable to handle this e.g. status: 'typing' | 'sending'
 - state variables are only initialized during the first render: so if we use a prop variable as the init value for a state variable, it won't be updated if the prop value changes the next time!
 - uncontrolled component: it has no state, everything it needs come from the props
 - The state of a component is tied to its position in the UI tree! So if you have a condition like `IF fancy <MyComp type={"fancy"}> ELSE <MyComp type={"normal"}>` then the state of the component is not reset if you keep chaging the value of fancy!
@@ -183,14 +183,16 @@ const initialTasks = [];
 - DOM ref: `<input ref={ref} />`
 - ref.current is mutable
 - handling a dynamic number of refs: use a ref callback
+
 ```js
  ref={(node) => {
     // save node e.g. to  an array which is stored in yourRef.current
 }}
 ```
 
-- accessing another component's DOM nodes
 ```js
+// accessing another component's DOM nodes
+
 function MyInput({ ref }) {
   return <input ref={ref} />;
 }
@@ -205,14 +207,14 @@ function MyForm() {
 ### useEffect
 - to sync with an external system *after rendering* (or to specify side effects that are caused by the rendering itself and not by a particular event)
     - some stuff should only be triggered by a user event (e.g. buying an item) so don't put these type of events in an Effect!
-    ```js
+```js
       useEffect(() => {
         const connection = createConnection();
         connection.connect();
         return () => connection.disconnect();
     }, []);
-    ```
-    
+```
+
     - return a cleanup function: it is called before every new trigger of the Effect and on unmount
     - the second parameter is a reactive property that triggers a re-init of the effect
 - think about Effects like when to sync and when to unsync
