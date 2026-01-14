@@ -292,6 +292,7 @@ const results = useData(`/api/search?${params}`);
 ## Built-in components
 - `Suspense`: show thee fallback content while the children are loading
   - child must be loading with e.g. `lazy` or `use`
+
 ```js
 <Suspense fallback={<Loading />}>
   <SomeComponent />
@@ -329,6 +330,7 @@ const results = useData(`/api/search?${params}`);
 - `useDebugValue`: add a debug label to my custom hook
 - `useDeferredValue`: 'show the old list of items while loading the new list instead of showing "loading..." again'
   - must use `lazy` or `use`
+
 ```js
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
@@ -357,7 +359,8 @@ const cachedValue = useMemo(calculateValue, dependencies)
 - `useSyncExternalStore`: subscribe to an external store e.g. DOM APIs
   - `subscribe`: has the event listener, calls a callback, return an unsub function
   - `getSnapshot`: called by React when the callback is called
-``` js
+  
+```js
  const isOnline = useSyncExternalStore(subscribe, getSnapshot);
 ```
 
