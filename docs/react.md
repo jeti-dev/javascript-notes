@@ -263,6 +263,7 @@ listRef.current.lastChild.scrollIntoView();
 
 - when we update a component during rendering, React throws aways the current JSX and retries rendering with the new values
 - custom hook for data fethcing:
+
 ```js
 function useData(url) {
   const [data, setData] = useState(null);
