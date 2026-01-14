@@ -188,6 +188,7 @@ const initialTasks = [];
     // save node e.g. to  an array which is stored in yourRef.current
 }}
 ```
+
 - accessing another component's DOM nodes
 ```js
 function MyInput({ ref }) {
