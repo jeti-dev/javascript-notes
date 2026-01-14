@@ -212,6 +212,7 @@ function MyForm() {
         return () => connection.disconnect();
     }, []);
     ```
+    
     - return a cleanup function: it is called before every new trigger of the Effect and on unmount
     - the second parameter is a reactive property that triggers a re-init of the effect
 - think about Effects like when to sync and when to unsync
@@ -241,7 +242,6 @@ function MyForm() {
   }, [num1])
 ```
 
-
 ### useMemo
 - to not recaulculate expensive stuff on each render
 ```js
@@ -258,6 +258,7 @@ flushSync(() => {
 // Otherwise the scroll would happen before setTodos updates the UI
 listRef.current.lastChild.scrollIntoView();
 ```
+
 - when we update a component during rendering, React throws aways the current JSX and retries rendering with the new values
 - custom hook for data fethcing:
 ```js
@@ -293,18 +294,21 @@ const results = useData(`/api/search?${params}`);
   <SomeComponent />
 </Suspense>
 ```
+
 - `Activity`: hide a component but keep its state and update it in the background
 ```js
 <Activity mode={visibility}>
   <Sidebar />
 </Activity>
 ```
+
 - `Profiler`: check performance of a subtree
 ```js
 <Profiler id="App" onRender={onRender}>
   <App />
 </Profiler>
 ```
+
 - `<form>`: the action attribute can take a function too
 - `<input>` (and other input-like stuff): use `value` and `checked` to have a controlled component and `defaultValue` and `defaultChecked` for an uncontrolled component
 
@@ -318,6 +322,7 @@ const results = useData(`/api/search?${params}`);
     });
   }, [productId, referrer]);
 ```
+
 - `useDebugValue`: add a debug label to my custom hook
 - `useDeferredValue`: 'show the old list of items while loading the new list instead of showing "loading..." again'
   - must use `lazy` or `use`
@@ -325,6 +330,7 @@ const results = useData(`/api/search?${params}`);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
 ```
+
 - `useId`: to generate ids for accessiblity stuff
 - `useImperativeHandle`: expose only a subset of APIs of a DOM node e.g.
 ```js
@@ -339,21 +345,25 @@ function MyInput({ ref }) {
   return <input ref={realInputRef} />;
 };
 ```
+
 - `useMemo`: cache the results of a calculation between rerenders
 ```js
 const cachedValue = useMemo(calculateValue, dependencies)
 ```
+
 - `useSyncExternalStore`: subscribe to an external store e.g. DOM APIs
   - `subscribe`: has the event listener, calls a callback, return an unsub function
   - `getSnapshot`: called by React when the callback is called
 ``` js
  const isOnline = useSyncExternalStore(subscribe, getSnapshot);
 ```
+
 - `useTransition`: ?
 - `useFormStatus`: the component which uses this hook must be in a `<form>`
 ```js
 const { pending, data, method, action } = useFormStatus();
 ```
+
 - `useActionState`: allows you to update state based on the result of a form action
 
 ## Built-in APIs
@@ -362,10 +372,12 @@ const { pending, data, method, action } = useFormStatus();
 const MarkdownPreview = lazy(() => import('./MarkdownPreview.js'));
 // instead of import MarkdownPreview from './MarkdownPreview.js';
 ```
+
 - `memo`: when a parent component rerenders, React rerenders the child components too -> you might only want to rerender a component when its props changed!
 ```js
 const MemoizedComponent = memo(SomeComponent, arePropsEqual?)
 ```
+
 - `use`: read the value of a resource like a Pomise or context ?
 - `createPortal`: render some children into a different part of the DOM
 ```js
@@ -377,6 +389,7 @@ const MemoizedComponent = memo(SomeComponent, arePropsEqual?)
   )}
 </div>
 ```
+
 - `preconnect`: eagerly connect to a server
 - `prefetchDNS` 
 - `preinit`: eagerly fetch and evaluate a stylesheet or external script
