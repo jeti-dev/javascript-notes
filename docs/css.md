@@ -304,3 +304,55 @@ export default function App() {
 }  
 ``` 
 
+## CSS variables (custom properties)
+
+Scope
+```css
+/* The selector defines the scope */
+section {
+  /* Declaration */
+  --main-bg-color: brown;
+
+  /* Reading the value, second parameter is the fallback value */
+   background-color: var(--main-bg-color, pink);
+}
+
+/* This way, the scope is global */
+:root {
+  --main-bg-color: brown;
+}
+```
+@property at-rule
+- The `--box-color` has `inherits:false` so the `.child` won't have the green color but another color if the `--box-color` was also declared at a higher scope.
+```css
+@property --box-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: teal;
+}
+
+.parent {
+  --box-color: green;
+  background-color: var(--box-color);
+}
+
+.child {
+  background-color: var(--box-color);
+}
+```
+Using JS
+```js
+// get variable from inline style
+element.style.getPropertyValue("--my-var");
+
+// get variable from wherever
+getComputedStyle(element).getPropertyValue("--my-var");
+
+// set variable on inline style
+element.style.setProperty("--my-var", jsVar + 4);
+```
+
+## Font loading strategies
+- FOIT (flash of invisible text): only show the text when the font is done loading
+- FOUT f(lash of unstyled text): show the text with the system font by default, then change it to our font
+- FOFT (flash of faux tex): show text with system font, then load just the most common letters and show them, finally load everything and change all font styles
