@@ -7,7 +7,7 @@ layout: default
 
 ## Basics
 
-1. Create the slice and export the reducer
+1 Create the slice and export the reducer
 
 ```ts
 const postsSlice = createSlice({
@@ -19,7 +19,7 @@ const postsSlice = createSlice({
 export default postsSlice.reducer;
 ```
 
-2. Add the reducer to the store
+2 Add the reducer to the store
 
 ```ts
 export const store = configureStore({
@@ -29,7 +29,7 @@ export const store = configureStore({
 });
 ```
 
-3. Select the data in a component
+3 Select the data in a component
 
 ```ts
 const posts = useAppSelector((state) => state.posts);
@@ -44,10 +44,11 @@ export type RootState = ReturnType<AppStore["getState"]>;
 export const useAppSelector = useSelector.withTypes<RootState>();
 ```
 
-4. At this point, you have access to the `initialState` but you have no actions to dispatch
+4 At this point, you have access to the `initialState` but you have no actions to dispatch
 
-5. Add a `postAdded` reducer and export the automatically generated action
-   - You can mutate the state because RTK uses Immer
+5 Add a `postAdded` reducer and export the automatically generated action
+
+- You can mutate the state because RTK uses Immer
 
 ```ts
 const postsSlice = createSlice({
@@ -63,7 +64,7 @@ const postsSlice = createSlice({
 export const { postAdded } = postsSlice.actions;
 ```
 
-6. Import `dispatch` and dispatch the `postAdded()` event
+6 Import `dispatch` and dispatch the `postAdded()` event
 
 ```ts
 const dispatch = useAppDispatch();
@@ -87,8 +88,8 @@ export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
 
 ## Advanced
 
-1. **Action creator**: Let's imagine you have to generate an `id` for your new Post and you want to do this from several different components. In that case, you'd need to create the `id` and pass that together with the other properties to your `dispatch`.
-   In a case like this you should use the `reducer + prepare` reducer pattern where you can create your `id` in the `prepare` callback. Redux will call your `prepare` first where you generate the `id` then Redux will call your `reducer` with the payload you created in `prepare`.
+1 **Action creator**: Let's imagine you have to generate an `id` for your new Post and you want to do this from several different components. In that case, you'd need to create the `id` and pass that together with the other properties to your `dispatch`.
+In a case like this you should use the `reducer + prepare` reducer pattern where you can create your `id` in the `prepare` callback. Redux will call your `prepare` first where you generate the `id` then Redux will call your `reducer` with the payload you created in `prepare`.
 
 ```ts
 const postsSlice = createSlice({
@@ -118,7 +119,7 @@ Dispatch your action
 dispatch(postAdded(title, content));
 ```
 
-2. **Selector functions**: Let's imagine you want to select a specific post by id in many components. You don't want to repeat your search logic in every component so you can create a selector function.
+2 **Selector functions**: Let's imagine you want to select a specific post by id in many components. You don't want to repeat your search logic in every component so you can create a selector function.
 
 ```ts
 // your selector
@@ -146,7 +147,7 @@ const postsSlice = createSlice({
 });
 ```
 
-3. **`extraReducers`**: In a slice, listen for actions that happened elsewhere in the app. e.g. When the user logs out, you want to (1) delete the cookies and (2) delete the posts of the user. So you need to do 2 things for 1 event.
+3 **`extraReducers`**: In a slice, listen for actions that happened elsewhere in the app. e.g. When the user logs out, you want to (1) delete the cookies and (2) delete the posts of the user. So you need to do 2 things for 1 event.
 
 - `builder.addCase(actionCreator, caseReducer)`: listen for a specific action
 - `builder.addMatcher(matcherFunction, caseReducer)`: listen for matching actions
@@ -169,7 +170,7 @@ const postsSlice = createSlice({
 });
 ```
 
-4. **Thunks**: Do stuff before and/or after a `dispatch`. Usually used for async code.
+4 **Thunks**: Do stuff before and/or after a `dispatch`. Usually used for async code.
 
 ```ts
 // define parameters if needed
@@ -381,7 +382,7 @@ addPostsListeners(startAppListening);
 
 ## Tips
 
-1. You can use useAppSelector to select calculated data
+1 You can use useAppSelector to select calculated data
 
 ```ts
 const post = useAppSelector((state) =>
@@ -389,7 +390,7 @@ const post = useAppSelector((state) =>
 );
 ```
 
-2. You can combine selectors
+2 You can combine selectors
 
 ```ts
 export const selectCurrentUser = (state: RootState) => {
@@ -400,19 +401,19 @@ export const selectCurrentUser = (state: RootState) => {
 };
 ```
 
-3. Memoizing selectors
-   Returning new reference for the same input
-   There are some cases when a reducer is dispatched and it returns a new reference even though the inputs didn't change e.g. filter the posts by user id.
+3 Memoizing selectors
+Returning new reference for the same input
+There are some cases when a reducer is dispatched and it returns a new reference even though the inputs didn't change e.g. filter the posts by user id.
 
-   ```ts
-   export const selectPostsByUser = (state: RootState, userId: string) => {
-     const allPosts = selectAllPosts(state);
-     // ❌ WRONG - this _always_ creates a new array reference!
-     return allPosts.filter((post) => post.user === userId);
-   };
-   ```
+```ts
+export const selectPostsByUser = (state: RootState, userId: string) => {
+  const allPosts = selectAllPosts(state);
+  // ❌ WRONG - this _always_ creates a new array reference!
+  return allPosts.filter((post) => post.user === userId);
+};
+```
 
-   So we have to memoize a selector like that:
+So we have to memoize a selector like that:
 
 ```ts
 export const selectAllPosts = (state: RootState) => state.posts.posts;
@@ -434,8 +435,8 @@ export const selectPostsByUser = createSelector(
 selectPostsByUser(state1, "user1");
 ```
 
-5. Normalizing Data
-   Data is not just an array, it is in a special format. It lets us reference the object by id so we don't have to loop through everything all the time.
+5 Normalizing Data
+Data is not just an array, it is in a special format. It lets us reference the object by id so we don't have to loop through everything all the time.
 
 ```ts
 {
