@@ -211,7 +211,7 @@ export const createAppAsyncThunk = createAsyncThunk.withTypes<{
 }>();
 ```
 
-Use your thunk
+Use your thunk:
 These actions will be dispatched automatically: `posts/fetchPosts/pending`, `posts/fetchPosts/fulfilled`, `posts/fetchPosts/failed`.
 The second argument `thunkApi` has special methods e.g. `dispatch()`, `getState()`, `signal` (to abort a request).
 
@@ -235,7 +235,7 @@ interface PostsState {
 }
 ```
 
-React to your thunk actions
+React to your thunk actions:
 You can have a reference to the thunk actions with `fetchPost.`
 
 ```ts
@@ -269,7 +269,7 @@ Dispatch your thunk
 dispatch(fetchPosts("Bob"));
 ```
 
-Wait for your thunk in a component
+Wait for your thunk in a component:
 `createAsyncThunk` handles errors internally and returns the "fulfilled" or the "rejected" action - so it is never fails basically. We can use `unwrap()` to get the `action.paylod` or catch the thrown error.
 
 ```ts
@@ -285,7 +285,7 @@ try {
 }
 ```
 
-Thunk condition
+Thunk condition:
 Let's say you have an ongoing API call and something triggers the same event again. You don't want to call the API again so you need a mechanism to skip the second action. If the `condition` returns `false` then it won't trigger the thunk.
 
 ```ts
