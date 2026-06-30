@@ -108,3 +108,32 @@ async function main() {
 ```
 
 - advanced hook: we can ask Claude to do sg e.g. we can tell it to check some files specifically for implementations of useful stuff in case Calude wants to create a new file with redundant code
+
+## API
+
+### Chat
+
+- Opus > Sonnet > Haiku
+- API request details
+  - API key
+  - Model: model to use
+  - Messages: list of messages containing the user's input
+  - Max Tokens: limit how many tokens can be generated max
+- steps of processing user input
+  - break message into tokens e.g. 1 word = 1 token
+  - each token is converted to an embedding (a long list of numbers) ~ the number definition of that word
+    - a word can mean a lot of things based on its context -> the embeddings represent all those meanings -> to find the correct meaning of the word in the user input we have to contextualize each word: each embedding is adjusted based on the other embeddings around it
+  - generation: the output layer generates a possibility of next words from the embeddings -> but not the most probable ones are selected, it depends on many factors which ones are selected
+  - the model asks itself if the generation is done
+    - e.g. check max token
+  - the response has:
+    - the text
+    - usage. count number of input and output tokens
+    - stop reason: why the model decided to stop generating
+  - we receive this on our backend and we can return to the client what we want from these
+- client.messages.create(model, max_tokens, messages=[])
+  - a message = {role: "user", content="What is a dog?"}
+  - response: many properties but the answer is in the text property
+- multi turn conversation: the API does not store any messages! we always have to send all the former messages
+
+### System prompts
