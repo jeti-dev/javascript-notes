@@ -136,7 +136,106 @@ async function main() {
   - response: many properties but the answer is in the text property
 - multi turn conversation: the API does not store any messages! we always have to send all the former messages
 
-### System prompts
+#### System prompts
 - customize the style and tone of the response
 - client.messages.create(model, messages, max_tokens, system)
   - system prompt e.g. "You are a tutor who ... You should not give the answer directly at first ..."
+
+
+#### Temperature
+- defines how predictable or creative the responses are
+- the text generation process
+  1. tokenization: breaking the input into chunks
+  2. prediction? calculating probabilities for the next possible words
+  3. sampling: chosing a token based on the probabilities
+- the cat is ... cute (0.3), hungry (0.2), brown(0.1) ...
+  - these are the probabilities of the next word
+  - LOW temperature will nearly always choose the most probable (cute, 0.3) -> deterministic
+  - HIGH temperature distributes the probability more evenly -> more creative as more chances to pick different words each time
+- it's just a config param:
+```python
+ params = {
+        "model": model,
+        "max_tokens": 1000,
+        "messages": messages,
+        "temperature": temperature
+    }
+```
+
+#### Response streaming
+- answers can take 10-30 seconds and we don't want the user to just stare at the screen for that long -> let's stream the response continously
+- types of response messages:
+  - MessageStart - A new message is being sent
+  - ContentBlockStart - Start of a new block containing text, tool use, or other content
+  - ContentBlockDelta - Chunks of the actual generated text: THIS is what we display to the user
+  - ContentBlockStop - The current content block has been completed
+  - MessageDelta - The current message is complete
+  - MessageStop - End of information about the current message
+- handle streaming:
+```python 
+stream = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=messages,
+    stream=True
+)
+
+for event in stream:
+    print(event)
+```
+
+- use the SDK to extract only the texts:
+```python
+with client.messages.stream(
+    model=model,
+    max_tokens=1000,
+    messages=messages
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="")
+```
+
+- get the FULL message after streaming:
+```python
+with client.messages.stream(
+    model=model,
+    max_tokens=1000,
+    messages=messages
+) as stream:
+    for text in stream.text_stream:
+        # Send each chunk to your client
+        pass
+    
+    # Get the complete message for database storage
+    final_message = stream.get_final_message()
+```
+
+#### Structured data
+- when we want structured data e.g. JSON and don't want any noise
+-  add assistant message prefilling + stop sequences
+```python
+messages = []
+
+add_user_message(messages, "Generate a very short event bridge rule as json")
+# it sets role: assistant in the parameter and prints the ```json as if Claude added it
+add_assistant_message(messages, "```json")
+
+# stop_sequences is a parameter on the req object
+text = chat(messages, stop_sequences=["```"])
+```
+  - the prefilled assistant message makes Cluade think it already started a markdown code block (START)
+  - when it tries to close the code block with ```, the stop sequence ends the generation (END)
+
+### Prompt evaluation
+- to test the correctness of a prompt
+- 5 steps eval flow
+  1. draft a prompt
+  2. create an eval dataset: sample inputs e.g. what kind of question or requests will Claude receive
+  3. feed through Claude: merge my eval dataset with me draft prompt and send each one to Claude
+  4. feed through a Grader: scores Claude's answers to the questions from 1 to 10
+    - it can create an average score too which we can compare to the next runs
+  5. change prompt and repeat
+
+#### Generating data sets
+- the eval dataset can be a list of objects with a `task` property that has the user input
+
