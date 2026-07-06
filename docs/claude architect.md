@@ -137,3 +137,6 @@ async function main() {
 - multi turn conversation: the API does not store any messages! we always have to send all the former messages
 
 ### System prompts
+- customize the style and tone of the response
+- client.messages.create(model, messages, max_tokens, system)
+  - system prompt e.g. "You are a tutor who ... You should not give the answer directly at first ..."
