@@ -276,3 +276,169 @@ text = chat(messages, stop_sequences=["```"])
   - be specific
   - structure with xml
   - provide examples
+
+
+### Tools
+- a way for Claude to get extra data e.g. if it has no access to the internet, Claude doesn't know what's the weather at the moment
+- how tool use works
+  1. ask a question from Claude including instructions on how to get extra data
+  2. Claude asks for extra data with details on what is needed
+  3. we respond with that extra data to Claude
+  4. Claude gives the final response
+
+#### Tool functions
+- a function that gets called by Claude
+  - should have a meaningful name, parameter names, validate inputs, raise menaningful errors -> Claude will try to call it a second time on error
+- e.g.
+```python 
+def get_current_datetime(date_format="%Y-%m-%d %H:%M:%S"):
+    if not date_format:
+        raise ValueError("date_format cannot be empty")
+    return datetime.now().strftime(date_format)
+```
+#### Tool schemas
+- a JSON schema providing meta info about the tool function
+- properties:
+  - name
+  - description
+  - input_schema
+- e.g.
+```json
+{
+    "name": "get_current_datetime",
+    "description": "Returns the current date and time formatted according to the specified format",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "date_format": {
+                "type": "string",
+                "description": "A string specifying the format of the returned datetime. Uses Python's strftime format codes.",
+                "default": "%Y-%m-%d %H:%M:%S"
+            }
+        },
+        "required": []
+    }
+}
+```
+- how to:
+  - 3-4 sentences to explain what it does
+  - describe when to use it
+  - explain the kind of data it returns
+  - add detailed descriptions for the arguments
+- use the ToolParam type from the Anthropic lib for better type checking
+
+#### Message blocks
+- to enable tool use, set it in the config:
+```python
+response = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=messages,
+    tools=[get_current_datetime_schema],
+)
+```
+- when Claude wants to use a tool, it returns a message with multiple blocks
+  - text block: human readable text explaining what Claude is doing
+  - tool use block: instructions for my code about which tool to call and what parameters to use; props:
+    1. ID for tracking the tool call
+    2. name of the function to call
+    3. input params as a dictionary
+    4. the type "tool_use"
+- remember that we always have to send all the previous messages to Claude -> we have to send the tool use block too:
+```python
+messages.append({
+    "role": "assistant",
+    "content": response.content
+})
+```
+
+#### Sending tool results
+- unpack the parameters from Claude's tool use request to be used in my tool function:
+```python
+get_current_datetime(**response.content[1].input)
+```
+- return the tool result to Claude in a special format:
+  - tool_use_id: the id from the tool request
+  - content: output from my tool, formatted as a string
+  - is_error: only true if an error occured
+```python
+{
+        "type": "tool_result",
+        "tool_use_id": response.content[1].id,
+        "content": "15:04:22",
+        "is_error": False
+}
+```
+- claude can request multiple tool use in one message
+- when sending the follow up request with the tool result, we must still include the tool schema so Claude can understand the tool references in the history!
+
+#### Multi turn conversations
+- when Claude asks for multiple tool use one after the other to generate the answer -> we need a conversation loop that continues until Claude stops requesting tools
+```python
+def run_conversation(messages):
+    while True:
+        response = chat(messages)
+
+        add_assistant_message(messages, response)
+
+        # Pseudo code
+        if response isn't asking for a tool:
+            break
+
+        tool_result_blocks = run_tools(response)
+        add_user_message(messages, tool_result_blocks)
+        
+    return messages
+```
+- how to know when Claude doesn't need more tools:
+```python
+if response.stop_reason != "tool_use":
+    break  # Claude is done, no more tools needed
+```
+- handling tool error:
+```python
+try:
+    tool_output = run_tool(tool_request.name, tool_request.input)
+    tool_result_block = {
+        "type": "tool_result",
+        "tool_use_id": tool_request.id,
+        "content": json.dumps(tool_output),
+        "is_error": False
+    }
+except Exception as e:
+    tool_result_block = {
+        "type": "tool_result", 
+        "tool_use_id": tool_request.id,
+        "content": f"Error: {e}",
+        "is_error": True
+    }
+```
+
+#### Tools and streaming
+- for tool use, a new type of event called InputJsonEvent is returned by Clade; props:
+  - partial_json: a chunk of JSON representing part of the tool arguments
+  - snapshot: the cumulative JSON built up from all the chunks received so far
+- how to process it:
+```python
+for chunk in stream:
+    if chunk.type == "input_json":
+        # Process the partial JSON chunk
+        print(chunk.partial_json)
+        # Or use the complete snapshot so far
+        current_args = chunk.snapshot
+```
+- Claude does not return all the chunks immediately as they get generated, it buffers and validates them first e.g.
+```python
+{
+  "abstract": "This paper presents a novel...",
+  "meta": {
+    "word_count": 847,
+    "review": "This paper introduces QuanNet..."
+  }
+}
+```
+  - It starts to generate chunks for the "abstract" property and its value. When it sees that it reached the end of the value, it validates if this key value pair is a valid text in the schema (a valid parameter for my tool) I sent. If it is then Claude returns the buffered chunks at once.
+- if we don't want buffering + validation so we can get the chunks faster, then we can use fine grained tool calling -> add fine_grained=True to the API call
+  - if this is enabled, then we have to handle invalid JSON responses from Claude
+
+#### The built-in text edit tool
