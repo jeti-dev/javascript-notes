@@ -239,3 +239,40 @@ text = chat(messages, stop_sequences=["```"])
 #### Generating data sets
 - the eval dataset can be a list of objects with a `task` property that has the user input
 
+#### Model based grading
+- grader types: code, another AI model, human
+- some grading tips: format, syntax, task following
+- when creating a model Grader it is very important to ask for strengths, weaknesses and reasoning otherwise it will default to score 6
+
+### Prompt engineering
+#### Clear and direct
+- the first line is crucial, use clear and direct language
+  - use instructions not questions
+  - start with direct action verbs like write, create, generate
+- 3 questions for you to write a better starting instruction: 
+  - What action to take? 
+  - What to create? 
+  - What are the key constraints?
+- Claude works the best when we treat it like a capable assistant whi needs clear direction
+
+#### Specific
+- output quality guidelines: length of response, structure and format, specific elements to include, style requirements
+- process steps (step by step instructions that affect Claude's thinking): troubleshooting complex problems, decision making scenarios, critical thinking, when considering multiple angles
+  - e.g. consider recent organization changes + review customer feedback + identify relevant industry changes
+
+#### Structure with XML
+- when there is a big context + serves as delimeters
+
+#### Provide examples
+- e.g. is a sentence has a positive or negative sentiment
+- goal: capturing edge cases, defining complex output format, showing exact style, how to handle ambiguous inputs
+- one-shot: provide 1 example
+- multi shot: multiple examples to show different types of responses or edge cases
+- tip: use the highest scoring answers from the evaluations as the examples
+- some explanation after the example makes it even better, it helps Claude understand the reasoning
+
+- summary
+  - be clear and direct
+  - be specific
+  - structure with xml
+  - provide examples
