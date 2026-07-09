@@ -442,3 +442,53 @@ for chunk in stream:
   - if this is enabled, then we have to handle invalid JSON responses from Claude
 
 #### The built-in text edit tool
+- features
+  - view file or directories
+  - view ranges of lines in a file
+  - replace text in a file
+  - create new file
+  - insert text at specific lines
+  - undo recent edits
+- Claude has the schema but I have to provide the implementation functions
+- I also still have to provide a small schema for Claude so it can expand it to the full schema
+```python 
+def get_text_edit_schema(model):
+    if model.startswith("claude-3-7-sonnet"):
+        return {
+            "type": "text_editor_20250124",
+            "name": "str_replace_editor",
+        }
+    elif model.startswith("claude-3-5-sonnet"):
+        return {
+            "type": "text_editor_20241022", 
+            "name": "str_replace_editor",
+        }
+```
+
+#### Web search tool
+- it must be enabled by my organization
+- Claude has the implementation function and the schema too but I still have to provide a simple schema to enable it
+```python
+web_search_schema = {
+    "type": "web_search_20250305",
+    "name": "web_search", 
+    "max_uses": 5
+}
+```
+- returned blocks
+  - Text blocks - Claude's explanation of what it's doing
+  - ServerToolUseBlock - Shows the exact search query Claude used
+  - WebSearchToolResultBlock - Contains the search results
+  - WebSearchResultBlock - Individual search results with titles and URLs
+  - Citation blocks - Text that supports Claude's statements
+- restrict domains with `allowed_domains`:
+```python
+web_search_schema = {
+    "type": "web_search_20250305",
+    "name": "web_search",
+    "max_uses": 5,
+    "allowed_domains": ["nih.gov"]
+}
+```
+- just enable it in the tools and Claude will decide when to use it
+
