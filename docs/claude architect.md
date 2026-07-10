@@ -212,7 +212,7 @@ with client.messages.stream(
 
 #### Structured data
 - when we want structured data e.g. JSON and don't want any noise
--  add assistant message prefilling + stop sequences
+-  add assistant message prefilling (e.g. start a JSON markdon block) + stop sequences
 ```python
 messages = []
 
@@ -564,3 +564,22 @@ RRF_score(d) = Σ(1 / (k + rank_i(d)))
 - it combines the scoring of both searching methods and the highest numbers win
 
 ### Features of Claude
+
+#### Extended thinking
+- not compatible with some features e.g. message pre-filling and temperature
+- reasoning feature that gives the model time to work through complex problems - we can see the reasoning process too
+- we get a new block: ThinkingBlock e.g. "I should cover what recursion is, how it works ..."
+  - type: thinking
+  - thinking: What Claude is saying (what we display to the user)
+  - signature: a cryptographic token tied to the thinking text Claude generated => it prevent developers from tampering with the reasoning process
+- more expensive + takes more time
+- when to use? => use prompt evaluation to decide if extended thinking is needed
+- redacted thinking: when the thinking process gets flagged by internal safety systems 
+  - the redacted content is in encrypted form and can be passed back to Claude without losing context
+  - by sending a special trigger warning to Claude we can test is our app handles this case gracefully
+- two parameters to enable it
+  - thinking=True
+  - thinking_budget=1024 (it's the minimum, must be smaller than the max_tokens)
+
+#### Image support
+- 
