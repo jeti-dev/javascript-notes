@@ -492,3 +492,75 @@ web_search_schema = {
 ```
 - just enable it in the tools and Claude will decide when to use it
 
+### RAG and agentic search
+#### Intro to RAG
+- retrievel augmented generation
+- helps to work with large documents which are too big to fit into single propmpts -> breaks the document into chunks and only includes the most relevant pieces when answering questions
+
+#### Chunking strategies
+1. size based
+  - divide into equal length strings
+  - includes some overlap on each side
+  - might break up related conntent into separate chunks
+2. structure based
+  - divide by headers, paragraphs etc
+  - try to avoid breaking related content into multiple chunks
+  - we must first understand the document to chunk it effectively
+3. semantic based
+  - divide by related sentences or sections
+  - we must understand the meaning of all sentences
+  - expensive to do but results in more relevant chunks
+4. sentence based
+  - a practical middle ground
+  - split into individual sentences using regex then group them into chunks with some overlap
+
+#### Text embeddings
+- after creating the chunks now we have to search the relevant chunks somehow
+- a text embedding is a numerical representation of the meaning contained in some text
+- the process
+  - we feed the text into an embedding model
+  - we get a long list of numbers ranging from -1 to +1
+- we can't know what these numbers represent because the meanings are just learnt by the models during training and they are not interpretable by humans
+- a provider for embeddings is e.g. VoyageAI
+
+#### The RAG flow
+- the embeddings are stored in a vector database
+- at this point, we are waiting for a user input
+- when an input arrives, we run it through the same embedding model
+- we get embeddings for the input
+- we send it to the vector db to get the most relevant chunks
+  - it uses cosine similarity , the value is between -1 to 1
+  - -1 is very different, 0 is no relationship, 1 is high similarity
+  - cosine distance: 1 - cosine similarity where values close 0 mean high similarity while larger values mean less similarity
+- when we have the most relevant chunk, we create a prompt and send it to Claude
+
+#### BM25 lexical search
+- semantic search doesn't always return the best results => sometimes we need exact term matches
+- BM25 (best match 25, an algorithm for lexical search in RAG systems) = combine semantic search + lexical search: run them parallel and merge the results
+- e.g.
+  - we want so search for an incident number "a inc-123"
+  - it gets tokenized to ['a', 'inc-123']
+  - we count how many times each token appears in all of the chunks
+  - the less times a token is present, the bigger importance it gets e.g. "a" appears a lot more time than "inc-123"
+  - we'll only use those chunks which have the most HIGH scoring tokens
+
+#### Multi index RAG pipeline
+- combine the semantic search (vector embeddings) + lexical search (BM25) => use a technique called reciprocal rank fusion
+- the difficulty: we have 2 different ways to search chunks and we somehow have to merge them
+
+| Chunk name | Rank from vector | Rank from BM25 |
+|------------|------------------|----------------|
+| Topic 2    | 1                | 2              |
+| Topic 6    | 2                | 3              |
+| Topic 5    | 3                | 1              |
+
+```python
+RRF_score(d) = Σ(1 / (k + rank_i(d)))
+
+# Where k is a constant (usually 60) and rank_i(d) 
+# is the rank of document d in the i-th ranking
+# e.g. 1.0/(60+2) + 1.0/(60+3) for Topic 6
+```
+- it combines the scoring of both searching methods and the highest numbers win
+
+### Features of Claude
