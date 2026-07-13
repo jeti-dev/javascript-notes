@@ -784,3 +784,5 @@ chat(
 - downloading a file: look for the code_execution_output block which contains a file ID for the generated content (e.g. charts)
 
 ### MCP
+- provides tools, prompts and resources for Claude
+- 
