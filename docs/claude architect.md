@@ -5,9 +5,9 @@ layout: default
 
 # Claude Architect
 
-## Claude Code in action
+From [https://anthropic.skilljar.com/](https://anthropic.skilljar.com/)
 
-Source: [https://anthropic.skilljar.com/claude-code-in-action](https://anthropic.skilljar.com/claude-code-in-action)
+## Claude Code in action
 
 - coding assistants use LLMs to complete tasks
   - however, an LLM can't do much on its own, it needs tools to e.g. read the content of a file -> coding assistants can work with tools to help the work of the LLM
@@ -582,4 +582,205 @@ RRF_score(d) = Σ(1 / (k + rank_i(d)))
   - thinking_budget=1024 (it's the minimum, must be smaller than the max_tokens)
 
 #### Image support
-- 
+- describe what is in the image, compare images, count objects, complex visual analysis
+- limits
+  - max 100 images across all messages in a single request
+  - max 5mb per image
+  - when sending 1 image then max height/width of 8000px
+  - hwn sending multiple images then max height/width of 2000px
+  - can be bas64 or a URL too
+  - token calculation for an image: (width px * height px) / 750
+- we have to use an ImageBlock
+```python
+with open("image.png", "rb") as f:
+    image_bytes = base64.standard_b64encode(f.read()).decode("utf-8")
+
+add_user_message(messages, [
+    # Image Block
+    {
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": "image/png",
+            "data": image_bytes,
+        }
+    },
+    # Text Block
+    {
+        "type": "text",
+        "text": "What do you see in this image?"
+    }
+])
+```
+- use the same prompt enginnering techniques e.g.
+  - add detailed guidelines and analysis steps
+  - use one or multi shot examples
+  - break down into smaller steps
+  - e.g. identify one ball at a time and assign a number to them => then count the numbers from left to right, from the bottom to the top => how many balls are in the image?
+
+#### PDF support
+- what Claude can do
+  - understand text content
+  - understand images and charts
+  - understand tables and data relationships
+  - understand document structure and formatting
+```python
+with open("earth.pdf", "rb") as f:
+    file_bytes = base64.standard_b64encode(f.read()).decode("utf-8")
+
+messages = []
+
+add_user_message(
+    messages,
+    [
+        {
+            "type": "document",
+            "source": {
+                "type": "base64",
+                "media_type": "application/pdf",
+                "data": file_bytes,
+            },
+        },
+        {"type": "text", "text": "Summarize the document in one sentence"},
+    ],
+)
+```
+
+#### Citations
+- Claude can reference parts of the text we provide to prove that its response is not from its training data but from the document
+```python
+{
+    "type": "document",
+    "source": {
+        "type": "base64",
+        "media_type": "application/pdf",
+        "data": file_bytes,
+    },
+    "title": "earth.pdf", # required
+    "citations": { "enabled": True } # required
+}
+```
+- the response becomes more complex:
+
+| Citation Structure | Example | Purpose |
+| :--- | :--- | :--- |
+| **cited_text** | Earth's atmosphere and oceans were formed by volcanic activity and outgassing. | Text that Claude is citing from the provided document |
+| **document_index** | 0 | If multiple documents are provided, this will tell you which document Claude is citing from |
+| **document_title** | 'earth.pdf' | Title of the document that Claude is citing from |
+| **start_page_number** | 4 | Starting page of the cited text |
+| **end_page_number** | 5 | Ending page of the cited text |
+
+- citations with plain text sources:
+```python
+{
+    "type": "document", 
+    "source": {
+        "type": "text",
+        "media_type": "text/plain",
+        "data": article_text,
+    },
+    "title": "earth_article",
+    "citations": { "enabled": True }
+}
+```
+
+#### Prompt caching
+- faster response + reduced cost
+- in a normal flow Claude:
+  - tokenizes the input prompt
+  - creates embedding for each token
+  - adds context based on surrounding text
+  - only then generates the output
+  - these are all thrown away after the response is sent
+- e.g. as a first step we summarize a text but then we ask for more focus on something => Claude could reuse some of its previous work
+  - tokenization, ebeddings and added context can be saved to a cache
+  - cache lives for 1 hour
+  - only useful if we repeadetly sendinf the same content e.g. multiple questions about a document
+- how to set it up
+  - we have to add a 'cache breakpoint' to a block
+  - work done before the breakpoint will be cached
+  - cache will be used only if the content up to and including the breakpoint is the same
+```python
+user_message = {
+  "role": "user",
+  "content": [
+    {
+      "type": "text",
+      "text": "<Long prompt>"
+      "cache_control": {
+       "type": "ephemeral"
+      }
+    }
+  ]
+}
+```
+- IMPORTANT: the cache is dismissed if anything has changed in the previously cached input
+  - e.g. one of your prompts has a dynamic data e.g. time(). Because AI is stateless, you always have to send all the previous conversations. So for the second time if you time() runs again, it would return a new time in one of your *older* inputs and it would dismiss the cache
+- can be added to
+  - text blocks
+  - system prompts
+  - tool definitions
+  - image blocks
+  - tool use and tool result blocks
+- tool definitions and system prompts are most commonly cached as they rarely change between requests
+- a request is processed in a specific order: tools, system prompt, messages => it helps thinking about where to put cache breakpoint
+- up to 4 cache breakpoint can be added
+- content must be min 1024 tokens to be cached - it's the sum of all messages and blocks, not individual blocks
+```python
+# tool schema caching
+last_tool["cache_control"] = {"type": "ephemeral"}
+
+# system prompts caching
+params["system"] = [
+        {
+            "type": "text",
+            "text": system,
+            "cache_control": {"type": "ephemeral"}
+        }
+    ]
+```
+- some new patterns in the response
+  - first request: cache_creation_input_otkens=1772-
+  - follow up requests: cache_read_input_tokens=1772-
+  - changed content: new cache creation tokens appear
+
+#### Code execution and the file API
+- file API: we can use this instead of encoding images or PDF directly in the message => we can upload files ahead of time and reference them later
+- steps
+  - upload file to Claude in a separate API call
+  - receive a file metadata object containing a unique file ID
+  - reference that file ID in future messages
+- code execution tool: server based tool, I don't have to provide the implementation
+  - Python code in an isolated Docker container
+  - no network access
+  - Claude can execute code multiple times during a single conversation
+  - results are captured and interpreted by Claude for the final response
+- combining them
+  - upload the data file with the File API
+  - then reference it and run analytics code on the data
+```python
+messages = []
+add_user_message(
+    messages,
+    [
+        {
+            "type": "text",
+            "text": """Run a detailed analysis to determine major drivers of churn.
+            Your final output should include at least one detailed plot summarizing your findings."""
+        },
+        {"type": "container_upload", "file_id": file_metadata.id},
+    ],
+)
+
+chat(
+    messages,
+    tools=[{"type": "code_execution_20250522", "name": "code_execution"}]
+)
+```
+- returned blocks:
+  - TextBlocks: Claude's analyzis and explanations
+  - ServerToolUseBlocks: the actual code that was run
+  - CodeExecutionRoolResultBlocks: output from running the code
+- downloading a file: look for the code_execution_output block which contains a file ID for the generated content (e.g. charts)
+
+### MCP
