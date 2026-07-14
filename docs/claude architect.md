@@ -822,3 +822,4 @@ sequenceDiagram
     OurServer->>User: Your repositories are...
   ```
 - there is a Python SDK that helps with creating tools
+  - it has a built in browser based tool (server inspector) testing app
