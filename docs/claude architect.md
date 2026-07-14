@@ -785,4 +785,40 @@ chat(
 
 ### MCP
 - provides tools, prompts and resources for Claude
-- 
+
+#### MCP clients 
+- the bridge between my server and the MCP servers, it handles the message passing nd protocol details
+- the MCP server usually runs on our server
+- it supports multiple transport protocols: HTtp, websocket, other
+- new message types
+  - from client to server: ListToolsRequest, CallToolRequest
+  - from server to client: ListToolsResult, CallToolResult
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant OurServer as Our Server
+    participant MCPClient as MCP Client
+    participant MCPServer as MCP Server
+    participant Claude
+    participant Github
+
+    User->>OurServer: What repositories do I have?
+    OurServer->>MCPClient: I need a list of tools to send to Claude
+    MCPClient->>MCPServer: ListToolsRequest
+    MCPServer-->>MCPClient: ListToolsResult
+    MCPClient-->>OurServer: Here are the tools
+    OurServer->>Claude: Query + Tools
+    Claude->>OurServer: ToolUse
+    OurServer->>MCPClient: Please run this tool with these args
+    MCPClient->>MCPServer: CallToolRequest
+    MCPServer->>Github: Request to Github
+    Github-->>MCPServer: Response
+    MCPServer-->>MCPClient: CallToolResult
+    MCPClient-->>OurServer: Here's the result of running the tool
+    OurServer->>Claude: toolResult
+    Claude->>OurServer: Your repositories are...
+    OurServer->>User: Your repositories are...
+  ```
+- there is a Python SDK that helps with creating tools
