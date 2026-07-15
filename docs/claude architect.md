@@ -823,3 +823,123 @@ sequenceDiagram
   ```
 - there is a Python SDK that helps with creating tools
   - it has a built in browser based tool (server inspector) testing app
+
+#### MCP client
+- allows our app to communicate with the MCP server
+- in the real world we usually build either an MCP server or an MCP client
+- main components:
+  - MCP Client: a custom class that helps using the session
+  - Client Session: the acutal connection to the server (part of the MCP SDK)
+    - must be cleaned up after usage
+- two main purposes:
+  - lets our code get a list of tools to be passed to Claude
+  - lets our code call a tool when Claude requests them
+- two methods to implement:
+  - `list_tools()`
+  - `call_tool()`
+
+```python
+async def list_tools(self) -> list[types.Tool]:
+    result = await self.session().list_tools()
+    return result.tools
+  
+async def call_tool(
+    self, tool_name: str, tool_input: dict
+) -> types.CallToolResult | None:
+    return await self.session().call_tool(tool_name, tool_input)
+  
+# test it by running the client directly; a testing harness connects to our MCP server and calls the methods
+async with MCPClient(
+    command="uv", args=["run", "mcp_server.py"]
+) as client:
+    result = await client.list_tools()
+    print(result)
+```
+
+#### Defining resources
+- expose data to clients (like an HTTP get request); used when we have to fetch info rather than perform actions
+- e.g. when the user types @ then he can select a document name from a list of documents
+  - we need the MCP server to return a list of document names
+  - and we need the MCP server to give us the document content when the message mentions a document
+- the client has to send a ReadResourceRequest message with a URL and the MCP server responds with the data
+- two types of resources:
+  - direct resource: the URI does not have any params
+  - templated resource: the URI has some parameters; the SDK parses them and passes to my function
+
+```python
+# direct
+@mcp.resource(
+    "docs://documents",
+    mime_type="application/json"
+)
+def list_docs() -> list[str]:
+    return list(docs.keys())
+
+# templated
+@mcp.resource(
+    "docs://documents/{doc_id}",
+    mime_type="text/plain"
+)
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]
+```
+- we also return `mime_type` to give clients a hint
+- test the resources with the MCP Inspector: `uv run mcp dev mcp_server.py` - it will spin up the UI based testing tool
+
+#### Accessing resources
+- we need a `read_resource` function in the MCP client
+  - the response from the MCP server contains a `contents` list: the first element is the actual resouce data along with meta data like MIME type
+```python
+async def read_resource(self, uri: str) -> Any:
+    result = await self.session().read_resource(AnyUrl(uri))
+    resource = result.contents[0]
+
+# handling MIME time by the MCP client
+import json
+from pydantic import AnyUrl
+
+if isinstance(resource, types.TextResourceContents):
+    if resource.mimeType == "application/json":
+        return json.loads(resource.text)
+    
+    return resource.texts
+```
+
+#### Defining prompts
+- prompts define a set of user and assistant messages that the users can directly use
+- steps to implement
+  - use `@mcp.prompt()`
+  - add a name and a description
+  - return a list of messages that form the complete prompt
+  - these prompts should be high quality
+
+```python
+# a document formatting prompt
+from mcp.server.fastmcp import base
+
+@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format."
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format")
+) -> list[base.Message]:
+    prompt = f"""
+Your goal is to reformat a document to be written with markdown syntax.
+
+The id of the document you need to reformat is:
+
+{doc_id}
+
+
+Add in headers, bullet points, tables, etc as necessary. Feel free to add in extra formatting.
+Use the 'edit_document' tool to edit the document. After the document has been reformatted...
+"""
+    
+    return [
+        base.UserMessage(prompt)
+    ]
+```
+- test it with the UI testing tool
