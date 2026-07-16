@@ -943,3 +943,48 @@ Use the 'edit_document' tool to edit the document. After the document has been r
     ]
 ```
 - test it with the UI testing tool
+
+#### Prompts in the client
+- implement `list_prompts`
+```python
+async def list_prompts(self) -> list[types.Prompt]:
+    result = await self.session().list_prompts()
+    return result.prompts
+```
+
+- when we define a prompt function, it can accept paramteres
+```python
+def format_document(doc_id: str):
+    # The doc_id gets interpolated into the prompt
+```
+
+- implement getting a prompt with the arguments interpolated, `get_prompt`
+```python
+async def get_prompt(self, prompt_name, args: dict[str, str]):
+    result = await self.session().get_prompt(prompt_name, args)
+    return result.messages
+```
+
+- test them through the CLI
+
+### Anthropic apps
+#### Claude Code
+- `/init` to understand the codebase -> creates a summary in the CLAUDE.md file
+- CLAUDE.md places and their scopes
+  - project: shared within the project
+  - local: personal notes that are not checked into git
+  - user: across my projects
+- use # to write instructions to the CLAUDE.md file
+- steps to use it successfully
+  - feed context (only relevant files)
+  - tell Claude to just create a plan, don't code yet
+  - ask for implementation
+  - OR as a test driven development
+    - in step 2, let Claude create tests
+    - in step 3, implement the tests
+    - in step 4, write the code that passes the test
+- has a built in MCP client
+```shell
+claude mcp add [server-name] [command-to-start-server]
+```
+
