@@ -988,3 +988,20 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
 claude mcp add [server-name] [command-to-start-server]
 ```
 
+### Agents and workflows
+- workflow: a series of calls to Claude meant to solve a specific problem using predefined steps
+- agents: Claude is given a goal and a set of tools => Claude needs to figure out how to solve the problem
+
+#### Workflows
+- evaluator-optimizer pattern
+  - producer: takes an input and creates an output
+  - grader: evaluates the output against some criteria
+  - feedback loop: if the grader does't accept the output, feedback goes back to the producer for improvement
+  - iteration: the cycle repeats until the grader accept the output
+- paralellization e.g. analyze if an object in an image is wood, metal or stone
+  - if we add this as 1 big prompt with details about how to recognize all these materials then the result won't be that precise
+  - send 3 messages simultaneously and ask for only 1 material => feed the 3 responses to a new session which can return the real answer
+- chaining workflows: split up the work into focused steps that build on each other so Claude can focus on small, specific tasks one at a time
+- routing workflow: one generic prompt is often not good for different topics e.g. creating an educational vs an entertaining video
+  - first, make Claude categorize the input
+  - then ask claude to create content and provide the category
