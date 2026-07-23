@@ -38,6 +38,28 @@ From [https://anthropic.skilljar.com/](https://anthropic.skilljar.com/)
 - SDK: run Claude programatically with Typescript, Python or via the CLI
   - by default, it can only read files -> write tools must be explicitly set
   - useful in hooks
+- steering long sessions
+  - sessions can get very long
+  - make Claude create a plan first, plan mode is read only
+  - use /compact to have a summary of the previous work, but to not lose any important info we can add instructions to /compact to focus on which parts when the /compact is used
+  - use /rewind to go back to a specific point in the history: restore code/cinversation, summarize from/to here
+  - /goal to tell Claude what results it should reach; use /goal clear to reset it
+  - use loop to do X action at an interval
+  - run parallel work with worktrees: each agent get its own copy of the codebase
+    - .worktreeinclude is a file where git-ignored files can be read by worktrees
+- CLAUDE.md
+  - keep it small because each line fights the others to be applied -> some stuff might not be applied if the file is too big
+  - if something MUST be done all the time e.g. must not push to main then it should be in a pre-tool-use hook instead
+  - scopes:
+   - managed policy = org-level
+   - user: my preferences across projects
+   - project: shared within the project
+   - local: personal notes that are not checked into git
+  - split it up and import the parts: @.claude/conventions/workflow.md
+  - write specific and checkable instructions e.g. put new API files into /api folder
+  - if we want to prohibit something, provide what alternatives Claude should do
+  - emphasis matters like IMPORTANT and YOU MUST 
+
 
 ### Hooks - like lifecycle hooks
 
@@ -549,7 +571,7 @@ web_search_schema = {
 - the difficulty: we have 2 different ways to search chunks and we somehow have to merge them
 
 | Chunk name | Rank from vector | Rank from BM25 |
-|------------|------------------|----------------|
+| ---------- | ---------------- | -------------- |
 | Topic 2    | 1                | 2              |
 | Topic 6    | 2                | 3              |
 | Topic 5    | 3                | 1              |
@@ -662,13 +684,13 @@ add_user_message(
 ```
 - the response becomes more complex:
 
-| Citation Structure | Example | Purpose |
-| :--- | :--- | :--- |
-| **cited_text** | Earth's atmosphere and oceans were formed by volcanic activity and outgassing. | Text that Claude is citing from the provided document |
-| **document_index** | 0 | If multiple documents are provided, this will tell you which document Claude is citing from |
-| **document_title** | 'earth.pdf' | Title of the document that Claude is citing from |
-| **start_page_number** | 4 | Starting page of the cited text |
-| **end_page_number** | 5 | Ending page of the cited text |
+| Citation Structure    | Example                                                                        | Purpose                                                                                     |
+| :-------------------- | :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------ |
+| **cited_text**        | Earth's atmosphere and oceans were formed by volcanic activity and outgassing. | Text that Claude is citing from the provided document                                       |
+| **document_index**    | 0                                                                              | If multiple documents are provided, this will tell you which document Claude is citing from |
+| **document_title**    | 'earth.pdf'                                                                    | Title of the document that Claude is citing from                                            |
+| **start_page_number** | 4                                                                              | Starting page of the cited text                                                             |
+| **end_page_number**   | 5                                                                              | Ending page of the cited text                                                               |
 
 - citations with plain text sources:
 ```python
@@ -971,9 +993,6 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
 #### Claude Code
 - `/init` to understand the codebase -> creates a summary in the CLAUDE.md file
 - CLAUDE.md places and their scopes
-  - project: shared within the project
-  - local: personal notes that are not checked into git
-  - user: across my projects
 - use # to write instructions to the CLAUDE.md file
 - steps to use it successfully
   - feed context (only relevant files)
@@ -1005,3 +1024,18 @@ claude mcp add [server-name] [command-to-start-server]
 - routing workflow: one generic prompt is often not good for different topics e.g. creating an educational vs an entertaining video
   - first, make Claude categorize the input
   - then ask claude to create content and provide the category
+- downsides: less flexible, more constrained UX (we must know all the inputs for the steps)
+
+#### Agents and tools
+- compared to workflows, use agents when we are not sure about the exact steps to be made: we provide a goal and a set of tools to Claude and we let it figure out how to solve the problem
+- Claude can combine the provided tools
+- tools should be abstract instead of specialized to work well
+  - good tools e.g. bash, read file, write file, edit file
+  - bad tools e.g. refactor given file, install dependencies
+- create a set of tools in a way that they can be combined by Claude
+- downsides: lower successful task completion rate, more challenging to instrument, test and evaluate
+
+#### Environment inspection
+- Claude needs some info from its environment to be aware of the results of its work
+- use system prompts e.g. after creating a video with Claude, tell it to use a specific tool to make screenshots and inspect those screenshots to check if the video is correct
+- a key question to ask from ourselves: "How will Claude know if this action worked?"
