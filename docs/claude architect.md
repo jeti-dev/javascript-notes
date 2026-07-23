@@ -59,7 +59,19 @@ From [https://anthropic.skilljar.com/](https://anthropic.skilljar.com/)
   - write specific and checkable instructions e.g. put new API files into /api folder
   - if we want to prohibit something, provide what alternatives Claude should do
   - emphasis matters like IMPORTANT and YOU MUST 
-
+- verification skills
+  - a skill that is called automatically after Claude is done and verifies the results
+  - use a reference.md in the skill folder to add detailed material and link it from the skill.md, it will be loaded only when the skill is used
+  - put scripts in the skill folder too
+- permission modes
+  - types
+    - manual: reads only, others must be allowed
+    - accept edits
+    - plan: reads only
+    - auto: accepts everything, with a separate classifier model reviewing each aftion beforehand
+    - don't ask: allows only pre-approved tools, others are auto denied
+    - - bypass permissions: skips all checks
+- 
 
 ### Hooks - like lifecycle hooks
 
