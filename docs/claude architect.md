@@ -51,29 +51,64 @@ From [https://anthropic.skilljar.com/](https://anthropic.skilljar.com/)
   - keep it small because each line fights the others to be applied -> some stuff might not be applied if the file is too big
   - if something MUST be done all the time e.g. must not push to main then it should be in a pre-tool-use hook instead
   - scopes:
-   - managed policy = org-level
-   - user: my preferences across projects
-   - project: shared within the project
-   - local: personal notes that are not checked into git
+  - managed policy = org-level
+  - user: my preferences across projects
+  - project: shared within the project
+  - local: personal notes that are not checked into git
   - split it up and import the parts: @.claude/conventions/workflow.md
   - write specific and checkable instructions e.g. put new API files into /api folder
   - if we want to prohibit something, provide what alternatives Claude should do
-  - emphasis matters like IMPORTANT and YOU MUST 
+  - emphasis matters like IMPORTANT and YOU MUST
 - verification skills
   - a skill that is called automatically after Claude is done and verifies the results
   - use a reference.md in the skill folder to add detailed material and link it from the skill.md, it will be loaded only when the skill is used
   - put scripts in the skill folder too
-- permission modes
-  - types
-    - manual: reads only, others must be allowed
-    - accept edits
-    - plan: reads only
-    - auto: accepts everything, with a separate classifier model reviewing each aftion beforehand
-    - don't ask: allows only pre-approved tools, others are auto denied
-    - - bypass permissions: skips all checks
-- 
+
+### Permission modes
+
+- types
+  - manual: reads only, others must be allowed
+  - accept edits
+  - plan: reads only
+  - auto: accepts everything, with a separate classifier model reviewing each action beforehand
+  - don't ask: allows only pre-approved tools, others are auto denied
+  - - bypass permissions: skips all checks
 
 ### Hooks - like lifecycle hooks
+
+- CLAUDE.md is just a request, not a guarantee => use hooks to guarantee something
+- most important ones
+  - PreToolUse
+  - PostToolUse: auto formatting, auto lint
+  - Stop: when Claude wants to end its turn => we can say that "no, you are not done yet"
+  - SubagentStop
+  - PreCompact, PostCompact
+  - InstructionsLoaded when CLAUDE.md or rule file loads => audit what gets into the context
+  - SessionStart: use the `startup` source if we only want it on fresh starts
+- properties
+  - permissionDecision types: allow, deny, ask
+  - updatedInput: instead of blocking the call, we can rewrite it; it replaces the whole input object so we have to echo back the fields we are changing
+    - e.g. strip out sensitive info from a bash call then let it run
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "...",
+    "updatedInput": {
+      "command": "..."
+    }
+  }
+}
+```
+
+- it is not always necessary to use JSON, we can use just exit codes too
+  - 0: success
+  - 2: blocking error, standard error gets fed back to Claude for context
+  - anything else: non blocking, standard error gets logged and Claude carries on
+
+#### Content from April - might be outdated
 
 - list of hooks:
   - Notification - Runs when Claude Code sends a notification, which occurs when Claude needs permission to use a tool, or after Claude Code has been idle for 60 seconds
@@ -143,6 +178,75 @@ async function main() {
 
 - advanced hook: we can ask Claude to do sg e.g. we can tell it to check some files specifically for implementations of useful stuff in case Calude wants to create a new file with redundant code
 
+### Routines and headless
+
+#### Routine
+
+- prompt + repository it works on + any connectors that are needed => they get run in the cloud
+- runs max each hour
+- each run starts from a fresh clone of my default branch and can only push to claude/\* prefixed branches - unless set otherwuse
+- trigger types
+  - cron
+  - HTTP Post
+  - GitHub event
+- creating a routine
+  - from the web at claude.ai/code/routines
+  - from Claude: /schedule
+
+#### Headless mode
+
+- use the `-p` or `--print` flag which makes Claude Code a one-shot command with no interactive UI
+- it reads standard input and output
+- pipes like any other shell tool
+- it skips auto discovery of hooks, skills, plugins, MCP servers and the CLAUDE.md file => we need to set them explicitly
+- multi step: we can use the session's ID from the output and resume later
+- `--bare` flag: for CI systems to use Claude Code in a deterministic mode
+
+#### Agent SDK
+
+- embeds Claude Code inside my own TS or Python app
+- there is a `query()` function
+- we pass a prompt and stuff like allowedTools, system prompt and permission mode
+- it's the same engine as the CLI
+
+### Github Actions and Code Review
+
+#### Code Review
+
+- managed by Anthropic
+- uses the Claude GitHub app
+- triggers: PR open, PR push, comment with @claude review
+- other details
+  - no approve or blocks - a human has the final decision, always
+  - no managed autofix, only findings
+- locally: /code-review --fix
+
+#### GitHub Action
+
+- for custom CI e.g. implementing changes from a comment, running shceduled reports => anything we would write a workflow for
+- setup with /install-github-app
+- the action props
+  - name: anthropics/claude-code-action@v1
+  - anthropic_api_key
+  - trigger_phrase: what to listen for in the comments, default is @claude
+  - use_bedrock / use_vertex
+  - prompt
+  - claude_args: CLI arguments
+    - --max-turns: agent loop
+    - permission mode: set it to not ask as there is no one to answer
+    - allowed tools
+- e.g. put a workflow into .github/workflows/claude.yaml:
+
+```YAML
+- uses: anthropics/claude-code-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    trigger_phrase: "@claude"
+    prompt: "Your instructions here"
+    claude_args: "--max-turns 5 --model claude-sonnet-5"
+```
+
 ## API
 
 ### Chat
@@ -171,12 +275,13 @@ async function main() {
 - multi turn conversation: the API does not store any messages! we always have to send all the former messages
 
 #### System prompts
+
 - customize the style and tone of the response
 - client.messages.create(model, messages, max_tokens, system)
   - system prompt e.g. "You are a tutor who ... You should not give the answer directly at first ..."
 
-
 #### Temperature
+
 - defines how predictable or creative the responses are
 - the text generation process
   1. tokenization: breaking the input into chunks
@@ -187,6 +292,7 @@ async function main() {
   - LOW temperature will nearly always choose the most probable (cute, 0.3) -> deterministic
   - HIGH temperature distributes the probability more evenly -> more creative as more chances to pick different words each time
 - it's just a config param:
+
 ```python
  params = {
         "model": model,
@@ -197,6 +303,7 @@ async function main() {
 ```
 
 #### Response streaming
+
 - answers can take 10-30 seconds and we don't want the user to just stare at the screen for that long -> let's stream the response continously
 - types of response messages:
   - MessageStart - A new message is being sent
@@ -206,7 +313,8 @@ async function main() {
   - MessageDelta - The current message is complete
   - MessageStop - End of information about the current message
 - handle streaming:
-```python 
+
+```python
 stream = client.messages.create(
     model=model,
     max_tokens=1000,
@@ -219,6 +327,7 @@ for event in stream:
 ```
 
 - use the SDK to extract only the texts:
+
 ```python
 with client.messages.stream(
     model=model,
@@ -230,6 +339,7 @@ with client.messages.stream(
 ```
 
 - get the FULL message after streaming:
+
 ```python
 with client.messages.stream(
     model=model,
@@ -239,15 +349,17 @@ with client.messages.stream(
     for text in stream.text_stream:
         # Send each chunk to your client
         pass
-    
+
     # Get the complete message for database storage
     final_message = stream.get_final_message()
 ```
 
 #### Structured data
+
 - when we want structured data e.g. JSON and don't want any noise
--  add assistant message prefilling (e.g. start a JSON markdon block) + stop sequences
-```python
+- add assistant message prefilling (e.g. start a JSON markdon block) + stop sequences
+
+````python
 messages = []
 
 add_user_message(messages, "Generate a very short event bridge rule as json")
@@ -256,48 +368,57 @@ add_assistant_message(messages, "```json")
 
 # stop_sequences is a parameter on the req object
 text = chat(messages, stop_sequences=["```"])
-```
-  - the prefilled assistant message makes Cluade think it already started a markdown code block (START)
-  - when it tries to close the code block with ```, the stop sequence ends the generation (END)
+````
+
+- the prefilled assistant message makes Cluade think it already started a markdown code block (START)
+- when it tries to close the code block with ```, the stop sequence ends the generation (END)
 
 ### Prompt evaluation
+
 - to test the correctness of a prompt
 - 5 steps eval flow
   1. draft a prompt
   2. create an eval dataset: sample inputs e.g. what kind of question or requests will Claude receive
   3. feed through Claude: merge my eval dataset with me draft prompt and send each one to Claude
   4. feed through a Grader: scores Claude's answers to the questions from 1 to 10
-    - it can create an average score too which we can compare to the next runs
+  - it can create an average score too which we can compare to the next runs
   5. change prompt and repeat
 
 #### Generating data sets
+
 - the eval dataset can be a list of objects with a `task` property that has the user input
 
 #### Model based grading
+
 - grader types: code, another AI model, human
 - some grading tips: format, syntax, task following
 - when creating a model Grader it is very important to ask for strengths, weaknesses and reasoning otherwise it will default to score 6
 
 ### Prompt engineering
+
 #### Clear and direct
+
 - the first line is crucial, use clear and direct language
   - use instructions not questions
   - start with direct action verbs like write, create, generate
-- 3 questions for you to write a better starting instruction: 
-  - What action to take? 
-  - What to create? 
+- 3 questions for you to write a better starting instruction:
+  - What action to take?
+  - What to create?
   - What are the key constraints?
 - Claude works the best when we treat it like a capable assistant whi needs clear direction
 
 #### Specific
+
 - output quality guidelines: length of response, structure and format, specific elements to include, style requirements
 - process steps (step by step instructions that affect Claude's thinking): troubleshooting complex problems, decision making scenarios, critical thinking, when considering multiple angles
   - e.g. consider recent organization changes + review customer feedback + identify relevant industry changes
 
 #### Structure with XML
+
 - when there is a big context + serves as delimeters
 
 #### Provide examples
+
 - e.g. is a sentence has a positive or negative sentiment
 - goal: capturing edge cases, defining complex output format, showing exact style, how to handle ambiguous inputs
 - one-shot: provide 1 example
@@ -311,8 +432,8 @@ text = chat(messages, stop_sequences=["```"])
   - structure with xml
   - provide examples
 
-
 ### Tools
+
 - a way for Claude to get extra data e.g. if it has no access to the internet, Claude doesn't know what's the weather at the moment
 - how tool use works
   1. ask a question from Claude including instructions on how to get extra data
@@ -321,39 +442,45 @@ text = chat(messages, stop_sequences=["```"])
   4. Claude gives the final response
 
 #### Tool functions
+
 - a function that gets called by Claude
   - should have a meaningful name, parameter names, validate inputs, raise menaningful errors -> Claude will try to call it a second time on error
 - e.g.
-```python 
+
+```python
 def get_current_datetime(date_format="%Y-%m-%d %H:%M:%S"):
     if not date_format:
         raise ValueError("date_format cannot be empty")
     return datetime.now().strftime(date_format)
 ```
+
 #### Tool schemas
+
 - a JSON schema providing meta info about the tool function
 - properties:
   - name
   - description
   - input_schema
 - e.g.
+
 ```json
 {
-    "name": "get_current_datetime",
-    "description": "Returns the current date and time formatted according to the specified format",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "date_format": {
-                "type": "string",
-                "description": "A string specifying the format of the returned datetime. Uses Python's strftime format codes.",
-                "default": "%Y-%m-%d %H:%M:%S"
-            }
-        },
-        "required": []
-    }
+  "name": "get_current_datetime",
+  "description": "Returns the current date and time formatted according to the specified format",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "date_format": {
+        "type": "string",
+        "description": "A string specifying the format of the returned datetime. Uses Python's strftime format codes.",
+        "default": "%Y-%m-%d %H:%M:%S"
+      }
+    },
+    "required": []
+  }
 }
 ```
+
 - how to:
   - 3-4 sentences to explain what it does
   - describe when to use it
@@ -362,7 +489,9 @@ def get_current_datetime(date_format="%Y-%m-%d %H:%M:%S"):
 - use the ToolParam type from the Anthropic lib for better type checking
 
 #### Message blocks
+
 - to enable tool use, set it in the config:
+
 ```python
 response = client.messages.create(
     model=model,
@@ -371,6 +500,7 @@ response = client.messages.create(
     tools=[get_current_datetime_schema],
 )
 ```
+
 - when Claude wants to use a tool, it returns a message with multiple blocks
   - text block: human readable text explaining what Claude is doing
   - tool use block: instructions for my code about which tool to call and what parameters to use; props:
@@ -379,6 +509,7 @@ response = client.messages.create(
     3. input params as a dictionary
     4. the type "tool_use"
 - remember that we always have to send all the previous messages to Claude -> we have to send the tool use block too:
+
 ```python
 messages.append({
     "role": "assistant",
@@ -387,14 +518,18 @@ messages.append({
 ```
 
 #### Sending tool results
+
 - unpack the parameters from Claude's tool use request to be used in my tool function:
+
 ```python
 get_current_datetime(**response.content[1].input)
 ```
+
 - return the tool result to Claude in a special format:
   - tool_use_id: the id from the tool request
   - content: output from my tool, formatted as a string
   - is_error: only true if an error occured
+
 ```python
 {
         "type": "tool_result",
@@ -403,11 +538,14 @@ get_current_datetime(**response.content[1].input)
         "is_error": False
 }
 ```
+
 - claude can request multiple tool use in one message
 - when sending the follow up request with the tool result, we must still include the tool schema so Claude can understand the tool references in the history!
 
 #### Multi turn conversations
+
 - when Claude asks for multiple tool use one after the other to generate the answer -> we need a conversation loop that continues until Claude stops requesting tools
+
 ```python
 def run_conversation(messages):
     while True:
@@ -421,15 +559,19 @@ def run_conversation(messages):
 
         tool_result_blocks = run_tools(response)
         add_user_message(messages, tool_result_blocks)
-        
+
     return messages
 ```
+
 - how to know when Claude doesn't need more tools:
+
 ```python
 if response.stop_reason != "tool_use":
     break  # Claude is done, no more tools needed
 ```
+
 - handling tool error:
+
 ```python
 try:
     tool_output = run_tool(tool_request.name, tool_request.input)
@@ -441,7 +583,7 @@ try:
     }
 except Exception as e:
     tool_result_block = {
-        "type": "tool_result", 
+        "type": "tool_result",
         "tool_use_id": tool_request.id,
         "content": f"Error: {e}",
         "is_error": True
@@ -449,10 +591,12 @@ except Exception as e:
 ```
 
 #### Tools and streaming
+
 - for tool use, a new type of event called InputJsonEvent is returned by Clade; props:
   - partial_json: a chunk of JSON representing part of the tool arguments
   - snapshot: the cumulative JSON built up from all the chunks received so far
 - how to process it:
+
 ```python
 for chunk in stream:
     if chunk.type == "input_json":
@@ -461,7 +605,9 @@ for chunk in stream:
         # Or use the complete snapshot so far
         current_args = chunk.snapshot
 ```
+
 - Claude does not return all the chunks immediately as they get generated, it buffers and validates them first e.g.
+
 ```python
 {
   "abstract": "This paper presents a novel...",
@@ -471,11 +617,13 @@ for chunk in stream:
   }
 }
 ```
-  - It starts to generate chunks for the "abstract" property and its value. When it sees that it reached the end of the value, it validates if this key value pair is a valid text in the schema (a valid parameter for my tool) I sent. If it is then Claude returns the buffered chunks at once.
+
+- It starts to generate chunks for the "abstract" property and its value. When it sees that it reached the end of the value, it validates if this key value pair is a valid text in the schema (a valid parameter for my tool) I sent. If it is then Claude returns the buffered chunks at once.
 - if we don't want buffering + validation so we can get the chunks faster, then we can use fine grained tool calling -> add fine_grained=True to the API call
   - if this is enabled, then we have to handle invalid JSON responses from Claude
 
 #### The built-in text edit tool
+
 - features
   - view file or directories
   - view ranges of lines in a file
@@ -485,7 +633,8 @@ for chunk in stream:
   - undo recent edits
 - Claude has the schema but I have to provide the implementation functions
 - I also still have to provide a small schema for Claude so it can expand it to the full schema
-```python 
+
+```python
 def get_text_edit_schema(model):
     if model.startswith("claude-3-7-sonnet"):
         return {
@@ -494,21 +643,24 @@ def get_text_edit_schema(model):
         }
     elif model.startswith("claude-3-5-sonnet"):
         return {
-            "type": "text_editor_20241022", 
+            "type": "text_editor_20241022",
             "name": "str_replace_editor",
         }
 ```
 
 #### Web search tool
+
 - it must be enabled by my organization
 - Claude has the implementation function and the schema too but I still have to provide a simple schema to enable it
+
 ```python
 web_search_schema = {
     "type": "web_search_20250305",
-    "name": "web_search", 
+    "name": "web_search",
     "max_uses": 5
 }
 ```
+
 - returned blocks
   - Text blocks - Claude's explanation of what it's doing
   - ServerToolUseBlock - Shows the exact search query Claude used
@@ -516,6 +668,7 @@ web_search_schema = {
   - WebSearchResultBlock - Individual search results with titles and URLs
   - Citation blocks - Text that supports Claude's statements
 - restrict domains with `allowed_domains`:
+
 ```python
 web_search_schema = {
     "type": "web_search_20250305",
@@ -524,31 +677,43 @@ web_search_schema = {
     "allowed_domains": ["nih.gov"]
 }
 ```
+
 - just enable it in the tools and Claude will decide when to use it
 
 ### RAG and agentic search
+
 #### Intro to RAG
+
 - retrievel augmented generation
 - helps to work with large documents which are too big to fit into single propmpts -> breaks the document into chunks and only includes the most relevant pieces when answering questions
 
 #### Chunking strategies
+
 1. size based
-  - divide into equal length strings
-  - includes some overlap on each side
-  - might break up related conntent into separate chunks
+
+- divide into equal length strings
+- includes some overlap on each side
+- might break up related conntent into separate chunks
+
 2. structure based
-  - divide by headers, paragraphs etc
-  - try to avoid breaking related content into multiple chunks
-  - we must first understand the document to chunk it effectively
+
+- divide by headers, paragraphs etc
+- try to avoid breaking related content into multiple chunks
+- we must first understand the document to chunk it effectively
+
 3. semantic based
-  - divide by related sentences or sections
-  - we must understand the meaning of all sentences
-  - expensive to do but results in more relevant chunks
+
+- divide by related sentences or sections
+- we must understand the meaning of all sentences
+- expensive to do but results in more relevant chunks
+
 4. sentence based
-  - a practical middle ground
-  - split into individual sentences using regex then group them into chunks with some overlap
+
+- a practical middle ground
+- split into individual sentences using regex then group them into chunks with some overlap
 
 #### Text embeddings
+
 - after creating the chunks now we have to search the relevant chunks somehow
 - a text embedding is a numerical representation of the meaning contained in some text
 - the process
@@ -558,6 +723,7 @@ web_search_schema = {
 - a provider for embeddings is e.g. VoyageAI
 
 #### The RAG flow
+
 - the embeddings are stored in a vector database
 - at this point, we are waiting for a user input
 - when an input arrives, we run it through the same embedding model
@@ -569,6 +735,7 @@ web_search_schema = {
 - when we have the most relevant chunk, we create a prompt and send it to Claude
 
 #### BM25 lexical search
+
 - semantic search doesn't always return the best results => sometimes we need exact term matches
 - BM25 (best match 25, an algorithm for lexical search in RAG systems) = combine semantic search + lexical search: run them parallel and merge the results
 - e.g.
@@ -579,6 +746,7 @@ web_search_schema = {
   - we'll only use those chunks which have the most HIGH scoring tokens
 
 #### Multi index RAG pipeline
+
 - combine the semantic search (vector embeddings) + lexical search (BM25) => use a technique called reciprocal rank fusion
 - the difficulty: we have 2 different ways to search chunks and we somehow have to merge them
 
@@ -591,15 +759,17 @@ web_search_schema = {
 ```python
 RRF_score(d) = Σ(1 / (k + rank_i(d)))
 
-# Where k is a constant (usually 60) and rank_i(d) 
+# Where k is a constant (usually 60) and rank_i(d)
 # is the rank of document d in the i-th ranking
 # e.g. 1.0/(60+2) + 1.0/(60+3) for Topic 6
 ```
+
 - it combines the scoring of both searching methods and the highest numbers win
 
 ### Features of Claude
 
 #### Extended thinking
+
 - not compatible with some features e.g. message pre-filling and temperature
 - reasoning feature that gives the model time to work through complex problems - we can see the reasoning process too
 - we get a new block: ThinkingBlock e.g. "I should cover what recursion is, how it works ..."
@@ -608,7 +778,7 @@ RRF_score(d) = Σ(1 / (k + rank_i(d)))
   - signature: a cryptographic token tied to the thinking text Claude generated => it prevent developers from tampering with the reasoning process
 - more expensive + takes more time
 - when to use? => use prompt evaluation to decide if extended thinking is needed
-- redacted thinking: when the thinking process gets flagged by internal safety systems 
+- redacted thinking: when the thinking process gets flagged by internal safety systems
   - the redacted content is in encrypted form and can be passed back to Claude without losing context
   - by sending a special trigger warning to Claude we can test is our app handles this case gracefully
 - two parameters to enable it
@@ -616,6 +786,7 @@ RRF_score(d) = Σ(1 / (k + rank_i(d)))
   - thinking_budget=1024 (it's the minimum, must be smaller than the max_tokens)
 
 #### Image support
+
 - describe what is in the image, compare images, count objects, complex visual analysis
 - limits
   - max 100 images across all messages in a single request
@@ -623,8 +794,9 @@ RRF_score(d) = Σ(1 / (k + rank_i(d)))
   - when sending 1 image then max height/width of 8000px
   - hwn sending multiple images then max height/width of 2000px
   - can be bas64 or a URL too
-  - token calculation for an image: (width px * height px) / 750
+  - token calculation for an image: (width px \* height px) / 750
 - we have to use an ImageBlock
+
 ```python
 with open("image.png", "rb") as f:
     image_bytes = base64.standard_b64encode(f.read()).decode("utf-8")
@@ -646,6 +818,7 @@ add_user_message(messages, [
     }
 ])
 ```
+
 - use the same prompt enginnering techniques e.g.
   - add detailed guidelines and analysis steps
   - use one or multi shot examples
@@ -653,11 +826,13 @@ add_user_message(messages, [
   - e.g. identify one ball at a time and assign a number to them => then count the numbers from left to right, from the bottom to the top => how many balls are in the image?
 
 #### PDF support
+
 - what Claude can do
   - understand text content
   - understand images and charts
   - understand tables and data relationships
   - understand document structure and formatting
+
 ```python
 with open("earth.pdf", "rb") as f:
     file_bytes = base64.standard_b64encode(f.read()).decode("utf-8")
@@ -681,7 +856,9 @@ add_user_message(
 ```
 
 #### Citations
+
 - Claude can reference parts of the text we provide to prove that its response is not from its training data but from the document
+
 ```python
 {
     "type": "document",
@@ -694,6 +871,7 @@ add_user_message(
     "citations": { "enabled": True } # required
 }
 ```
+
 - the response becomes more complex:
 
 | Citation Structure    | Example                                                                        | Purpose                                                                                     |
@@ -705,9 +883,10 @@ add_user_message(
 | **end_page_number**   | 5                                                                              | Ending page of the cited text                                                               |
 
 - citations with plain text sources:
+
 ```python
 {
-    "type": "document", 
+    "type": "document",
     "source": {
         "type": "text",
         "media_type": "text/plain",
@@ -719,6 +898,7 @@ add_user_message(
 ```
 
 #### Prompt caching
+
 - faster response + reduced cost
 - in a normal flow Claude:
   - tokenizes the input prompt
@@ -734,6 +914,7 @@ add_user_message(
   - we have to add a 'cache breakpoint' to a block
   - work done before the breakpoint will be cached
   - cache will be used only if the content up to and including the breakpoint is the same
+
 ```python
 user_message = {
   "role": "user",
@@ -748,8 +929,9 @@ user_message = {
   ]
 }
 ```
+
 - IMPORTANT: the cache is dismissed if anything has changed in the previously cached input
-  - e.g. one of your prompts has a dynamic data e.g. time(). Because AI is stateless, you always have to send all the previous conversations. So for the second time if you time() runs again, it would return a new time in one of your *older* inputs and it would dismiss the cache
+  - e.g. one of your prompts has a dynamic data e.g. time(). Because AI is stateless, you always have to send all the previous conversations. So for the second time if you time() runs again, it would return a new time in one of your _older_ inputs and it would dismiss the cache
 - can be added to
   - text blocks
   - system prompts
@@ -760,6 +942,7 @@ user_message = {
 - a request is processed in a specific order: tools, system prompt, messages => it helps thinking about where to put cache breakpoint
 - up to 4 cache breakpoint can be added
 - content must be min 1024 tokens to be cached - it's the sum of all messages and blocks, not individual blocks
+
 ```python
 # tool schema caching
 last_tool["cache_control"] = {"type": "ephemeral"}
@@ -773,12 +956,14 @@ params["system"] = [
         }
     ]
 ```
+
 - some new patterns in the response
   - first request: cache_creation_input_otkens=1772-
   - follow up requests: cache_read_input_tokens=1772-
   - changed content: new cache creation tokens appear
 
 #### Code execution and the file API
+
 - file API: we can use this instead of encoding images or PDF directly in the message => we can upload files ahead of time and reference them later
 - steps
   - upload file to Claude in a separate API call
@@ -792,6 +977,7 @@ params["system"] = [
 - combining them
   - upload the data file with the File API
   - then reference it and run analytics code on the data
+
 ```python
 messages = []
 add_user_message(
@@ -811,6 +997,7 @@ chat(
     tools=[{"type": "code_execution_20250522", "name": "code_execution"}]
 )
 ```
+
 - returned blocks:
   - TextBlocks: Claude's analyzis and explanations
   - ServerToolUseBlocks: the actual code that was run
@@ -818,9 +1005,11 @@ chat(
 - downloading a file: look for the code_execution_output block which contains a file ID for the generated content (e.g. charts)
 
 ### MCP
+
 - provides tools, prompts and resources for Claude
 
-#### MCP clients 
+#### MCP clients
+
 - the bridge between my server and the MCP servers, it handles the message passing nd protocol details
 - the MCP server usually runs on our server
 - it supports multiple transport protocols: HTtp, websocket, other
@@ -854,11 +1043,13 @@ sequenceDiagram
     OurServer->>Claude: toolResult
     Claude->>OurServer: Your repositories are...
     OurServer->>User: Your repositories are...
-  ```
+```
+
 - there is a Python SDK that helps with creating tools
   - it has a built in browser based tool (server inspector) testing app
 
 #### MCP client
+
 - allows our app to communicate with the MCP server
 - in the real world we usually build either an MCP server or an MCP client
 - main components:
@@ -876,12 +1067,12 @@ sequenceDiagram
 async def list_tools(self) -> list[types.Tool]:
     result = await self.session().list_tools()
     return result.tools
-  
+
 async def call_tool(
     self, tool_name: str, tool_input: dict
 ) -> types.CallToolResult | None:
     return await self.session().call_tool(tool_name, tool_input)
-  
+
 # test it by running the client directly; a testing harness connects to our MCP server and calls the methods
 async with MCPClient(
     command="uv", args=["run", "mcp_server.py"]
@@ -891,6 +1082,7 @@ async with MCPClient(
 ```
 
 #### Defining resources
+
 - expose data to clients (like an HTTP get request); used when we have to fetch info rather than perform actions
 - e.g. when the user types @ then he can select a document name from a list of documents
   - we need the MCP server to return a list of document names
@@ -919,12 +1111,15 @@ def fetch_doc(doc_id: str) -> str:
         raise ValueError(f"Doc with id {doc_id} not found")
     return docs[doc_id]
 ```
+
 - we also return `mime_type` to give clients a hint
 - test the resources with the MCP Inspector: `uv run mcp dev mcp_server.py` - it will spin up the UI based testing tool
 
 #### Accessing resources
+
 - we need a `read_resource` function in the MCP client
   - the response from the MCP server contains a `contents` list: the first element is the actual resouce data along with meta data like MIME type
+
 ```python
 async def read_resource(self, uri: str) -> Any:
     result = await self.session().read_resource(AnyUrl(uri))
@@ -937,11 +1132,12 @@ from pydantic import AnyUrl
 if isinstance(resource, types.TextResourceContents):
     if resource.mimeType == "application/json":
         return json.loads(resource.text)
-    
+
     return resource.texts
 ```
 
 #### Defining prompts
+
 - prompts define a set of user and assistant messages that the users can directly use
 - steps to implement
   - use `@mcp.prompt()`
@@ -971,15 +1167,18 @@ The id of the document you need to reformat is:
 Add in headers, bullet points, tables, etc as necessary. Feel free to add in extra formatting.
 Use the 'edit_document' tool to edit the document. After the document has been reformatted...
 """
-    
+
     return [
         base.UserMessage(prompt)
     ]
 ```
+
 - test it with the UI testing tool
 
 #### Prompts in the client
+
 - implement `list_prompts`
+
 ```python
 async def list_prompts(self) -> list[types.Prompt]:
     result = await self.session().list_prompts()
@@ -987,12 +1186,14 @@ async def list_prompts(self) -> list[types.Prompt]:
 ```
 
 - when we define a prompt function, it can accept paramteres
+
 ```python
 def format_document(doc_id: str):
     # The doc_id gets interpolated into the prompt
 ```
 
 - implement getting a prompt with the arguments interpolated, `get_prompt`
+
 ```python
 async def get_prompt(self, prompt_name, args: dict[str, str]):
     result = await self.session().get_prompt(prompt_name, args)
@@ -1002,7 +1203,9 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
 - test them through the CLI
 
 ### Anthropic apps
+
 #### Claude Code
+
 - `/init` to understand the codebase -> creates a summary in the CLAUDE.md file
 - CLAUDE.md places and their scopes
 - use # to write instructions to the CLAUDE.md file
@@ -1015,15 +1218,18 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
     - in step 3, implement the tests
     - in step 4, write the code that passes the test
 - has a built in MCP client
+
 ```shell
 claude mcp add [server-name] [command-to-start-server]
 ```
 
 ### Agents and workflows
+
 - workflow: a series of calls to Claude meant to solve a specific problem using predefined steps
 - agents: Claude is given a goal and a set of tools => Claude needs to figure out how to solve the problem
 
 #### Workflows
+
 - evaluator-optimizer pattern
   - producer: takes an input and creates an output
   - grader: evaluates the output against some criteria
@@ -1039,6 +1245,7 @@ claude mcp add [server-name] [command-to-start-server]
 - downsides: less flexible, more constrained UX (we must know all the inputs for the steps)
 
 #### Agents and tools
+
 - compared to workflows, use agents when we are not sure about the exact steps to be made: we provide a goal and a set of tools to Claude and we let it figure out how to solve the problem
 - Claude can combine the provided tools
 - tools should be abstract instead of specialized to work well
@@ -1048,6 +1255,7 @@ claude mcp add [server-name] [command-to-start-server]
 - downsides: lower successful task completion rate, more challenging to instrument, test and evaluate
 
 #### Environment inspection
+
 - Claude needs some info from its environment to be aware of the results of its work
 - use system prompts e.g. after creating a video with Claude, tell it to use a specific tool to make screenshots and inspect those screenshots to check if the video is correct
 - a key question to ask from ourselves: "How will Claude know if this action worked?"
