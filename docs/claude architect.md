@@ -247,6 +247,41 @@ async function main() {
     claude_args: "--max-turns 5 --model claude-sonnet-5"
 ```
 
+### Verifying Unsupervised Runs
+
+- run /code-review then check the git diff
+- use the tests as quality gates => run them in hooks
+  - a stop hook that refuses to end the turn on failure
+  - a post tool-use hook that lints and type checks after every edit
+  - exit with 2 in cause of failure so the error will be feed back to Claude
+- open a fresh session or sub agent and have it review the code without any guidance about the implementation
+
+### Plugins
+
+- an installable unit: skills, subagents, hooks, MCP configs etc
+- install: /plugin install org-name@plugin-name then run /reload-plugins
+- for a team, create a private marketplace
+  - it is a shared source that plugins resolve through
+  - /plugin marketplace add your-org/claude-plugins
+- runs code on my machine with my priviligies
+- it does not override my config, they stack e.g. hooks
+- skills, agents and commands are namespaced under the plugin name so they won't clash with mines
+- settings.json: only the agent and subagent status line keys are used
+  - the agent key promotes the plugins subagents to the main thread along with its system prompt, tool restrictions and model => it can be dangerous
+- check the plugin panel for what the plugin brings
+- how to make my own package (sharing .claude directory)
+- folder structure
+  - one folder per skill
+  - one file per subagent under agents
+  - hooks/hooks.json and .mcp.json at the pugin root
+  - optional manifest in .claude-plugin/plugin.json
+    - name (required). namespaces the skills
+    - version
+    - description
+    - author: {name}
+
+---
+
 ## API
 
 ### Chat
