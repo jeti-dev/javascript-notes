@@ -3,7 +3,7 @@ title: Claude Architect v2
 layout: default
 ---
 
-[https://anthropic-partners.skilljar.com/ai-fluency-framework-foundations](https://anthropic-partners.skilljar.com/ai-fluency-framework-foundations)
+[https://anthropic-partners.skilljar.com](https://anthropic-partners.skilljar.com)
 
 - AI fluency: framework & foundations
 - Claude 101
@@ -82,3 +82,31 @@ layout: default
 - Deployment Diligence requires taking responsibility for verifying and vouching for the outputs we use or share
 - Different contexts (personal, academic, professional) may have different expectations for disclosure and verification
 - Thoughtful Diligence helps ensure our AI collaborations are not only effective and efficient, but also ethical and safe
+
+# Claude 101
+
+- Before your next conversation with Claude, consider: setting the stage (your role, objectives, and context), defining the task (what action you want Claude to take), and specifying rules (style, tone, and examples).
+- Memory automatically saves key context from your conversations — your role, preferences, past decisions, and working style — so you don't have to repeat yourself every time you start a new chat. For example, if you tell Claude you work in marketing at a B2B company, it'll remember that context going forward.
+- Styles let you customize how Claude communicates. Choose from preset options — like concise, formal, or explanatory — or create your own custom style by describing exactly how you want Claude to write.
+- Projects are self-contained workspaces with their own memory, chat histories, knowledge bases, and customized instructions. Think of them as dedicated environments for specific work streams.
+  - Project instructions guide Claude's behavior—you can specify tone, expertise level, response style, and more. These instructions apply to every conversation within the project.
+  - Projects scale automatically. When your knowledge base approaches context limits, Claude switches to searching your project knowledge and pulling in only what's relevant, expanding capacity by up to 10x while maintaining response quality.
+  - For Claude for Work users, projects enable collaboration. Share projects with teammates so everyone benefits from the same context, instructions, and accumulated knowledge.
+
+## Artifacts
+
+- Artifacts are standalone, interactive outputs that Claude creates in a dedicated window alongside your conversation. Instead of getting a long block of code or text buried in the chat, you see your content rendered and ready to use—whether that's a working website, an interactive chart, or a document you can immediately download.
+  - It's significant and self-contained, typically over 15 lines
+  - It's something you're likely to want to edit, iterate on, or reuse
+  - It represents complex content that stands on its own without needing the surrounding conversation
+  - It's content you'll want to reference or use later
+  - We can ask Claude to create an artifact.
+  - Artifacts have their own dedicated window.
+  - Artifacts can be shared.
+
+## Connectors
+
+- Connectors transform Claude from an assistant into an informed collaborator by giving Claude access to the same tools, data, and context that you use every day. Instead of starting every conversation from scratch, Claude can work directly with your actual information.
+- Connectors allow Claude to read information and perform actions on your behalf. Depending on the connector and permissions you grant, Claude can search your files, retrieve documents, analyze data, create new content, update records, and execute tasks across your connected applications—all from within your conversation.
+- The Model Context Protocol (MCP) powers connectors. Think of MCP like USB-C for AI—a universal standard that allows Claude to connect to many different applications through a single, consistent interface. This open standard means developers can build connectors for any tool, and those connectors work seamlessly with Claude.
+- There are two types of connectors: web connectors and desktop extensions. Web connectors link Claude to cloud services like Google Drive, Notion, Slack, and Asana. Desktop extensions run locally on your computer through the Claude Desktop app, giving Claude access to local files and native applications.
