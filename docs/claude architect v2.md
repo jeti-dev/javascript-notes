@@ -204,3 +204,235 @@ layout: default
   - Exit code 2 — block the action. The stderr message gets fed back to Claude as feedback so it knows why it was blocked and can adjust.
   - Any other exit code — a non-blocking error that gets shown to you but doesn't stop anything.
 - Hooks configured in .claude/settings.json are project-level and can be checked into your repo. This means your entire team gets the same hooks automatically. Use the CLAUDE_PROJECT_DIR environment variable in your commands to reference scripts stored in your project, so they work regardless of Claude's current working directory.
+
+# Claude Code in Action
+
+## Long sessions
+
+- `/compact` might lose data so give instructions about how to compact
+- When Claude heads down the wrong path, you don't have to prompt your way back out. Rewind takes you to your last checkpoint. Every user prompt creates a checkpoint you can revert to. To open the menu, double tap escape on an empty prompt.
+  - Restore code and conversation - roll back both together.
+  - Restore conversation - roll back just the chat.
+  - Restore code - roll back just the files.
+  - Summarize from here - summarizes everything after the checkpoint. Great if you had a side conversation and just want to free up some space.
+  - Summarize up to here - summarizes everything before the checkpoint. Great when you had a long setup phase you want to compress, but you want to keep the implementation parts intact.
+- `/goal`: Goal sets a completion condition. You describe what "done" looks like, and Claude keeps working across turns until a fast evaluator confirms those conditions are met. It won't just stop the first time it thinks it's finished.
+  - To cancel it, run `/goal clear`. One important constraint: the evaluator only reads the transcript. So your condition has to be checkable from the output Claude actually produces, like the results of a test run.
+- Loop runs a prompt on an interval between turns, either fixed or self-paced. Use it to pull something external, like a CI run or a deploy, and act when the state changes. To stop a loop, just press escape.
+- Parallel work with worktrees: There's one helpful file to know about. A .worktreeinclude file at the repo root lists git-ignored files to copy into each worktree. This is useful for things like an environment variable file or a local config that you need in every worktree but don't want to commit to version control.
+
+## CLAUDE.md
+
+- The leaner the file, the more of it Claude actually follows.
+- scopes
+  - Managed policy — the org-level file your platform team controls. You can't exclude it, so org policy is always in play.
+  - User — your personal preferences that follow you across every project on your machine.
+  - Project — the file shared with your team, checked into the repo.
+  - Local — ignored by git. Your personal notes for this one repository only.
+- When your project file starts getting long, you can break it into pieces using the path-to-file import syntax. Instead of one wall of text, you point to other files: `@.claude/conventions/code-style.md`
+- Be specific.
+- When you tell Claude not to do something, say what to do instead.
+- Words like "IMPORTANT" and "YOU MUST" do raise a rule's priority. But only relative to everything quieter around it.
+
+## Verification skills
+
+- When it finishes, the change matches the skill's description, so the skill fires on its own. From there it:
+  - Runs the test suite.
+  - Reads the diff.
+  - Checks that no test was weakened just to make things pass.
+  - Reports pass or fail, with the evidence attached.
+- skill folder extras:
+  - Drop a reference.md next to the skill for detailed material, then link to it from skill.md. Claude only reads it when it actually needs that depth. Your main file stays short.
+  - Put scripts in the folder too. Claude executes them rather than loading their contents into context. That means a skill can carry its own tooling, like a check.sh that runs all the gates.
+
+## Permission modes
+
+- Types:
+  - Manual reads only, without prompting. Everything else asks first.
+  - Accept edits runs reads, file edits, and common file system bash commands without asking. This is for iterating on code that you review after the fact.
+  - Plan reads only. It researches and proposes changes without editing anything.
+  - Auto accepts everything, with a separate classifier model reviewing each action before it runs.
+  - Don't ask allows only pre-approved tools. Everything else is auto-denied with no prompt.
+    - Don't ask is the right move whenever no human is around to approve prompts: CI pipelines, scheduled jobs, overnight batches. Only pre-approved tools are allowed, and anything off that list gets auto-denied with no prompt.
+  - Bypass permissions skips all checks. This is the equivalent of the dangerously-skip-permissions flag. Only run it inside an isolated container or virtual machine.
+- Auto mode classifier prohibits e.g.
+  - Production deploys and migrations
+  - Force pushing, or piping downloaded code straight into a shell
+  - Sending sensitive data to external endpoints
+  - Destroying files that exist for the session
+
+## Hooks
+
+- Claude Code fires around 30 hook events over the course of a session.
+- The ones worth knowing:
+  - PreToolUse fires before a tool call. This is your enforcement primitive. It's the one that can stop something before it happens.
+  - PostToolUse fires after a successful tool call. This is usually where auto-formatting or an auto-lint goes.
+  - Stop fires when Claude wants to end its turn. You can refuse and say "no, you're not done yet" if some condition isn't met. There's a matching SubagentStop for when a sub-agent finishes.
+  - PreCompact and PostCompact fire before and after compaction.
+  - InstructionsLoaded fires when a CLAUDE.md or rule file loads. Handy for auditing what actually made it into context.
+  - SessionStart fires at the start and primes the environment. Use the startup source if you only want it on fresh starts.
+- One thing that trips people up: to re-inject context after compaction, don't use PostCompact. Use SessionStart with the compact matcher. That's the one that actually gets its output back into the conversation.
+
+### PreToolUse
+
+- PreToolUse is where the real power is, because it can block a tool call before it runs. The way you talk back to Claude is by printing JSON and exiting zero. The key field is permissionDecision, and it takes one of three values:
+  - allow — let the call through
+  - deny — stop the call
+  - ask — hand it back to the user to decide
+  - There's technically a fourth value, defer, but it only applies to non-interactive -p runs where a calling process pauses the tool and resumes it later. You'll rarely reach for it.
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "...",
+    "updatedInput": {
+      "command": "..."
+    }
+  }
+}
+```
+
+- Notice updatedInput. Instead of blocking a call, you can rewrite it. That's how you'd redact a secret out of a bash command and still let it run. One catch: updatedInput replaces the whole input object, so you have to echo back the fields you aren't changing, or you'll lose them.
+
+### Other hooks
+
+- Not every hook needs to speak JSON. For simpler hooks, exit codes do the job. There are three numbers that matter.
+  - 0 is success. If standard out is JSON, Claude parses it. Plain text is ignored on most events, but on SessionStart, UserPromptSubmit, and UserPromptExpansion, plain text gets added to context. That's exactly what makes a state-preserver hook work.
+  - 2 is a blocking error. Standard error gets fed back to Claude as context. This is the blocking exit code almost everywhere.
+  - Anything else is non-blocking. Standard error gets logged, and Claude carries on.
+- A couple more wrinkles. Exit 2 can even block Stop, which is how you tell Claude it's not done. But PostToolUse fires after the tool already ran, so blocking there is too late to stop the call, though it can still feed text back to Claude. And a few events ignore blocking entirely, like Notification and SessionStart. They'll show your standard error and carry on regardless.
+- Let's tie it together with something practical. Say you want a PreToolUse guardrail on the Bash tool. The matcher picks the tool to watch, and an optional if clause can narrow it to a specific command.
+  - The obvious move is to return deny and stop a dangerous call. That's good. But the lesser-known and more interesting move is to return updatedInput to rewrite the call. That's how you strip a secret out of a command and still let it run, instead of just refusing.
+  - Here's what that looks like in practice. Claude is asked to run a command that includes a live-looking secret. The hook intercepts it, spots the sk*live* pattern, and swaps it for a placeholder before the command ever executes.
+- One more pattern worth setting up. When Claude compacts a long conversation, it drops a lot of detail. A SessionStart hook with the compact matcher runs right after compaction. Have it print a short summary of the files you've been working on. That summary goes back into context, so Claude picks up where it left off instead of starting cold.
+
+## Routines and headless
+
+### Routine
+
+- A routine is the most direct way to automate a task. There's no script and no server. It bundles three things: a prompt, the repository it works on, and any connectors it needs. Then it runs that bundle in the cloud whenever it's triggered.
+- The key part is that the infrastructure is Anthropic's. There's no machine of yours staying on overnight, and there's no workflow file for you to maintain. You describe the job once and it just runs.
+- A routine can fire on a few kinds of triggers:
+  - A cron schedule, like every morning at 9am.
+  - An HTTP POST to its API endpoint, so your own code can kick it off.
+  - A GitHub event, like a new pull request landing.
+- How to create:
+  - You can create a routine from the web at claude.ai/code/routines. You give it a name, write the instructions describing what Claude should do in each session, pick a repository, and choose a trigger.
+  - You can also create one from inside Claude Code without leaving your terminal. Just run the /schedule command and describe what you want in plain language
+- Limitations:
+- Routines are a research preview. Behavior and limits will keep moving, so don't be surprised if things change.
+- A recurring schedule runs at most hourly. If you need something more frequent, routines aren't the tool.
+- Each run starts from a fresh clone of your default branch and can only push to claude/ prefixed branches unless you loosen that per repo. This is the guardrail that keeps an autonomous run from rewriting main.
+
+### Headless
+
+- But sometimes the job needs your environment, or logic wrapped around the run. That's when you drop to headless mode.
+- The core of headless mode is the -p flag (short for --print). It runs Claude Code as a one-shot command with no interactive UI. It reads standard in and writes standard out, so it pipes like any other shell tool: `claude -p "summarize the changes in this diff"`
+- One thing worth knowing: -p skips auto-discovery of hooks, skills, plugins, MCP servers, and the CLAUDE.md file. You get Claude plus the tools you allow explicitly, and nothing the local environment happens to load. The upside is that startup is much faster this way.
+- The object that matches your schema lands in the structured_output field of the JSON response. So you can pull it out with a jq command and pipe it into a database or another script: `claude -p "Extract the exported function names from src/core/style.js" \
+--output-format json \
+--json-schema '{"type":"object","properties":{"functions":{"type":"array","items":{"type":"string"}}},"required":["functions"]}' \
+| jq '.structured_output.functions'`
+- For work that happens across multiple steps, you don't have to cram everything into one command. Capture the session's ID from the JSON output and resume it later: `claude --resume "$(jq -r .session_id /tmp/plan.json)"`
+- When CI needs the same results every single run, there's a mode built for that. The --bare flag gives you deterministic mode. It's the right choice when you're running Claude Code inside a pipeline and you want repeatable, predictable output rather than anything that varies run to run.
+- The last step on the spectrum is the Agent SDK. This gets you a library that embeds Claude Code inside your own TypeScript or Python applications.
+  - Both languages expose a query function and the same primitives as the CLI. You pass a prompt plus options, like:
+    - allowedTools to control what Claude can do,
+    - a system prompt,
+    - and a permission mode.
+  - Then you iterate over the messages Claude streams back and handle them however your app needs. It's the same engine as the CLI, just callable from inside your product.
+
+## GH actions and code review
+
+### Code review
+
+- It's an Anthropic-hosted service that reviews your pull requests through the Claude GitHub app. There's nothing for you to build or host. You turn it on, and it starts posting findings as inline comments right on the lines that matter. An organization admin enables it from the Claude Code admin settings.
+- From there the admin installs the Claude GitHub app, picks which repos it watches, and decides when it runs. You have a few choices for timing:
+  - Once when a PR opens
+  - On every push to the PR
+  - Only when someone comments @claude review
+- A set of review agents analyzes the diff against your full codebase, not just the changed lines in isolation. Then it posts findings as inline comments on the specific lines, tagged by severity, with a summary table in the check run.
+- Limitations:
+  - It never approves or blocks the PR. The judgment call stays with a human. Claude flags things; you decide.
+  - There's no managed autofix. The service posts findings only.
+  - It's a research preview right now, available on team and enterprise plans, so expect the behavior to keep moving.
+- From your own terminal, the /code-review command reviews a diff, and its --fix flag applies the findings to your working tree.
+
+### GH action
+
+- This is for custom CI: implementing changes from a comment, running scheduled reports, anything you'd normally write a workflow for. It runs the agent on PR comments, scheduled jobs, and any GitHub event.
+- Setup starts inside Claude Code. Run the /install-github-app command. You'll need repo admin to do this. The slash command walks you through installing the GitHub app and setting the Anthropic API key secret on the repo.
+- The action itself is anthropics/claude-code-action@v1. Here are the inputs you'll actually use:
+  - anthropic_api_key — optional.
+  - github_token — defaults to secrets.GITHUB_TOKEN.
+  - trigger_phrase — what the action listens for in comments. Defaults to @claude.
+  - use_bedrock / use_vertex — switch to those providers if you're on Bedrock or Vertex.
+  - prompt — the instruction for the run.
+  - claude_args — a string of CLI arguments passed straight through to Claude Code.
+- Drop a workflow into .github/workflows/claude.yaml and it listens for @claude on PR comments and issue comments. The core step looks like this:
+
+```yaml
+- uses: anthropics/claude-code-action@v1
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    trigger_phrase: "@claude"
+    prompt: "Your instructions here"
+    claude_args: "--max-turns 5 --model claude-sonnet-5"
+```
+
+- Now someone writes @claude implement the spec in the linked Linear issue on a pull request, and the action picks it up. Claude pushes commits and posts comments describing what it did.
+- The same action works for a daily rollup. A cron trigger fires at, say, 9:00 UTC, the action runs, and Claude posts the results. You can also add a workflow_dispatch trigger so you can kick it off manually from the Actions tab.
+- The claude_args line is where the fine-tuning happens. A few knobs worth knowing:
+  - --max-turns 5 puts a hard cap on the agent loop, so it can't run forever.
+  - Permission mode. For an unattended job you'll want it to not stop and ask, since there's no one there to answer.
+  - Allowed tools. Give the job exactly what it needs and nothing more. For a report, that means read-only.
+
+## Verifying unsupervised runs
+
+- When a run goes unattended at work, keep it in auto mode rather than bypass permissions. In auto mode, the classifier still reviews each action for danger. That's a safety net worth keeping. But be clear about what that net does and doesn't do. The classifier never judges whether the code is actually correct. It only flags dangerous actions. So your verification bar stays exactly where it was. Set that bar based on how unsupervised the run was.
+- The real gate on an unsupervised run is whether the tests passed, and whether Claude actually ran them or only claimed that it did. Don't leave that to trust. Wire it as a hook so Claude can't skip it.
+- A couple of hooks do the job:
+  - A stop hook that runs your tests and refuses to end the turn on a failure.
+  - A post-tool-use hook that lints and type checks after every edit.
+- The key detail is the exit code. A hook that exits with exit 2 feeds the failure straight back to Claude. Claude reads that failure and fixes it without you asking. Best of all, the check fires on every run, whether or not you remember to ask for it.
+- The sub-agent code review you'd run before a pull request works here too. Point it at an unsupervised run.
+
+## Plugins
+
+- A plugin is one installable unit. It bundles everything you'd otherwise share by hand: skills, subagents, hooks, and MCP server configs, plus the longer tail of stuff like language server protocol servers, background monitors, themes, and a slice of settings.json. One version, one install.
+- Inside a session: `/plugin install org-name@plugin-name`
+  - Claude Code installs it and tells you to run /reload-plugins to apply the change.
+- For a team, the better move is to add a private marketplace once. A marketplace is a shared source that plugins resolve through: `/plugin marketplace add your-org/claude-plugins`
+- Once it's added, every install after that resolves through it. You get centralized discovery, version tracking, and updates in one place instead of scattered across everyone's laptop. You can browse what's available from the Discover tab.
+- Here's the part that matters most. A plugin runs code on your machine, with your privileges. Its hooks fire on every matching tool call. So if you install a plugin for its skills, you also get its PreToolUse and Stop hooks whether you read them or not.
+- Before you install, check the plugin's details. Claude Code shows you what it will install and estimates the context cost, along with a plain warning that Anthropic doesn't control what's inside third-party plugins.
+- A plugin doesn't overwrite your configuration. Its components run alongside your own. e.g. A plugin's PreToolUse hook and your own PreToolUse hook both fire on every tool call.
+- Skills, agents, and commands are namespaced under the plugin name, so they never clash with yours. A plugin can also ship a settings.json file, but only a narrow one. Claude Code honors just two keys from it: the agent and subagent status line keys.
+  - That agent key is worth a pause. Setting it promotes one of the plugin's subagents to the main thread, along with its system prompt, tool restrictions, and model. In other words, enabling the plugin can change how Claude Code behaves by default.
+- Once a plugin is installed you can see everything it added, manage it, and uninstall it from the plugin panel.
+
+### Packaging a plugin
+
+- A plugin uses the same .claude shape you already use:
+  - One folder per skill.
+  - One markdown file per subagent under agents.
+  - hooks/hooks.json and .mcp.json, at the plugin root.
+- On top of that, there's an optional manifest. It lives at .claude-plugin/plugin.json and holds the name, version, description, and author:
+
+```js
+{
+  "name": "svg-splitter-review",
+  "version": "0.1.0",
+  "description": "Reviews the SVG Splitter repo",
+  "author": {
+    "name": "Lewis Menelaws"
+  }
+}
+```
+
+- The manifest is optional. Leave it out and Claude Code still discovers your components by directory convention. But a couple of details are worth knowing:
+  - Name is the only required field. It namespaces your skills as company-name:skill-name, which keeps them from colliding with anyone else's.
+  - Version it like any other dependency. That's what makes updates and version tracking work across your team.
