@@ -436,3 +436,53 @@ layout: default
 - The manifest is optional. Leave it out and Claude Code still discovers your components by directory convention. But a couple of details are worth knowing:
   - Name is the only required field. It namespaces your skills as company-name:skill-name, which keeps them from colliding with anyone else's.
   - Version it like any other dependency. That's what makes updates and version tracking work across your team.
+
+# Introduction to agent skills
+
+- This video introduces skills — reusable markdown files that teach Claude Code how to handle specific tasks automatically. Instead of repeating instructions every time you ask Claude to review a PR or write a commit message, you write a skill once and Claude applies it whenever the task comes up.
+- Each skill lives in a SKILL.md file with a name and description in its frontmatter
+- Claude uses the description to match skills to requests.
+- Personal skills go in ~/.claude/skills and follow you across all projects. Project skills go in .claude/skills inside a repository
+  - On Windows, personal skills live in C:/Users/<your-user>/.claude/skills
+- Skills load on demand — unlike CLAUDE.md (which loads into every conversation) or slash commands (which require explicit invocation), skills activate automatically when Claude recognizes the situation
+- When Claude matches a skill to your request, you'll see it load in the terminal
+- Claude loads only skill names and descriptions at startup
+- You get a confirmation prompt before Claude loads the full skill content into context
+- Priority for name conflicts: Enterprise → Personal → Project → Plugins
+- Always restart Claude Code for changes to take effect when updating or deleting a skill
+- You can verify it's available by checking the available skills list.
+
+## Advanced skills
+
+- The agent skills open standard
+- name and description are required — allowed-tools and model are optional but powerful additions
+  - If you omit allowed-tools entirely, the skill doesn't restrict anything.
+- A good description answers two questions: What does the skill do? When should Claude use it?
+- keep SKILL.md under 500 lines and link to supporting files (references, scripts, assets) that Claude reads only when needed
+- Scripts execute without loading their contents into context — only the output consumes tokens, keeping context efficient
+- Skills share Claude's context window with your conversation. When Claude activates a skill, it loads the contents of that SKILL.md into context.
+  - scripts/ — Executable code
+  - references/ — Additional documentation
+  - assets/ — Images, templates, or other data files
+- The script executes and only the output consumes tokens. The key instruction to include in your SKILL.md is to tell Claude to run the script, not read it.
+- Sharing
+  - Project skills in .claude/skills
+  - Plugins
+  - Enterprise managed settings deploy skills organization-wide with the highest priority
+  - Subagents don't automatically see your skills — you must explicitly list skills in a custom agent's frontmatter skills field Skills are loaded when the subagent starts, not on demand like in the main conversation.
+  - Built-in agents (Explorer, Plan, Verify) can't access skills at all — only custom subagents defined in .claude/agents can
+
+## Skills vs others
+
+- Use Subagents when:
+  - You want to delegate a task to a separate execution context
+  - You need different tool access than the main conversation
+  - You want isolation between delegated work and your main context
+
+## Troubleshooting
+
+- Start with the skills validator tool. using uv is the easiest way to get it set up quickly
+- If a skill doesn't trigger, the cause is almost always the description
+- If a skill doesn't load, check that SKILL.md is inside a named directory (not at the skills root) and the file name is exactly SKILL.md. claude --debug
+- For runtime errors, check dependencies, file permissions (chmod +x), and path separators (use forward slashes everywhere)
+- Installed a plugin but can't see its skills? Clear the cache, restart Claude Code, and reinstall. If skills still don't appear after that, the plugin structure might be wrong.
