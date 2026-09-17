@@ -677,3 +677,238 @@ async def get_prompt(self, prompt_name, args: dict[str, str]):
     result = await self.session().get_prompt(prompt_name, args)
     return result.messages
 ```
+
+# Advanced MCP
+
+## Sampling
+
+- Sampling allows a server to access a language model like Claude through a connected MCP client. Instead of the server directly calling Claude, it asks the client to make the call on its behalf. This shifts the responsibility and cost of text generation from the server to the client.
+- Sampling is most valuable when building publicly accessible MCP servers. You don't want random users generating unlimited text at your expense. By using sampling, each client pays for their own AI usage while still benefiting from your server's functionality.
+- The flow is straightforward:
+  - Server completes its work (like fetching Wikipedia articles)
+  - Server creates a prompt asking for text generation
+  - Server sends a sampling request to the client
+  - Client calls Claude with the provided prompt
+  - Client returns the generated text to the server
+  - Server uses the generated text in its response
+- The client integrates with the language model, handles API keys and cost
+
+#### Setting up sampling
+
+- In your tool function on the server, use the create_message function to request text generation:
+
+```python
+@mcp.tool()
+async def summarize(text_to_summarize: str, ctx: Context):
+    prompt = f"""
+    Please summarize the following text:
+    {text_to_summarize}
+    """
+
+    result = await ctx.session.create_message(
+        messages=[
+            SamplingMessage(
+                role="user",
+                content=TextContent(
+                    type="text",
+                    text=prompt
+                )
+            )
+        ],
+        max_tokens=4000,
+        system_prompt="You are a helpful research assistant",
+    )
+
+    if result.content.type == "text":
+        return result.content.text
+    else:
+        raise ValueError("Sampling failed")
+```
+
+- Create a sampling callback on the client that handles the server's requests:
+
+```python
+async def sampling_callback(
+    context: RequestContext, params: CreateMessageRequestParams
+):
+    # Call Claude using the Anthropic SDK
+    text = await chat(params.messages)
+
+    return CreateMessageResult(
+        role="assistant",
+        model=model,
+        content=TextContent(type="text", text=text),
+    )
+```
+
+- Then pass this callback when initializing your client session:
+
+```python
+async with ClientSession(
+    read,
+    write,
+    sampling_callback=sampling_callback
+) as session:
+    await session.initialize()
+```
+
+## Logging and progress notifications
+
+-In the Python MCP SDK, logging and progress notifications work through the Context argument that's automatically provided to your tool functions. This context object gives you methods to communicate back to the client during execution.
+
+- context.info() - Send log messages to the client
+- context.report_progress() - Update progress with current and total values
+
+```python
+@mcp.tool(
+    name="research",
+    description="Research a given topic"
+)
+async def research(
+    topic: str = Field(description="Topic to research"),
+    *,
+    context: Context
+):
+    await context.info("About to do research...")
+    await context.report_progress(20, 100)
+    sources = await do_research(topic)
+
+    await context.info("Writing report...")
+    await context.report_progress(70, 100)
+    results = await generate_report(sources)
+
+    return results
+```
+
+- On the client side, you need to set up callback functions to handle these notifications. The server emits these messages, but it's up to your client application to decide how to present them to users.
+- You provide the logging callback when creating the client session, and the progress callback when making individual tool calls. This gives you flexibility to handle different types of notifications appropriately.
+
+```python
+async def logging_callback(params: LoggingMessageNotificationParams):
+    print(params.data)
+
+async def print_progress_callback(
+    progress: float, total: float | None, message: str | None
+):
+    if total is not None:
+        percentage = (progress / total) * 100
+        print(f"Progress: {progress}/{total} ({percentage:.1f}%)")
+    else:
+        print(f"Progress: {progress}")
+
+async def run():
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(
+            read,
+            write,
+            logging_callback=logging_callback
+        ) as session:
+            await session.initialize()
+
+            await session.call_tool(
+                name="add",
+                arguments={"a": 1, "b": 3},
+                progress_callback=print_progress_callback,
+            )
+```
+
+## Roots
+
+- Roots are a way to grant MCP servers access to specific files and folders on your local machine. Think of them as a permission system that says "Hey, MCP server, you can access these files" - but they do much more than just grant permission.
+- Roots also provide security by limiting access to specific folder.
+- Flow
+  - User asks to convert a video file
+  - Claude calls list_roots to see what directories it can access
+  - Claude calls read_dir on accessible directories to find the file
+  - Once found, Claude calls the conversion tool with the full path
+- The MCP SDK doesn't automatically enforce root restrictions - you need to implement this yourself. A typical pattern is to create a helper function like is_path_allowed() that:
+  - Takes a requested file path
+  - Gets the list of approved roots
+  - Checks if the requested path falls within one of those roots
+  - Returns true/false for access permission
+  - You then call this function in any tool that accesses files or directories before performing the actual file operation.
+
+## JSON message types
+
+- MCP uses JSON messages to handle communication between clients and servers.
+- Here's a typical example: when Claude needs to call a tool provided by an MCP server, the client sends a "Call Tool Request" message. The server processes this request, runs the tool, and responds with a "Call Tool Result" message containing the output.
+- The complete list of message types is defined in the official MCP specification repository on GitHub.
+- 2 types of messages:
+  - request-result
+  - notification
+
+### Request-result messages
+
+- These messages always come in pairs. You send a request and expect to get a result back:
+  - Call Tool Request → Call Tool Result
+  - List Prompts Request → List Prompts Result
+  - Read Resource Request → Read Resource Result
+  - Initialize Request → Initialize Resu
+
+### Notification messages
+
+- These are one-way messages that inform about events but don't require a response:
+  - Progress Notification - Updates on long-running operations
+  - Logging Message Notification - System log messages
+  - Tool List Changed Notification - When available tools change
+  - Resource Updated Notification - When resources are modified
+
+### Client and Server messages
+
+- Client messages include requests that clients send to servers (like tool calls) and notifications that clients might send.
+- Server messages include requests that servers send to clients and notifications that servers broadcast.
+- Some transports, like the streamable HTTP transport, have limitations on which types of messages can flow in which directions.
+
+## STDIO transport
+
+- The client launches the MCP server as a subprocess and communicates through standard input and output streams.
+- Here's how it works:
+  - Client sends messages to the server using the server's stdin
+  - Server responds by writing to stdout
+  - Either the server or client can send a message at any time
+  - Only works when client and server run on the same machine
+- Every MCP connection must start with a 3 step handshake:
+  - Initialize Request - Client sends this first
+  - Initialize Result - Server responds with capabilities
+  - Initialized Notification - Client confirms (no response expected)
+  - Only after this handshake can you send other requests like tool calls or prompt listings.
+- 4 types
+  - Client → Server request: Client writes to stdin
+  - Server → Client response: Server writes to stdout
+  - Server → Client request: Server writes to stdout
+  - Client → Server response: Client writes to stdin
+
+## Streamable HTTP transport
+
+- The streamable HTTP transport enables MCP clients to connect to remotely hosted servers over HTTP connections. Unlike the standard I/O transport that requires both client and server on the same machine, this transport opens up possibilities for public MCP servers that anyone can access.
+- Two key settings control how the streamable HTTP transport behaves:
+  - stateless_http - Controls connection state management
+  - json_response - Controls response format handling
+  - By default, both settings are false, but certain deployment scenarios may force you to set them to true. When enabled, these settings can break core functionality like progress notifications, logging, and server-initiated requests.
+- he following message types become difficult to implement with plain HTTP:
+  - Server-initiated requests: Create Message requests, List Roots requests
+  - Notifications: Progress notifications, Logging notifications, Initialized notifications, Cancelled notifications
+
+### The details
+
+- StreamableHTTP is MCP's solution to a fundamental problem: some MCP functionality requires the server to make requests to the client, but HTTP makes this challenging.
+- Uses Server-Sent Events (SSE)
+- The process starts like any MCP connection:
+  - Client sends an Initialize Request to the server
+  - Server responds with an Initialize Result that includes a special mcp-session-id header
+  - Client sends an Initialized Notification with the session ID
+- After initialization, the client can make a GET request to establish a Server-Sent Events connection. This creates a long-lived HTTP response that the server can use to stream messages back to the client at any time.
+- When the client makes a tool call, things get more complex. The system creates two separate SSE connections:
+  - Primary SSE Connection: Used for server-initiated requests and stays open indefinitely
+  - Tool-Specific SSE Connection: Created for each tool call and closes automatically when the tool result is sent
+  - Progress notifications: Sent through the primary SSE connection
+  - Logging messages and tool results: Sent through the tool-specific SSE connection
+
+### The state
+
+- In case I have many MCP Server instances behind a load balancer, stateful connections won't work as the traffic won't be routed back to the same Server every time.
+- The json_response=True flag is simpler - it just disables streaming for POST request responses. Instead of getting multiple SSE messages as a tool executes, you get only the final result as plain JSON.
+- With streaming disabled:
+  - No intermediate progress messages
+  - No log statements during execution
+  - Just the final tool result
