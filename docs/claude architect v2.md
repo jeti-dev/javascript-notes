@@ -486,3 +486,194 @@ layout: default
 - If a skill doesn't load, check that SKILL.md is inside a named directory (not at the skills root) and the file name is exactly SKILL.md. claude --debug
 - For runtime errors, check dependencies, file permissions (chmod +x), and path separators (use forward slashes everywhere)
 - Installed a plugin but can't see its skills? Clear the cache, restart Claude Code, and reinstall. If skills still don't appear after that, the plugin structure might be wrong.
+
+# Introductio to MCP
+
+- Think of it as a way to shift the burden of tool definitions and execution away from your server to specialized MCP servers.
+- Each MCP Server acts as an interface to some outside service.
+- Anyone can create an MCP server implementation. Often, service providers themselves will make their own official MCP implementations.
+- MCP servers and tool use are complementary but different concepts. MCP servers provide tool schemas and functions already defined for you, while tool use is about how Claude actually calls those tools.
+
+## MCP client
+
+- The MCP client serves as the communication bridge between your server and MCP servers. It's your access point to all the tools that an MCP server provides, handling the message exchange and protocol details so your application doesn't have to.
+- The most common setup runs both the MCP client and server on the same machine, communicating through standard input/output.
+- ListToolsRequest/ListToolsResult: The client asks the server "what tools do you provide?" and gets back a list of available tools.
+- CallToolRequest/CallToolResult: The client asks the server to run a specific tool with given arguments, then receives the results.
+
+### Steps
+
+1. User Query: The user submits their question to your server
+2. Tool Discovery: Your server needs to know what tools are available to send to Claude
+3. List Tools Exchange: Your server asks the MCP client for available tools
+4. MCP Communication: The MCP client sends a ListToolsRequest to the MCP server and receives a ListToolsResult
+5. Claude Request: Your server sends the user's query plus the available tools to Claude
+6. Tool Use Decision: Claude decides it needs to call a tool to answer the question
+7. Tool Execution Request: Your server asks the MCP client to run the tool Claude specified
+8. External API Call: The MCP client sends a CallToolRequest to the MCP server, which makes the actual GitHub API call
+9. Results Flow Back: GitHub responds with repository data, which flows back through the MCP server as a CallToolResult
+10. Tool Result to Claude: Your server sends the tool results back to Claude
+11. Final Response: Claude formulates a final answer using the repository data
+12. User Gets Answer: Your server delivers Claude's response back to the user
+
+![Event loop](/assets/claude2mcpclient.png)
+
+## Defining tools with MCP
+
+- use the official Python SDK
+
+```python
+# server start
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("DocumentMCP", log_level="ERROR")
+```
+
+```python
+# tool definition
+@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document and return it as a string."
+)
+def read_document(
+    doc_id: str = Field(description="Id of the document to read")
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+
+    return docs[doc_id]
+```
+
+## The MCP server inspector
+
+- When building MCP servers, you need a way to test your functionality without connecting to a full application. The Python MCP SDK includes a built-in browser-based inspector that lets you debug and test your server in real-time.
+
+```bash
+# starts the inspector with GUI
+mcp dev mcp_server.py
+```
+
+- The inspector maintains your server state between tool calls, so edits persist and you can verify the complete functionality of your MCP server.
+
+## Implementing an MCP client
+
+- The client is what allows our application code to communicate with the MCP server and access its functionality.
+- In most real-world projects, you'll either implement an MCP client or an MCP server
+- 2 components:
+  - MCP Client - A custom class we create to make using the session easier
+  - Client Session - The actual connection to the server (part of the MCP Python SDK). The client session requires careful resource management - we need to properly clean up connections when we're done. That's why we wrap it in our own class that handles all the cleanup automatically.
+
+### Client functions
+
+- two essential functions: list_tools() and call_tool()
+
+```python
+async def list_tools(self) -> list[types.Tool]:
+    result = await self.session().list_tools()
+    return result.tools
+```
+
+- It's straightforward - we access our session (the connection to the server), call the built-in list_tools() method, and return the tools from the result.
+
+```python
+async def call_tool(
+    self, tool_name: str, tool_input: dict
+) -> types.CallToolResult | None:
+    return await self.session().call_tool(tool_name, tool_input)
+```
+
+- We pass the tool name and input parameters (provided by Claude) to the server and return the result.
+
+## Resources
+
+- Resources in MCP servers allow you to expose data to clients, similar to GET request handlers in a typical HTTP server. They're perfect for scenarios where you need to fetch information rather than perform actions.
+- Let's say you want to build a document mention feature where users can type @document_name to reference files. This requires two operations:
+  - Getting a list of all available documents (for autocomplete)
+  - Fetching the contents of a specific document (when mentioned)
+- Resources follow a request-response pattern. When your client needs data, it sends a ReadResourceRequest with a URI to identify which resource it wants. The MCP server processes this request and returns the data in a ReadResourceResult.
+
+### Resource types
+
+- Direct resources have static URIs that never change. They're perfect for operations that don't need parameters.
+
+```python
+@mcp.resource(
+    "docs://documents",
+    mime_type="application/json"
+)
+def list_docs() -> list[str]:
+    return list(docs.keys())
+```
+
+- Templated resources include parameters in their URIs. The Python SDK automatically parses these parameters and passes them as keyword arguments to your function.
+
+```python
+@mcp.resource(
+    "docs://documents/{doc_id}",
+    mime_type="text/plain"
+)
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]
+```
+
+- Use the mime_type parameter to give clients a hint about what kind of data you're returning:
+  - "application/json" for structured data
+  - "text/plain" for plain text
+  - "application/pdf" for binary files
+- You can test resources using the MCP Inspector.
+
+### Accessing resources
+
+- To enable resource access in your MCP client, you need to implement a read_resource function.
+- When you request a resource, the server returns a result with a contents list. We access the first element since we typically only need one resource at a time. The response includes:
+  - The actual content (text or data)
+  - A MIME type that tells us how to parse the content
+  - Other metadata about the resource
+
+## Prompts
+
+- Prompts in MCP servers let you define pre-built, high-quality instructions that clients can use instead of writing their own prompts from scratch. Think of them as carefully crafted templates that give better results than what users might come up with on their own.
+- Prompts work best when they're specialized for your MCP server's domain.
+
+```python
+@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format."
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format")
+) -> list[base.Message]:
+    prompt = f"""
+Your goal is to reformat a document to be written with markdown syntax.
+
+The id of the document you need to reformat is:
+<document_id>
+{doc_id}
+</document_id>
+
+Add in headers, bullet points, tables, etc as necessary. Feel free to add in structure.
+Use the 'edit_document' tool to edit the document. After the document has been reformatted...
+"""
+
+    return [
+        base.UserMessage(prompt)
+    ]
+```
+
+- The list_prompts method is straightforward. It calls the session's list prompts function and returns the prompts
+
+```python
+async def list_prompts(self) -> list[types.Prompt]:
+    result = await self.session().list_prompts()
+    return result.prompts
+```
+
+- The get_prompt method is more interesting because it handles variable interpolation. For example, if your server has a format_document prompt that expects a doc_id parameter, the arguments dictionary would contain {"doc_id": "plan.md"}. This value gets interpolated into the prompt template.
+
+```python
+async def get_prompt(self, prompt_name, args: dict[str, str]):
+    result = await self.session().get_prompt(prompt_name, args)
+    return result.messages
+```
