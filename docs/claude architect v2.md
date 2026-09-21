@@ -912,3 +912,195 @@ async def run():
   - No intermediate progress messages
   - No log statements during execution
   - Just the final tool result
+
+# Building with the Cladude API
+
+## Accessing Claude with the API
+
+- When your server contacts the Anthropic API, you can use either an official SDK or make plain HTTP requests.
+- Must have params:
+  - API Key - Identifies your request to Anthropic
+  - Model - Name of the model to use (like "claude-3-sonnet")
+  - Messages - List containing the user's input text
+  - Max Tokens - Limit for how many tokens Claude can generate
+- 4 steps how Claude processes the request:
+  - Tokenization: Claude first breaks your input text into smaller chunks called tokens. These can be whole words, parts of words, spaces, or symbols. For simplicity, think of each word as one token.
+  - Embedding: Each token gets converted into an embedding - a long list of numbers that represents all possible meanings of that word. Think of embeddings as numerical definitions that capture semantic relationships.
+  - Contextualization: Claude refines each embedding based on surrounding words to determine the most likely meaning in context. This process adjusts the numerical representations to highlight the appropriate definition.
+  - Generation: The contextualized embeddings pass through an output layer that calculates probabilities for each possible next word. Claude doesn't always pick the highest probability word - it uses a mix of probability and controlled randomness to create natural, varied responses.
+- Conditions on when Claude stops generating the response:
+  - Max tokens reached - Has it hit the limit you specified?
+  - Natural ending - Did it generate an end-of-sequence token?
+  - Stop sequence - Did it encounter a predefined stop phrase?
+- The API response structure:
+  - Message - The generated text
+  - Usage - Count of input and output tokens
+  - Stop Reason - Why generation ended
+
+## Making a request
+
+- Params:
+  - model - The name of the Claude model you want to use
+  - max_tokens - A safety limit on response length (not a target)
+  - messages - The conversation history you're sending to Claude
+
+```python
+from anthropic import Anthropic
+
+client = Anthropic()
+model = "claude-sonnet-4-0"
+
+message = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=[
+        {
+            "role": "user",
+            "content": "What is quantum computing? Answer in one sentence"
+        }
+    ]
+)
+```
+
+- Message types: Each message is a dictionary with a role (either "user" or "assistant") and content (the actual text).
+  - User messages - Content you want to send to Claude (written by humans)
+  - Assistant messages - Responses that Claude has generated
+- The response: `message.content[0].text`
+
+## Multi turn conversation
+
+- Claude doesn't store any of your conversation history, each request you make is completely independent, with no memory of previous exchanges.
+- Here's the flow that actually works:
+  - Send your initial user message to Claude
+  - Take Claude's response and add it to your message list as an assistant message
+  - Add your follow-up question as another user message
+  - Send the entire conversation history to Claude
+
+## System prompts
+
+- System prompts provide Claude with guidance on how to respond. You define them as plain strings and pass them into the create function call.
+  - System prompts provide Claude guidance on how to respond
+  - Claude will try to respond in the same way someone in the specified role would respond
+  - Helps keep Claude on task
+
+```python
+system_prompt = """
+You are a patient math tutor.
+Do not directly answer a student's questions.
+Guide them to a solution step by step.
+"""
+
+client.messages.create(
+    model=model,
+    messages=messages,
+    max_tokens=1000,
+    system=system_prompt
+)
+```
+
+## Temperature
+
+- Temperature is a powerful parameter that controls how predictable or creative Claude's responses will be.
+- 3 keys steps when Claude figures out the next word:
+  - Tokenization - Breaking your input into smaller chunks
+  - Prediction - Calculating probabilities for possible next words
+  - Sampling - Choosing a token based on those probabilities
+- At low temperatures (near 0), Claude becomes very deterministic - it almost always picks the highest probability token. At high temperatures (near 1), Claude distributes probability more evenly across options, leading to more varied and creative outputs.
+
+```python
+ params = {
+        "model": model,
+        "max_tokens": 1000,
+        "messages": messages,
+        "temperature": temperature
+    }
+```
+
+## Response streaming
+
+- Instead of waiting for the full response from Claude, we can stream its response.
+- When you enable streaming, Claude sends back several types of events:
+  - MessageStart - A new message is being sent
+  - ContentBlockStart - Start of a new block containing text, tool use, or other content
+  - ContentBlockDelta - Chunks of the actual generated text
+  - ContentBlockStop - The current content block has been completed
+  - MessageDelta - The current message is complete
+  - MessageStop - End of information about the current message
+
+```python
+stream = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=messages,
+    stream=True
+)
+
+for event in stream:
+    print(event)
+```
+
+- Rather than manually parsing events, you can use the SDK's simplified streaming interface that extracts just the text content:
+
+```python
+with client.messages.stream(
+    model=model,
+    max_tokens=1000,
+    messages=messages
+) as stream:
+    for text in stream.text_stream:
+        print(text, end="")
+
+     # Get the complete message for database storage
+    final_message = stream.get_final_message()
+```
+
+## Structured data
+
+- When you need Claude to generate structured data like JSON, Python code, or bulleted lists, you'll often run into a common problem: Claude wants to be helpful and add explanatory text around your content.
+- You can combine assistant message prefilling with stop sequences to get exactly the content you want.
+- This technique works by:
+  - The user message tells Claude what to generate
+  - The prefilled assistant message makes Claude think it already started a markdown code block
+  - Claude continues by writing just the JSON content
+  - When Claude tries to close the code block with ```, the stop sequence immediately ends generation
+
+````python
+messages = []
+
+add_user_message(messages, "Generate a very short event bridge rule as json")
+add_assistant_message(messages, "```json") # starts the JSON instead of Claude
+
+text = chat(messages, stop_sequences=["```"]) # when Claude ends the JSON it also signals it to stop generating
+
+import json
+
+# Clean up and parse the JSON
+clean_json = json.loads(text.strip())
+````
+
+## Prompt evaluation
+
+- Prompt engineering gives you techniques for writing better prompts, while prompt evaluation helps you measure how well those prompts actually work.
+- Prompt engineering is your toolkit for crafting effective prompts. It includes techniques like:
+  - Multishot prompting
+  - Structuring with XML tags
+  - Many other best practices
+- Prompt evaluation takes a different approach. Instead of focusing on how to write prompts, it's about measuring their effectiveness through automated testing. You can:
+  - Test against expected answers
+  - Compare different versions of the same prompt
+  - Review outputs for errors
+- 5 steps to eval a prompt
+  - Start by writing an initial prompt that you want to improve.
+  - Your evaluation dataset contains sample inputs that represent the types of questions or requests your prompt will handle in production. The dataset should include questions that will be interpolated into your prompt template.
+  - Take each question from your dataset and merge it with your prompt template to create complete prompts. Then send each one to Claude to get responses.
+  - The grader evaluates the quality of Claude's responses by examining both the original question and Claude's answer. This step provides objective scoring, typically on a scale from 1 to 10, where 10 represents a perfect answer and lower scores indicate room for improvement.
+  - Now that you have a baseline score, you can modify your prompt and run the entire process again to see if your changes improve performance.
+- There are three main approaches to grading model outputs:
+  - Code graders - Programmatically evaluate outputs using custom logic
+  - Model graders - Use another AI model to assess the quality
+  - Human graders - Have people manually review and score outputs
+- Before implementing any grader, you need clear evaluation criteria. For a code generation prompt, you might focus on:
+  - Format - Should return only Python, JSON, or Regex without explanation
+  - Valid Syntax - Produced code should have valid syntax
+  - Task Following - Response should directly address the user's task with accurate code
+- For a grader, the key insight is asking for strengths, weaknesses, and reasoning alongside the score. Without this context, models tend to default to middling scores around 6.
