@@ -1104,3 +1104,75 @@ clean_json = json.loads(text.strip())
   - Valid Syntax - Produced code should have valid syntax
   - Task Following - Response should directly address the user's task with accurate code
 - For a grader, the key insight is asking for strengths, weaknesses, and reasoning alongside the score. Without this context, models tend to default to middling scores around 6.
+
+## Prompt engineering
+
+- The evaluation setup uses a PromptEvaluator class that handles dataset generation and model grading. When creating your evaluator instance, you can control concurrency with the max_concurrent_tasks parameter. Start with a low concurrency value (like 3) to avoid rate limit errors.
+
+```python
+evaluator = PromptEvaluator(max_concurrent_tasks=5)
+```
+
+- The evaluation system can automatically generate test cases based on your prompt requirements. You define what inputs your prompt needs:
+
+```python
+dataset = evaluator.generate_dataset(
+    task_description="Write a compact, concise 1 day meal plan for a single athlete",
+    prompt_inputs_spec={
+        "height": "Athlete's height in cm",
+        "weight": "Athlete's weight in kg",
+        "goal": "Goal of the athlete",
+        "restrictions": "Dietary restrictions of the athlete"
+    },
+    output_file="dataset.json",
+    num_cases=3
+)
+```
+
+- Start with a simple, naive prompt to establish a baseline:
+
+```python
+def run_prompt(prompt_inputs):
+    prompt = f"""
+What should this person eat?
+
+- Height: {prompt_inputs["height"]}
+- Weight: {prompt_inputs["weight"]}
+- Goal: {prompt_inputs["goal"]}
+- Dietary restrictions: {prompt_inputs["restrictions"]}
+"""
+
+    messages = []
+    add_user_message(messages, prompt)
+    return chat(messages)
+```
+
+- When running your evaluation, you can specify additional criteria that the grading model should consider:
+
+```python
+results = evaluator.run_evaluation(
+    run_prompt_function=run_prompt,
+    dataset_file="dataset.json",
+    extra_criteria="""
+The output should include:
+- Daily caloric total
+- Macronutrient breakdown
+- Meals with exact foods, portions, and timing
+"""
+)
+```
+
+- After running an evaluation, you'll get both a numerical score and a detailed HTML report. The report shows you exactly how each test case performed, including the model's reasoning for each score.
+
+### Prompt engineering techniques
+
+- The first line of your prompt is the most important part of your entire request. This is where you set the stage for everything that follows, and getting it right can dramatically improve your results.
+- Focus on two key principles: clarity and directness.
+- Details:
+  - Use instructions, not questions
+  - Start with direct action verbs like "Write," "Create," or "Generate"
+- Output quality guidelines: listing qualities that your output should have.
+- Process steps: Provides specific steps for Claude to follow. This approach is particularly useful when you want Claude to think through a problem systematically or consider multiple perspectives before arriving at a final answer.
+- XML tags: Claude can sometimes struggle to understand which pieces of text belong together or what different sections are supposed to represent. XML tags provide a simple way to add structure and clarity to your prompts. e.g. `<sales_records>`...`</sales_records>`
+- One-shot (single example) or multi-shot (multiple examples) prompting: giving Claude sample input/output pairs to guide its responses.
+  - Don't just provide the input/output pair - explain why the output is good.
