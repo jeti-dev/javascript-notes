@@ -1176,3 +1176,13 @@ The output should include:
 - XML tags: Claude can sometimes struggle to understand which pieces of text belong together or what different sections are supposed to represent. XML tags provide a simple way to add structure and clarity to your prompts. e.g. `<sales_records>`...`</sales_records>`
 - One-shot (single example) or multi-shot (multiple examples) prompting: giving Claude sample input/output pairs to guide its responses.
   - Don't just provide the input/output pair - explain why the output is good.
+
+# Tools
+
+- Tools allow Claude to access information from the outside world, extending its capabilities beyond what it learned during training.
+- The flow:
+  - Initial Request: You send Claude a question along with instructions on how to get extra data from external sources
+  - Tool Request: Claude analyzes the question and decides it needs additional information, then asks for specific details about what data it needs
+  - Data Retrieval: Your server runs code to fetch the requested information from external APIs or databases
+  - Final Response: You send the retrieved data back to Claude, which then generates a complete response using both the original question and the fresh data
+- When a user asks about current weather, you include instructions in your prompt about how to retrieve weather data. Claude recognizes it needs current information and requests weather data for the specific location. Your server then calls a weather API to get real-time conditions and sends that data back to Claude. Finally, Claude combines the fresh weather data with the user's question to provide an accurate, current response.
