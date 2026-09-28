@@ -1186,3 +1186,250 @@ The output should include:
   - Data Retrieval: Your server runs code to fetch the requested information from external APIs or databases
   - Final Response: You send the retrieved data back to Claude, which then generates a complete response using both the original question and the fresh data
 - When a user asks about current weather, you include instructions in your prompt about how to retrieve weather data. Claude recognizes it needs current information and requests weather data for the specific location. Your server then calls a weather API to get real-time conditions and sends that data back to Claude. Finally, Claude combines the fresh weather data with the user's question to provide an accurate, current response.
+
+## Tool functions
+
+- A tool function is a plain Python function that gets executed automatically when Claude decides it needs extra information to help a user. For example, if someone asks "What time is it?", Claude would call your date/time tool to get the current time.
+- Guidelines:
+  - Use descriptive names: Both your function name and parameter names should clearly indicate their purpose
+  - Validate inputs: Check that required parameters aren't empty or invalid, and raise errors when they are
+  - Provide meaningful error messages: Claude can see error messages and might retry the function call with corrected parameters
+
+```python
+def get_current_datetime(date_format="%Y-%m-%d %H:%M:%S"):
+    if not date_format:
+        raise ValueError("date_format cannot be empty")
+    return datetime.now().strftime(date_format)
+```
+
+## Tool schemas
+
+- After writing your tool function, the next step is creating a JSON schema that tells Claude what arguments your function expects and how to use it. This schema acts as documentation that Claude reads to understand when and how to call your tools.
+- 3 properties:
+  - name - A clear, descriptive name for your tool (like "get_weather")
+  - description - What the tool does, when to use it, and what it returns
+  - input_schema - The actual JSON schema describing the function's arguments
+- More on the description property:
+  - Aim for 3-4 sentences explaining what the tool does
+  - Describe when Claude should use it
+  - Explain what kind of data it returns
+  - Provide detailed descriptions for each argument
+
+```python
+# Add the schema to the file of the tool function
+from anthropic.types import ToolParam
+get_current_datetime_schema = ToolParam({
+    "name": "get_current_datetime",
+    "description": "Returns the current date and time formatted according to the specified format",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "date_format": {
+                "type": "string",
+                "description": "A string specifying the format of the returned datetime. Uses Python's strftime format codes.",
+                "default": "%Y-%m-%d %H:%M:%S"
+            }
+        },
+        "required": []
+    }
+})
+```
+
+## Handling message blocks
+
+- When working with Claude's tool functionality, you'll encounter a new type of response structure that's different from the simple text responses you've seen before. Instead of just getting back a single text block, Claude can now return multi-block messages that contain both text and tool usage information.
+- To enable Claude to use tools, you need to include a tools parameter in your API call:
+
+```python
+response = client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=messages,
+    tools=[get_current_datetime_schema],
+)
+```
+
+- When Claude decides to use a tool, it returns an assistant message with multiple blocks in the content list.
+- Multi block message properties:
+  - Text Block - Human-readable text explaining what Claude is doing (like "I can help you find out the current time. Let me find that information for you")
+  - ToolUse Block - Instructions for your code about which tool to call and what parameters to use
+    - An ID for tracking the tool call
+    - The name of the function to call (like "get_current_datetime")
+    - Input parameters formatted as a dictionary
+    - The type designation "tool_use"
+- Here's how to properly append a multi-block assistant message to your conversation history. This preserves both the text block and the tool use block, which is crucial for maintaining the conversation context when you make subsequent API calls:
+
+```python
+messages.append({
+    "role": "assistant",
+    "content": response.content
+})
+```
+
+## Sending tool results
+
+- After Claude requests a tool call, you need to execute the function and send the results back. This completes the tool use workflow by providing Claude with the information it requested.
+- When Claude responds with a tool use block, you extract the input parameters and call your function. Here's how to access the tool parameters:
+
+```python
+response.content[1].input
+```
+
+- This gives you a dictionary of the arguments Claude wants to pass to your function. Since your function expects keyword arguments rather than a dictionary, you use Python's unpacking syntax:
+
+```python
+get_current_datetime(**response.content[1].input)
+```
+
+- After running the tool function, you need to send the results back to Claude using a tool result block. This block goes inside a user message and tells Claude what happened when you executed the tool.
+- Properties of a Tool Result Block:
+  - tool_use_id - Must match the id of the ToolUse block that this ToolResult corresponds to
+  - content - Output from running your tool, serialized as a string
+  - is_error - True if an error occurred
+- Claude can request multiple tool calls in a single response. For example, if a user asks "What's 10 + 10 and what's 30 + 30?", Claude might respond with two separate ToolUse blocks. Each tool call gets a unique ID, and you must match these IDs when sending back results. This ensures Claude knows which result corresponds to which request, even if the results arrive in a different order.
+- Your follow-up request to Claude must include the complete conversation history plus the new tool result. Here's the structure:
+
+```python
+messages.append({
+    "role": "user",
+    "content": [{
+        "type": "tool_result",
+        "tool_use_id": response.content[1].id,
+        "content": "15:04:22",
+        "is_error": False
+    }]
+})
+```
+
+- When sending the follow-up request, you must still include the tool schema even though you're not expecting Claude to make another tool call. Claude needs the schema to understand the tool references in your conversation history:
+
+```python
+client.messages.create(
+    model=model,
+    max_tokens=1000,
+    messages=messages,
+    tools=[get_current_datetime_schema]
+)
+```
+
+## Multi-turn conversations with tools
+
+- When building applications with multiple tools, you need to handle scenarios where Claude might need to call several tools in sequence to answer a single user question. This creates a multi-turn conversation pattern where Claude makes multiple tool requests before providing a final answer. Your application needs to handle this automatically.
+- To handle this pattern, you need a conversation loop that continues until Claude stops requesting tools:
+
+```python
+def run_conversation(messages):
+    while True:
+        response = chat(messages, tools=[get_current_datetime_schema])
+        add_assistant_message(messages, response)
+        print(text_from_message(response))
+
+        if response.stop_reason != "tool_use":
+            break
+
+        tool_results = run_tools(response)
+        add_user_message(messages, tool_results)
+
+    return messages
+
+def run_tools(message):
+    tool_requests = [
+        block for block in message.content if block.type == "tool_use"
+    ]
+    tool_result_blocks = []
+
+    for tool_request in tool_requests:
+        # Process each tool request...
+
+```
+
+- The key to knowing whether Claude wants to use a tool lies in the stop_reason field of the response message. When Claude decides it needs to call a tool, this field gets set to "tool_use".
+
+## Tools use with streaming
+
+- With streaming enabled, Claude sends back different types of events as it processes your request. For tool use, you'll also need to handle a new event type called InputJsonEvent.
+- InputJsonEvent properties:
+  - partial_json - A chunk of JSON representing part of the tool arguments
+  - snapshot - The cumulative JSON built up from all chunks received so far
+
+```python
+for chunk in stream:
+    if chunk.type == "input_json":
+        # Process the partial JSON chunk
+        print(chunk.partial_json)
+        # Or use the complete snapshot so far
+        current_args = chunk.snapshot
+```
+
+- The Anthropic API doesn't immediately send you every chunk as Claude generates it. Instead, it buffers chunks and validates them first.
+- The API will:
+  - Wait until the entire abstract value is complete
+  - Validate that key-value pair against your schema
+  - Send all the buffered chunks for abstract at once
+  - Repeat the process for the meta object
+
+```json
+{
+  "abstract": "This paper presents a novel...",
+  "meta": {
+    "word_count": 847,
+    "review": "This paper introduces QuanNet..."
+  }
+}
+```
+
+- If you need faster, more granular streaming you can enable fine-grained tool calling. Fine-grained tool calling does one main thing: it disables JSON validation on the API side. This means:
+  - You get chunks as soon as Claude generates them
+  - No buffering delays between top-level keys
+  - More traditional streaming behavior
+  - Critical: JSON validation is disabled - your code must handle invalid JSON
+
+```python
+run_conversation(
+    messages,
+    tools=[save_article_schema],
+    # Enable here
+    fine_grained=True
+)
+```
+
+## The text edit tool
+
+- This tool gives Claude the ability to work with files and directories just like you would in a standard text editor.
+- Capabilities:
+  - View file or directory contents
+  - View specific ranges of lines in a file
+  - Replace text in a file
+  - Create new files
+  - Insert text at specific lines in a file
+  - Undo recent edits to files
+- While the tool schema is built into Claude, you still need to provide the actual implementation. Think of it this way - Claude knows how to ask for file operations, but you need to write the code that actually performs those operations.
+- An example schema stub we still have to provide:
+
+```json
+{
+  "type": "text_editor_20250124",
+  "name": "str_replace_editor"
+}
+```
+
+## The web search tool
+
+- To use the web search tool, you create a schema object with these required fields:
+
+```python
+web_search_schema = {
+    "type": "web_search_20250305",
+    "name": "web_search",
+    "max_uses": 5
+}
+```
+
+- The max_uses field limits how many searches Claude can perform. Claude might do follow-up searches based on initial results, so this prevents excessive API calls. A single search returns multiple results, but Claude may decide additional searches are needed.
+- Response blocks:
+  - Text blocks - Claude's explanation of what it's doing; Render text blocks as regular content
+  - ServerToolUseBlock - Shows the exact search query Claude used
+  - WebSearchToolResultBlock - Contains the search results
+  - WebSearchResultBlock - Individual search results with titles and URLs; Display web search results as a list of sources at the top
+  - Citation blocks - Text that supports Claude's statements; Show citations inline with the text, including the source domain, page title, URL, and quoted text
+- You can limit searches to specific domains using the allowed_domains field.
