@@ -1433,3 +1433,108 @@ web_search_schema = {
   - WebSearchResultBlock - Individual search results with titles and URLs; Display web search results as a list of sources at the top
   - Citation blocks - Text that supports Claude's statements; Show citations inline with the text, including the source domain, page title, URL, and quoted text
 - You can limit searches to specific domains using the allowed_domains field.
+- Your choice depends entirely on your use case and document guarantees:
+  - Structure-based: Best results when you control document formatting (like internal company reports)
+  - Sentence-based: Good middle ground for most text documents
+  - Size-based: Most reliable fallback that works with any content type, including code
+- Size-based chunking with overlap is often the go-to choice in production because it's simple, reliable, and works with any document type. While it may not give perfect results, it consistently produces reasonable chunks that won't break your pipeline.
+
+# RAG (retrievel augmented generation)
+
+- Retrieval Augmented Generation (RAG) is a technique that helps you work with large documents that are too big to fit into a single prompt. Instead of cramming everything into one massive prompt, RAG breaks documents into chunks and only includes the most relevant pieces when answering questions.
+- Challenges
+  - Requires a preprocessing step to chunk documents
+  - Need a search mechanism to find "relevant" chunks
+  - Included chunks might not contain all the context Claude needs
+  - Many ways to chunk text - which approach is best?
+
+## Text chunking strategies
+
+- How you break up your documents directly impacts the quality of your entire system. A poor chunking strategy can lead to irrelevant context being inserted into your prompts, causing your AI to give completely wrong answers.
+
+### 1. Size based
+
+- Size-based chunking is the simplest approach - you divide your text into strings of equal length. If you have a 325-character document, you might split it into three chunks of roughly 108 characters each.
+- Problems:
+  - Words get cut off mid-sentence
+  - Chunks lose important context from surrounding text
+  - Section headers might be separated from their content
+- Workarounds:
+  - You can add overlap between chunks. This means each chunk includes some characters from the neighboring chunks, providing better context and ensuring complete words and sentences.
+
+### 2. Structure based
+
+- Structure-based chunking divides text based on the document's natural structure - headers, paragraphs, and sections. This works great when you have well-formatted documents like Markdown files.
+
+### 3. Semantic based
+
+- Semantic-based chunking is the most sophisticated approach. You divide text into sentences, then use natural language processing to determine how related consecutive sentences are. You build chunks from groups of related sentences. This method is computationally expensive but produces the most relevant chunks. It requires understanding the meaning of individual sentences and is more complex to implement than the other strategies.
+
+### 4. Sentence based
+
+- A practical middle ground is chunking by sentences. You split the text into individual sentences using regular expressions, then group them into chunks with optional overlap
+
+## Text embeddings
+
+- After breaking a document into chunks, the next step in a RAG pipeline is finding which chunks are most relevant to a user's question. This is essentially a search problem - you need to look through all your text chunks and identify the ones that relate to what the user is asking about.
+- Semantic search: The most common approach for finding relevant chunks is semantic search. Unlike keyword-based search that looks for exact word matches, semantic search uses text embeddings to understand the meaning and context of both the user's question and each text chunk.
+- Text embeddings: A text embedding is a numerical representation of the meaning contained in some text. Think of it as converting words and sentences into a format that computers can work with mathematically.
+- Embedding process:
+  - You feed text into an embedding model
+  - The model outputs a long list of numbers (the embedding)
+  - Each number ranges from -1 to +1
+  - These numbers represent different qualities or features of the input text
+- Each number in an embedding is essentially a "score" for some quality of the input text. However, here's the important caveat: we don't know precisely what each number represents.
+- We store these embeddings in a vector database - a specialized database optimized for storing, comparing, and searching through long lists of numbers like our embeddings.
+- When a user asks a question like "I'm curious about the company. In particular, what did the software engineering dept do this year?", we run their query through the same embedding model.
+- Cosine similarity is used to determine which embeddings are the most similar.
+  - Results range from -1 to 1
+  - Values close to 1 mean high similarity
+  - Values close to -1 mean very different
+  - 0 means perpendicular (no relationship)
+
+```text
+       ▲ Dimension 2 (e.g., "AI / Technology")
+       │
+1.0 ───┼───────────────────────────────────────────┐
+       │                                           │
+       │              (Query Vector)               │
+       │                /                          │
+       │               /                           │
+       │              /                            │
+       │             /                             │
+       │            / _ θ = Small Angle            │
+       │           / /  (High Similarity: ~0.95)   │
+       │          / /                              │
+       │         / ┌───────────────────────────────┼───► (Doc A: "LLMs and Transformers")
+       │        /_/                                │
+       │       /                                   │
+       │      /                                    │
+       │     /                                     │
+       │    /     θ = Large Angle                  │
+       │   /      (Low Similarity: ~0.12)          │
+       │  /                                        │
+       │ /                                         │
+       │/──────────────────────────────────────────┼───► (Doc B: "Baking Sourdough Bread")
+       └───┴───────────────────────────────────────┴─► Dimension 1 (e.g., "Computer Science")
+          0.0                                     1.0
+```
+
+- Cosine distance: This is simply calculated as (1 - cosine similarity). With cosine distance:
+  - Values close to 0 mean high similarity
+  - Larger values mean less similarity
+- This adjustment makes the numbers easier to interpret in many contexts.
+- Steps of the full flow:
+  - Chunk the text by section
+  - Generate embeddings for each chunk
+  - Create a vector store and add each embedding to it
+  - Generate an embedding for the user's question
+  - Search the store to find the most relevant chunks
+
+## BM25 lexical search
+
+- When building RAG pipelines, you'll quickly discover that semantic search alone doesn't always return the best results. Sometimes you need exact term matches that semantic search might miss. The solution is to combine semantic search with lexical search using a technique called BM25. Let's say you're searching for a specific incident ID like "INC-2023-Q4-011" in a document. While semantic search excels at understanding context and meaning, it might return sections that are semantically related but don't actually contain the exact term you're looking for.
+- The solution is to run both semantic and lexical searches in parallel, then merge the results:
+  - Semantic search finds conceptually related content using embeddings
+  - Lexical search finds exact term matches using classic text search
+  - Merged results combine both approaches for better accuracy
