@@ -516,7 +516,7 @@ layout: default
 11. Final Response: Claude formulates a final answer using the repository data
 12. User Gets Answer: Your server delivers Claude's response back to the user
 
-![Event loop](/assets/claude2mcpclient.png)
+![MCP](/assets/claude2mcpclient.png)
 
 ## Defining tools with MCP
 
@@ -1804,3 +1804,105 @@ chat(
   - Document parsing and transformation
   - Mathematical computations and modeling
   - Report generation with custom formatting
+
+# Agents and workflows
+
+- Workflows and agents are strategies for handling user tasks that can't be completed by Claude in a single request. You've actually been creating both throughout this course - when you used tools and let Claude figure out how to complete tasks, that was an agent.
+- What to use and when:
+  - Use workflows when you can picture the exact flow or steps that Claude should go through to solve a problem, or when your app's UX constrains users to a set of tasks
+  - Use agents when you're not sure exactly what task or task parameters you'll give to Claude
+- An example Evaluator-optimizer workflow:
+  - Producer: Takes input and creates output (Claude using CadQuery to model the part and create a rendering)
+  - Grader: Evaluates the output against some criteria
+  - Feedback loop: If the grader doesn't accept the output, feedback goes back to the producer for improvement
+  - Iteration: The cycle repeats until the grader accepts the output
+
+## Parallelization workflows
+
+- Imagine you're building a material designer application where users upload images of parts and receive recommendations for the best material to use. Your first instinct might be to send the image to Claude with a simple prompt asking it to choose between metal, polymer, ceramic, composite, elastomer, or wood.
+- While this approach might work, you're asking Claude to do a lot of heavy lifting in a single request. Without specific criteria for each material type, the results won't be as reliable as they could be.
+- You might think to improve this by adding detailed criteria for each material into one massive prompt. But this creates a new problem - Claude has to juggle all these different considerations simultaneously, which can lead to confusion and suboptimal results.
+- Instead of cramming everything into one request, you can split the task into multiple parallel requests. Each request focuses on evaluating the part for a single material type with specialized criteria.
+- The flow:
+  - Send the same image to Claude multiple times simultaneously
+  - Each request includes specialized criteria for one material (metal criteria, polymer criteria, ceramic criteria, etc.)
+  - Claude evaluates the part's suitability for each material independently
+  - Collect all the analysis results and feed them into a final aggregation step
+- Advantages:
+  - Focused attention: Claude can concentrate on one specific aspect at a time rather than trying to balance multiple competing considerations simultaneously. This leads to more thorough and accurate analysis for each material type.
+  - Easier optimization: You can improve and test the prompts for each material evaluation independently. If your metal analysis isn't working well, you can refine just that prompt without affecting the others.
+  - Better scalability: Adding new materials to evaluate is straightforward - just add another parallel request. You don't need to rewrite existing prompts or worry about how the new criteria might interfere with existing ones.
+  - Improved reliability: By breaking down the complex task, you reduce the cognitive load on the AI model and get more consistent, reliable results.
+
+## Chaining workflows
+
+- A chaining workflow breaks down a large, complex task into smaller, sequential subtasks. Instead of asking Claude to do everything at once, you split the work into focused steps that build on each other.
+- You might wonder why not just combine all the Claude tasks into a single prompt. The key benefit is focus - when you give Claude one specific task at a time, it can concentrate on doing that task well rather than juggling multiple requirements simultaneously.
+- Chaining advantages:
+  - Split large tasks into smaller, non-parallelizable subtasks
+  - Optionally do non-LLM processing between each task
+  - Keep Claude focused on one aspect of the overall task
+- e.g. we want to make a technical documentation and want to follow some styles:
+  - Not mention that it's written by an AI
+  - Avoid using emojis
+  - Skip clichéd or overly casual language
+  - Write in a professional, technical tone
+- When to use it:
+  - You have complex tasks with multiple requirements
+  - Claude consistently ignores some constraints in long prompts
+  - You need to process or validate outputs between steps
+  - You want to keep each interaction focused and manageable
+
+## Routing workflows
+
+- Routing workflows solve a common problem in AI applications: different types of user requests need different handling approaches. Instead of using a one-size-fits-all prompt, you can categorize incoming requests and route them to specialized processing pipelines.
+- Consider a social media marketing tool that generates video scripts from user topics. A user might enter "programming" or "surfing" as their topic, but these should produce very different types of content.
+- The 2 steps routing process:
+  - Categorization - Send the user's topic to Claude with a request to categorize it into one of your predefined genres
+  - Specialized Processing - Use the category result to select the appropriate prompt template and generate content
+- When to use:
+  - Your application handles diverse types of requests that need different approaches
+  - You can clearly define categories that cover your use cases
+  - The categorization step can be handled reliably by Claude
+  - The performance benefit of specialized processing outweighs the overhead of the routing step
+
+## Agents and tools
+
+- While workflows are perfect when you know the exact steps needed to complete a task, agents shine when you're not sure what those steps should be. Instead of defining a rigid sequence, you give Claude a goal and a set of tools, then let it figure out how to combine those tools to achieve the objective.
+- The real power of agents lies in their ability to combine simple tools in unexpected ways.
+- The key insight for building effective agents is providing reasonably abstract tools rather than hyper-specialized ones. Claude Code demonstrates this principle perfectly.
+- e.g. generic Claude Code tools:
+  - bash - Run any command
+  - read - Read any file
+  - write - Create any file
+  - edit - Modify files
+  - glob - Find files
+  - grep - Search file contents
+- When designing agents, provide tools that Claude can combine in creative ways. e.g.
+  - bash - Access to FFMPEG for video processing
+  - generate_image - Create images from prompts
+  - text_to_speech - Convert text to audio
+  - post_media - Upload content to social platforms
+
+## Environment inspection
+
+- When building AI agents, one crucial concept often gets overlooked: environment inspection. Claude operates blindly - it needs to be able to observe and understand the results of its actions to work effectively.
+- You can guide Claude to inspect its environment through system prompts. For complex tasks like video generation, this becomes especially important.
+- Consider a video creation agent that needs to:
+  - Generate video content using tools like FFmpeg
+  - Verify that audio dialogue is placed correctly
+  - Check that visual elements appear as expected
+- You might include system prompt instructions like:
+  - Use the bash tool to run whisper.cpp and generate caption files with timestamps to verify dialogue placement
+  - Use FFmpeg to extract screenshots from the video at regular intervals to visually inspect the output
+  - Compare the generated content against the original requirements
+- When Claude can inspect its environment, several things improve:
+  - Better progress tracking - Claude can gauge how close it is to completing a task
+  - Error handling - Unexpected results can be detected and corrected
+  - Quality assurance - Output can be verified before considering a task complete
+  - Adaptive behavior - Claude can adjust its approach based on what it observes
+- When designing your own agents, always ask: "How will Claude know if this action worked?" Whether you're working with files, APIs, or user interfaces, provide tools and instructions that let Claude observe the results of its actions. e.g.:
+  - Reading file contents before modifications
+  - Taking screenshots after UI interactions
+  - Checking API responses for expected data
+  - Validating generated content against requirements
