@@ -1538,3 +1538,269 @@ web_search_schema = {
   - Semantic search finds conceptually related content using embeddings
   - Lexical search finds exact term matches using classic text search
   - Merged results combine both approaches for better accuracy
+- BM25 (Best Match 25) is a popular algorithm for lexical search in RAG systems.
+  - Step 1: Tokenize the query: Break the user's question into individual terms. For example, "a INC-2023-Q4-011" becomes ["a", "INC-2023-Q4-011"].
+  - Step 2: Count term frequency: See how often each term appears across all your documents. Common words like "a" might appear 5 times, while specific terms like "INC-2023-Q4-011" might appear only once.
+  - Step 3: Weight terms by importance: Terms that appear less frequently get higher importance scores. The word "a" gets low importance because it's common, while "INC-2023-Q4-011" gets high importance because it's rare.
+  - Step 4: Find best matches: Return documents that contain more instances of the higher-weighted terms.
+- Advantages:
+  - Gives higher weight to rare, specific terms
+  - Ignores common words that don't add search value
+  - Focuses on term frequency rather than semantic meaning
+  - Works especially well for technical terms, IDs, and specific phrases
+
+## Merging results from vector and BM25 searches
+
+- Merging results from different search methods isn't as simple as just concatenating lists. Each method uses different scoring systems, so we need a way to normalize and combine their rankings fairly.
+- RRF_score(d) = Σ(1 / (k + rank_i(d)))
+
+![RFF](../assets/rff.png "RFF")
+
+# Features of Claude
+
+## Extended thinking
+
+- Extended Thinking is not compatible with some other features, notable message pre-filling and temperature. Extended thinking is Claude's advanced reasoning feature that gives the model time to work through complex problems before generating a final response.
+
+```python
+ params["thinking"] = {
+        "type": "enabled",
+        "budget": 1024
+    }
+```
+
+- The minimum value of budget is 1024 tokens, and your max_tokens parameter must be greater than your thinking budget.
+- With thinking enabled, you get both the reasoning process and the final answer:
+  - ThinkingBlock: 'I should do X and Y ...'
+    - The signature proeprty is a cryptographic token that ensures you haven't modified the thinking text. This prevents developers from tampering with Claude's reasoning process, which could potentially lead the model in unsafe directions.
+  - TextBlock: 'Here is my answer to your question ...'
+- The key benefits include:
+  - Better reasoning capabilities for complex tasks
+  - Increased accuracy on difficult problems
+  - Transparency into Claude's thought process
+- However, there are important trade-offs:
+  - Higher costs (you pay for thinking tokens)
+  - Increased latency (thinking takes time)
+  - More complex response handling in your code
+- Sometimes you'll receive a redacted thinking block instead of readable reasoning text. This happens when Claude's thinking process gets flagged by internal safety systems. The redacted content contains the actual thinking in encrypted form, allowing you to pass the complete message back to Claude in future conversations without losing context.
+  - For testing purposes, you can force Claude to return a redacted thinking block by sending a special trigger string. This helps ensure your application handles redacted responses gracefully without crashing.
+
+## Image support
+
+- Claude's vision capabilities let you include images in your messages and ask Claude to analyze them in countless ways. You can ask Claude to describe what's in an image, compare multiple images, count objects, or perform complex visual analysis tasks.
+- Limitations:
+  - Up to 100 images across all messages in a single request
+  - Max size of 5MB per image
+  - When sending one image: max height/width of 8000px
+  - When sending multiple images: max height/width of 2000px
+  - Images can be included as base64 encoding or a URL to the image
+  - Each image counts as tokens based on its dimensions: tokens = (width px × height px) / 750
+- To send an image to Claude, you include an image block in your user message alongside text blocks.
+
+```python
+add_user_message(messages, [
+    # Image Block
+    {
+        "type": "image",
+        "source": {
+            "type": "base64",
+            "media_type": "image/png",
+            "data": image_bytes,
+        }
+    },
+    # Text Block
+    {
+        "type": "text",
+        "text": "What do you see in this image?"
+    }
+])
+```
+
+- You can dramatically improve Claude's accuracy by:
+  - Providing detailed guidelines and analysis steps
+  - Using one-shot or multi-shot examples
+  - Breaking down complex tasks into smaller steps
+
+## PDF support
+
+- To process a PDF file with Claude, you'll use nearly identical code to what you'd use for images. The main differences are in the file type specifications and variable names for clarity.
+
+```python
+add_user_message(
+    messages,
+    [
+        {
+            "type": "document",
+            "source": {
+                "type": "base64",
+                "media_type": "application/pdf",
+                "data": file_bytes,
+            },
+        },
+        {"type": "text", "text": "Summarize the document in one sentence"},
+    ],
+)
+```
+
+- It can analyze and understand:
+  - Text content throughout the document
+  - Images and charts embedded in the PDF
+  - Tables and their data relationships
+  - Document structure and formatting
+
+## Citations
+
+- To enable citations, you need to modify your document message structure. Add two new fields to your document block:
+
+```python
+{
+    "type": "document",
+    "source": {
+        "type": "base64",
+        "media_type": "application/pdf",
+        "data": file_bytes,
+    },
+    "title": "earth.pdf",
+    "citations": { "enabled": True }
+}
+```
+
+- Claude's response is instead of simple text, you get structured data that includes citation information for each claim:
+  - cited_text - The exact text from your document that supports Claude's statement
+  - document_index - Which document Claude is referencing (useful when you provide multiple documents)
+  - document_title - The title you assigned to the document
+  - start_page_number - Where the cited text begins
+  - end_page_number - Where the cited text ends
+- It works with plan text too. With plain text sources, instead of page numbers, you'll get character positions that pinpoint exactly where in the text Claude found each piece of information.
+
+```python
+{
+    "type": "document",
+    "source": {
+        "type": "text",
+        "media_type": "text/plain",
+        "data": article_text,
+    },
+    "title": "earth_article",
+    "citations": { "enabled": True }
+}
+```
+
+## Prompt caching
+
+- Prompt caching is a feature that speeds up Claude's responses and reduces the cost of text generation by reusing computational work from previous requests. Instead of throwing away all the processing work after each request, Claude can save and reuse it when you send similar content again.
+- After sending you the response, Claude throws away all this computational work - the tokenization, embeddings, and context analysis all get discarded. This becomes inefficient when you make follow-up requests that include the same content. For example, in a conversation where you're asking Claude to refine a summary of the same long text.
+- Prompt caching changes this workflow by saving the preprocessing work instead of discarding it.
+- Advantages:
+  - Faster responses: Requests using cached content execute more quickly
+  - Lower costs: You pay less for the cached portions of your requests
+  - Automatic optimization: The initial request writes to the cache, follow-up requests read from it
+- Limitations:
+  - Cache duration: Cached content only lives for one hour
+  - Limited use cases: Only beneficial when you're repeatedly sending the same content
+  - High frequency requirement: Most effective when the same content appears extremely frequently in your requests
+- The process is straightforward: your initial request writes processing work to the cache, and follow-up requests can read from that cache instead of reprocessing the same content. The cache lives for one hour, so this feature is only useful if you're repeatedly sending the same content within that timeframe.
+- Caching isn't enabled automatically - you need to manually add cache breakpoints to specific blocks in your messages.
+  - Work done on messages is not cached automatically
+  - You must manually add a 'cache breakpoint' to a block
+  - Work done for everything before the breakpoint will be cached
+  - Cache will only be used on follow-up requests if the content up to and including the breakpoint is identical
+- You must use the expanded format with the cache_control field set to {"type": "ephemeral"}.
+
+```python
+user_message = {
+  "role": "user",
+  "content": [
+    {
+      "type": "text",
+      "text": "<Long prompt>",
+      "cache_control": {
+        "type": "ephemeral"
+      }
+    }
+  ]
+  }
+```
+
+- When you place a cache breakpoint in a message, Claude caches all the processing work up to and including that breakpoint. Content after the breakpoint is processed normally without caching.
+- For the cache to be useful in follow-up requests, the content must be identical up to the breakpoint. Even small changes like adding the word "please" will invalidate the cache and force Claude to reprocess everything.
+- You're not limited to text blocks - cache breakpoints can be added to:
+  - System prompts
+  - Tool definitions
+  - Image blocks
+  - Tool use and tool result blocks
+- System prompts and tool definitions are excellent candidates for caching since they rarely change between requests. This is often where you'll get the most benefit from prompt caching.
+- Behind the scenes, Claude processes your request components in a specific order: tools first, then system prompt, then messages. Understanding this order helps you place breakpoints effectively.
+- You can add up to four cache breakpoints total. For example, you might cache your tools, then add another breakpoint partway through your conversation history. This gives you flexibility in what gets cached when different parts of your request change.
+- There's a minimum threshold for caching: content must be at least 1024 tokens long to be cached. This is the sum of all messages and blocks you're trying to cache, not individual blocks.
+- To cache your tool schemas, you need to add a cache control field to the last tool in your list.
+
+```python
+ last_tool["cache_control"] = {"type": "ephemeral"}
+```
+
+- For system prompts, you need to structure them as a text block with cache control:
+
+```python
+ params["system"] = [
+        {
+            "type": "text",
+            "text": system,
+            "cache_control": {"type": "ephemeral"}
+        }
+    ]
+```
+
+- You can set multiple cache breakpoints in a single request. The order matters:
+  - Tools (if provided)
+  - System prompt (if provided)
+  - Messages
+
+## Code execution and the Files API
+
+- The Anthropic API offers two powerful features that work exceptionally well together: the Files API and Code Execution. While they might seem separate at first, combining them opens up some really interesting possibilities for delegating complex tasks to Claude.
+- The Files API provides an alternative way to handle file uploads. Instead of encoding images or PDFs directly in your messages as base64 data, you can upload files ahead of time and reference them later.
+- How the Files API works:
+  - Upload your file (image, PDF, text, etc.) to Claude using a separate API call
+  - Receive a file metadata object containing a unique file ID
+  - Reference that file ID in future messages instead of including raw file data
+- Code execution is a server-based tool that doesn't require you to provide an implementation. You simply include a predefined tool schema in your request, and Claude can optionally execute Python code in an isolated Docker container.
+- Details:
+  - Runs in an isolated Docker container
+  - No network access (can't make external API calls)
+  - Claude can execute code multiple times during a single conversation
+  - Results are captured and interpreted by Claude for the final response
+- The real power comes from using these features together. Since the Docker containers have no network access, the Files API becomes the primary way to get data in and out of the execution environment.
+
+```python
+messages = []
+add_user_message(
+    messages,
+    [
+        {
+            "type": "text",
+            "text": """Run a detailed analysis to determine major drivers of churn.
+            Your final output should include at least one detailed plot summarizing your findings."""
+        },
+        {"type": "container_upload", "file_id": file_metadata.id},
+    ],
+)
+
+chat(
+    messages,
+    tools=[{"type": "code_execution_20250522", "name": "code_execution"}]
+)
+```
+
+- When Claude uses code execution, the response contains multiple types of blocks:
+  - Text blocks - Claude's analysis and explanations
+  - Server tool use blocks - The actual code Claude decided to run
+  - Code execution tool result blocks - Output from running the code
+- Claude might execute code multiple times during a single response, iteratively building up its analysis. Each execution cycle includes the code and its results.
+- One of the most powerful features is Claude's ability to generate files (like plots or reports) and make them available for download. When Claude creates a visualization, it gets stored in the container and you can download it using the Files API.
+- Look for blocks with type: "code_execution_output" in the response - these contain file IDs for generated content.
+- Other possibilities:
+  - Image processing and manipulation
+  - Document parsing and transformation
+  - Mathematical computations and modeling
+  - Report generation with custom formatting
