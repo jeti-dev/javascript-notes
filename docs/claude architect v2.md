@@ -516,7 +516,7 @@ layout: default
 11. Final Response: Claude formulates a final answer using the repository data
 12. User Gets Answer: Your server delivers Claude's response back to the user
 
-![MCP](..assets/claude2mcpclient.png)
+![MCP](../assets/claude2mcpclient.png)
 
 ## Defining tools with MCP
 
