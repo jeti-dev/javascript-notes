@@ -1,11 +1,18 @@
-// Print-only styles.
 @media print {
-  .side-bar,
-  .page-header {
-    display: none;
+  /* Hide the black left column */
+  aside, 
+  nav, 
+  .sidebar, 
+  .left-column { 
+    display: none !important; 
   }
-  .main-content {
-    max-width: auto;
-    margin: 1em;
+
+  /* Make the main content container fill the entire page width */
+  main, 
+  .main-content, 
+  .content { 
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
