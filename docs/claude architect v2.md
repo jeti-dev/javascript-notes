@@ -1906,3 +1906,79 @@ chat(
   - Taking screenshots after UI interactions
   - Checking API responses for expected data
   - Validating generated content against requirements
+
+---
+
+# Claude Cert Guide - Notes
+
+[https://claudecertificationguide.com/](https://claudecertificationguide.com/)
+
+## Agentic Arhitecture & Orchestration
+
+- stop_reason: tool_use, end_turn
+- hub and spoke architecture: coordinator agent + subagents
+  - ALL communication flows through the coordinator. Subagents never communicate directly with each other
+  - advantage:
+    - Observability — you can log and monitor every message in one place.
+    - Consistent error handling — the coordinator applies uniform error recovery policies.
+    - Controlled information flow — the coordinator decides what context each subagent receives.
+- Subagents do NOT automatically inherit the coordinator's conversation history; subagent starts with only what the coordinator explicitly includes in its prompt
+  - Use structured data formats that separate content from metadata. When passing research findings between agents, the data must include both the content (the claim, the fact, the analysis) and the metadata (source URL, document name, page number). If you pass content without metadata, the downstream agent cannot attribute claims to sources. The coordinator must tell the subagents to include the metadata in their response.
+  ```JSON
+  {
+  "findings": [
+    {
+      "claim": "Solar panel efficiency has increased 25% in the last decade",
+      "source_url": "https://example.com/solar-report",
+      "document_name": "Annual Solar Industry Report 2024",
+      "page_number": 14,
+      "confidence": "high",
+      "retrieved_by": "web_search_agent"
+    }
+  ]
+  }
+  ```
+- Subagents do NOT share memory between invocations
+- The coordinator evaluates synthesis output for gaps, it is an iterative cycle
+- the narrow decomposition failure: This pattern applies broadly: if the output is incomplete in scope (not depth), the coordinator's decomposition is almost always the root cause.
+- The Task/Agent tool is how a coordinator spawns subagents
+- There is a critical configuration requirement: the coordinator's allowedTools must include Task/Agent; Without it, the coordinator physically can't spawn subagents.
+- Each subagent is defined by an AgentDefinition that specifies three things:
+  - Description — what the subagent does (used by the coordinator to decide when to invoke it).
+  - System prompt — the instructions the subagent follows.
+  - Tool restrictions — which tools the subagent can access (scoped to its role).
+- When a coordinator needs to invoke multiple subagents for independent tasks, it should emit multiple Task tool calls in a single response; Sequential spawning — one subagent per coordinator turn — adds latency for nothing.
+- fork_session creates independent branches from a shared analysis baseline. After a coordinator has completed an initial analysis (reading a codebase, understanding a problem), it can fork the session to explore divergent approaches.
+- `resume` continues a specific named session
+- if a single failure would cause financial loss, security breach, or compliance violation, use programmatic enforcement not prompts
+- SubagentStart observes subagent spawning, can add context to the subagent, and cannot block it. SubagentStop gates completion by exiting with code 2, which sends the subagent back to work. Neither hook rewrites subagent output. Subagents can define hooks in their own frontmatter, scoped to their execution, and Stop hooks there auto-convert to SubagentStop.
+- multi-concern request handling
+  - Decompose the request into distinct items (return, address update, loyalty inquiry).
+  - Investigate each in parallel using shared context (the customer's account information is relevant to all three).
+  - Synthesise a unified resolution that addresses all items in a single response.
+  - (The wrong approach is to handle them sequentially with separate conversations, or to address only the first item and forget the rest.)
+- When an agent can't resolve an issue and must escalate to a human agent, the handoff must follow a structured protocol. The critical constraint: the human agent does NOT have access to the conversation transcript.
+  - A proper handoff summary must be self-contained and include:
+    - Customer ID — so the human agent can pull up the account.
+    - Conversation summary — what the customer asked for and what has been attempted.
+    - Root cause analysis — the agent's assessment of the underlying issue.
+    - Refund amount (if applicable) — the specific financial figure, not a vague reference.
+    - Recommended action — what the agent believes the human agent should do.
+- In the Agent SDK a PreToolUse hook answers with a permissionDecision of allow, deny, ask or defer, plus an optional updatedInput that rewrites the tool's arguments before it runs. A PostToolUse hook can set updatedToolOutput to replace what the model sees, for built-in and MCP tools alike.
+- reCompact, which runs immediately before Claude Code compacts the conversation, whether the user typed /compact (matcher manual) or the context reached the auto-compact window (matcher auto). The hook receives the transcript path, the trigger, and any custom instructions the user passed to /compact, so it can archive the full transcript to a log before the summary discards detail
+- Dynamic adaptive decomposition generates subtasks based on what is discovered at each step. The plan evolves as the agent learns more about the problem. The agent starts with a high-level goal, performs initial investigation, and generates a plan based on what it finds. As it executes the plan, it discovers new information that may change the remaining steps. The agent adapts the plan accordingly.
+- Attention dilution is a specific failure mode that occurs when an agent processes too many items in a single pass. The result is inconsistent depth — the agent produces thorough analysis for some items and misses obvious issues in others.
+  - details:
+    - Detailed feedback for the first few files, increasingly shallow analysis for later files.
+    - A pattern flagged as problematic in one file while identical code is approved in another file.
+    - Obvious bugs missed in some files while minor style issues are caught in others.
+  - Why it happens: The model allocates attention across all items in the context. When there are too many items, attention per item decreases. Early items get disproportionate attention; later items get skimmed.
+  - The fix: Multi-pass architecture. Split the work into two layers:
+    - Per-item local analysis passes: analyse each file (or document, or module) individually in its own pass. Each pass has the full attention budget focused on a single item.
+    - Cross-item integration pass: after all local passes complete, run a separate pass that looks across all items for cross-cutting concerns (data flow issues, inconsistent pattern usage, cross-file dependencies).
+- Session management determines how an agent maintains continuity across work sessions.
+  1. resume continues a specific named session from where it left off. The entire conversation history — including all tool results, analyses, and reasoning — is restored.
+  2. fork_session creates an independent branch from a shared analysis baseline. After the fork, each branch operates independently; you have to combine it with --resume to set a starting point
+  3. Start a completely new session but inject a structured summary of the prior session's findings into the initial context. The new session has no stale tool results — only the curated summary you provide.
+- The exam tests whether you recognise that resuming after file changes can lead to stale context. Simply resuming and asking the agent to re-read changed files is not the best answer — the stale results remain in history and can still influence reasoning. A fresh start with summary injection is more reliable.
+- targeted re-analysis: inform the agent about the specific files that changed and let it re-analyse only those files. The summary from the prior session covers everything that has not changed. This is faster than full re-exploration and more reliable than resuming with stale context.
