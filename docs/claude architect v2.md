@@ -1982,3 +1982,121 @@ chat(
   3. Start a completely new session but inject a structured summary of the prior session's findings into the initial context. The new session has no stale tool results — only the curated summary you provide.
 - The exam tests whether you recognise that resuming after file changes can lead to stale context. Simply resuming and asking the agent to re-read changed files is not the best answer — the stale results remain in history and can still influence reasoning. A fresh start with summary injection is more reliable.
 - targeted re-analysis: inform the agent about the specific files that changed and let it re-analyse only those files. The summary from the prior session covers everything that has not changed. This is faster than full re-exploration and more reliable than resuming with stale context.
+
+## Tool Design and MCP Integration
+
+- A production-grade tool description includes five elements:
+  - What the tool does — its primary purpose, stated unambiguously
+  - What inputs it expects — data types, formats, constraints, and required versus optional fields
+  - Example queries it handles well — concrete use cases that anchor the model's understanding
+  - Edge cases and limitations — what the tool does NOT do, and what happens when inputs fall outside expected ranges
+  - Explicit boundaries — when to use THIS tool versus similar tools in the same toolkit
+- Keyword-sensitive instructions in system prompts can create unintended tool associations that override well-written descriptions. If your system prompt says "always check customer details before proceeding", the model may route any customer-related query to get_customer no matter what the descriptions say. So after updating tool descriptions, reread your system prompt for conflicts. It's a subtle failure mode, and the exam tests it.
+- error types
+  - Protocol errors are standard JSON-RPC error responses. The server sends one when the request itself is malformed: the tool name does not exist, the arguments fail the input schema, or the server hits an internal fault. There's no result object at all, only an error with a code and a message. The host application handles these. The model never sees a tool result, because no tool ran.
+  - Tool execution errors are results. The tool was found, the arguments were valid, the tool ran, and something went wrong inside it: an upstream API failed, the input data was wrong, a business rule rejected the request. The server returns a normal result with isError: true and the detail in content, and the model reads it and decides what to do next.
+- From now, we are talking about tool execution errors!
+- One shape note before the examples. errorCategory, isRetryable and description are an application-level convention
+  - the MCP protocol's CallToolResult defines only content, structuredContent and isError
+- Execution error types:
+  - 1. Transient Errors Timeouts, service unavailability, rate limits. The underlying system is temporarily unreachable but the request itself is valid. Recovery: retry after a brief delay.
+
+```JSON
+{
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "Service temporarily unavailable"
+  }],
+  "structuredContent": {
+    "errorCategory": "transient",
+    "isRetryable": true,
+    "description": "The order database is experiencing high load. The request is valid and should succeed on retry."
+  }
+}
+```
+
+- 2. Validation Errors Invalid input format, missing required fields, out-of-range values. The request itself is malformed. Recovery: fix the input, then send a corrected call.
+
+```JSON
+{
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "Invalid order ID format"
+  }],
+  "structuredContent": {
+    "errorCategory": "validation",
+    "isRetryable": false,
+    "description": "Order ID must be in format #NNNNN (e.g. #12345). Received: 'order-abc'. Reformat the ID and call again."
+  }
+}
+```
+
+(isRetryable: false here is not "give up". It means resending this call is pointless)
+
+- 3. Business Errors Policy violations, limit exceedances, business rule conflicts. The request is technically valid but violates a business constraint. Recovery: do NOT retry — the same request will always fail. The agent needs an alternative workflow.
+
+```JSON
+{
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "Refund exceeds policy limit"
+  }],
+  "structuredContent": {
+    "errorCategory": "business",
+    "isRetryable": false,
+    "description": "Refund amount of £750 exceeds the £500 automatic refund limit. This requires manager approval. Please escalate to a human agent with the refund details."
+  }
+}
+```
+
+(Note the isRetryable: false flag. Business errors never resolve through retrying — the same policy violation applies every time.)
+
+- 4. Permission Errors Access denied, insufficient credentials, authorisation failures. The tool cannot execute because the caller lacks the required permissions. Recovery: escalate or use different credentials.
+
+```JSON
+{
+  "isError": true,
+  "content": [{
+    "type": "text",
+    "text": "Access denied"
+  }],
+  "structuredContent": {
+    "errorCategory": "permission",
+    "isRetryable": false,
+    "description": "The current service account does not have permission to access financial records. Escalate to a senior agent with financial system access."
+  }
+}
+```
+
+- isRetryable answers one narrow question: will resending this exact request work?
+- It queried the database, found no matching customer, and correctly returned an empty result. But because the response doesn't distinguish between "I couldn't reach the database" and "I reached the database and found nothing", the agent treats both the same way — as a failure worth retrying. The fix: structure your tool responses so a successful query with no results looks nothing like a failed query.
+- In multi-agent architectures, error handling follows a principle of local recovery with selective propagation:
+  - Subagents implement local recovery for transient failures. If a web search times out, the search subagent retries before bothering the coordinator.
+  - Only propagate errors that cannot be resolved locally. If all retries fail, the subagent reports the failure upward.
+  - Include partial results and what was attempted. The coordinator needs context: "I searched 3 of 5 sources successfully. Sources 4 and 5 timed out. Here are partial results from the 3 successful sources."
+- Giving a single agent 18 tools degrades selection reliability. Every additional tool adds decision complexity, and error rates climb as the toolkit grows. The optimal range is 4-5 tools per agent, scoped to that agent's specific role. Give an agent tools outside its specialisation and it will tend to misuse them.
+- common tool problems:
+  - Few enough to handle, but two of them read alike: Sharpen the descriptions
+  - Different jobs (query, transform, export): Split by role, 4-5 tools each
+  - Variations on one job, sharing a shape: Consolidate into one parameterised tool
+  - Doing more than the agent should be able to do: Constrain them
+- The tool_choice parameter controls how the model interacts with available tools. Three settings, three distinct jobs.
+  - "auto" (default) The model decides whether to call a tool or return text. Use this for general operation where the model needs flexibility to respond conversationally when no tool call is appropriate.
+  - "any" The model MUST call a tool but chooses which one. Use this when you need guaranteed structured output from one of multiple schemas — the model will always produce a tool call, never plain text.
+  - Forced selection The model MUST call a specific named tool. Use this to enforce mandatory first steps — the model cannot skip or reorder the required operation.
+- Sometimes an agent needs occasional access to a capability that belongs to another role. The solution is a scoped cross-role tool: a constrained version of the capability, given directly to the agent that needs it.
+- Replacing generic tools with constained alternatives: This is least privilege applied to tool design.
+  - Prevents misuse, Makes the tool's purpose clearer, Reduces the risk of unintended side effects
+  - e.g. instead of fetch_url create a load_document
+- A remote server declares "type": "http" and a url. A local one declares a command and args, and speaks over stdio. An entry with a url but no type is a configuration error — Claude Code reads it as a stdio server, skips it, and tells you to add the type. Both GitHub and Atlassian ship official remote servers now, which is why neither is an npx line.
+- The .mcp.json file supports ${VARIABLE_NAME} syntax for environment variable expansion. This is how you keep credentials out of version control whilst still sharing server configuration with your team.
+  - There is a second form worth knowing: ${VAR:-default} expands to VAR when it is set and falls back to default when it is not. Use it for machine-specific paths that have a sensible fallback, as in the ${WORKSPACE_ROOT:-.} argument above. As of 14 August 2026, an unset variable with no default does not stop the rest of the configuration loading. Claude Code warns and carries on, so do not rely on a missing token failing loudly.
+- One precision from the MCP specification (September 2026): resources are application-controlled. The server lists them, but the client decides when to attach one to the model's context, so the agent sees a resource only when the host surfaces it. Claude Code does that through @server:resource mentions and a resource-listing tool.
+- Here's a subtle one: when an MCP tool has a sparse description, the agent may prefer built-in tools (like Grep) even when the MCP tool is more capable.
+- Six built-in tools for working with codebases: Read, Write, Edit, Bash, Grep, and Glob
+  - Grep searches file CONTENTS for patterns. Use Grep when you need to find text inside files.
+  - Glob matches file PATHS by naming patterns. Use Glob when you need to find files by name, extension, or directory structure.
+  - Edit performs targeted modifications using unique text matching. You specify the exact text to find and its replacement. When Edit fails: Edit requires unique text matching. If the text you specify appears in multiple places in the file, Edit can't tell which occurrence you mean, so it fails. That's a safety mechanism, not a bug — it stops you changing text you never meant to touch.
