@@ -2099,4 +2099,22 @@ chat(
 - Six built-in tools for working with codebases: Read, Write, Edit, Bash, Grep, and Glob
   - Grep searches file CONTENTS for patterns. Use Grep when you need to find text inside files.
   - Glob matches file PATHS by naming patterns. Use Glob when you need to find files by name, extension, or directory structure.
-  - Edit performs targeted modifications using unique text matching. You specify the exact text to find and its replacement. When Edit fails: Edit requires unique text matching. If the text you specify appears in multiple places in the file, Edit can't tell which occurrence you mean, so it fails. That's a safety mechanism, not a bug — it stops you changing text you never meant to touch.
+  - Edit performs targeted modifications using unique text matching. You specify the exact text to find and its replacement. When Edit fails: Edit requires unique text matching. If the text you specify appears in multiple places in the file, Edit can't tell which occurrence you mean, so it fails. That's a safety mechanism, not a bug — it stops you changing text you never meant to touch. When Edit can't find a unique anchor: the exam's answer. The exam guide names one fallback, Read + Write. Read the full file, then Write the complete modified version back. It works every time, because you're no longer asking Edit to guess. It also spends a file's worth of tokens on what was usually a one-line change, which is why it's the fallback and not the default. When Edit can't find a unique anchor: current Claude Code. The Edit tool docs now give you a cheaper move first: widen old_string with more surrounding context until it pins down one location, or set replace_all: true if you actually want every occurrence updated. Both keep you on Edit and cost almost no extra context. In real work, do that before you reach for Read + Write.
+  - The ordering in real work:
+    - Try Edit with the shortest anchor that's plausibly unique.
+    - On a non-unique match, widen old_string until it matches one location, or - use replace_all: true if you want every occurrence changed.
+    - Fall back to Read + Write when neither of those can disambiguate the target.
+- Do not readd all the files upfront, use incremental discovery. Start narrow. Expand only as needed.
+  - Grep to find entry points. Search for the function name, class name, or error message that anchors your investigation. This tells you which files are relevant.
+  - Read to follow imports and trace flows. Once you know which files matter, Read them to understand the code structure. Follow import statements to discover related files.
+  - Grep again to trace usage. The files you read in step 2 may expose the function under another name: a wrapper (submitOrder() that calls processOrder() inside it) or a barrel file that re-exports it (export { processOrder as submitOrder }). Callers of the new name never mention the original, so your first Grep never saw them. Grep for each new name, across the whole codebase, to get the full list of consumers. The next section works through an example.
+  - Read only what you need. Each file you read should be justified by what you discovered in the previous step.
+- Tracing Function Usage Across Wrapper Modules:
+  - Grep for the function definition to find where it is defined
+  - Read the defining file to identify exported names
+  - Grep for each exported name across the codebase to find all consumers
+  - If the function is re-exported through a barrel file (e.g. index.ts), Grep for the barrel file's module name to find consumers who import from it
+- The deprecation scenario:
+  - Grep for the function name — finds every file whose contents reference the function, including any tests that import it directly (content search)
+  - Glob for sibling test files — finds the test file that pairs with each caller by naming convention, e.g. OrderProcessor.ts → OrderProcessor.test.tsx, even when the test exercises the function indirectly through the source module (path matching)
+  - Grep again for wrapper names — when a caller exposes the function through a wrapper (e.g. applyLegacyOrder calls processLegacyOrder internally), Grep for the wrapper name to find tests that cover the function transitively through it
