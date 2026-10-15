@@ -2193,3 +2193,151 @@ claude -p \
 - A git worktree is a second working directory for the same repository, on its own branch, sharing the same history. Running each Claude Code session in its own worktree means edits in one session never touch files in another, which is what lets three instances extract three services from one monolith at the same time and commit to the same repository without colliding. claude --worktree <name> creates one under .claude/worktrees/<name>/ on a branch called worktree-<name> and starts the session inside it. git worktree add ../project-feature -b feature does the same by hand, with a path and branch of your choosing. Each session gets a full context budget of its own as well as its own files. Coordination on a shared file is sequencing, not locking: the first session merges, the second rebases onto the result before touching it. A custom subagent can run in a worktree of its own with isolation: worktree in its frontmatter, so parallel subagent edits don't collide either.
 - The Message Batches API offers 50% cost savings but has processing times up to 24 hours with no guaranteed latency SLA
 - When running test generation in CI, include existing test files in context. Without them, Claude Code may suggest tests that already exist, wasting developer review time. Including existing tests enables Claude to identify coverage gaps rather than duplicating existing scenarios.
+
+## Prompt Engineering & Structured Output
+
+- False positive trust problem: High false positive rates in one category destroy developer trust in all categories. If your "documentation mismatch" findings are wrong 40% of the time, developers stop reading your "security vulnerability" findings too, even when those run at 98% accuracy. The fix feels backwards: temporarily disable the high false-positive categories while you rework their prompts.
+- Severity calibration: use concrete examples not descriptions e.g. a snippet for an unsanitized user input
+- The hierarchy is: explicit criteria first, confidence-based routing second. LLM self-reported confidence is poorly calibrated. The model is often sure about wrong findings and hesitant about right ones.
+- Few-shot examples are the most effective technique for achieving consistent, well-formatted output from Claude. Not more instructions. Not confidence thresholds. Not temperature adjustments. When your output is inconsistent, few-shot examples are the first tool to reach for.
+- Exact cases where to use few-shot examples
+  - Detailed instructions alone produce inconsistent formatting.
+  - The model makes inconsistent judgement calls on ambiguous cases.
+  - Extraction tasks produce empty/null fields for information that exists in the document.
+- rules for few-shot examples
+  - Use 2-4 targeted examples. Fewer than 2 doesn't establish a pattern. More than 4 wastes tokens without proportional benefit.
+  - Each example must show reasoning. Don't just show input-output pairs. Show why one action was chosen over plausible alternatives. That teaches the model to generalise its judgement to novel patterns, n
+  - Cover the failing scenarios.ot just match the specific cases in your examples.
+- Few-shot examples have a useful side effect: they cut hallucination in extraction tasks. This matters most for documents with inconsistent formatting.
+- In code review and analysis, few-shot examples pull double duty: they show both what to flag and what to ignore.
+- When you need guaranteed schema-compliant structured output from Claude, there is a clear reliability hierarchy:
+  - tool_use with JSON schemas — eliminates JSON syntax errors entirely: With tool use, the tool's JSON schema constrains the shape of what Claude returns, eliminating syntax issues like missing brackets, trailing commas, or unquoted keys.
+  - Prompt-based JSON — model can produce malformed JSON
+  - +1: strict: true on a tool definition is one; the guide's appendix names it as "strict mode for syntax error elimination". Setting strict: true on a tool definition guarantees Claude's tool inputs match your JSON Schema by constraining the model's token sampling to schema-valid outputs
+  - +1: output_config.format is the other, and it constrains the response itself rather than a tool call.
+  - +1: The current docs also list a fourth tool_choice mode, {"type": "none"}, which blocks tool calls and is the default when you pass no tools;
+- The tool_choice parameter controls whether and how the model calls tools. Understanding the three modes is critical for the exam:
+  - "auto" (default): The model decides whether to call a tool or return text. It may choose to respond with a text message instead of calling the extraction tool. Use this when the model legitimately needs the option to respond conversationally.
+  - "any": The model MUST call a tool but chooses which one. Use this when you have multiple extraction schemas (e.g., extract_invoice, extract_receipt, extract_contract) and the document type is unknown. The model selects the appropriate tool and returns structured output. Guaranteed structured output, flexible tool selection.
+  - {"type": "tool", "name": "extract_metadata"}: The model MUST call the specific named tool. Use this to force a mandatory first step — for example, ensuring metadata extraction runs before enrichment steps. No flexibility, maximum control.
+- Schema design for prod
+  - Optional/nullable fields — When source documents may not contain certain information, make those fields optional or nullable. This is the primary defence against fabrication. If a field is required, the model is pressured to produce a value even when the source has none. If the field is nullable, the model can honestly return null. Required fields pressure the model to fabricate values when information is absent from the source. Optional/nullable fields allow honest null responses, which is always preferable to plausible-looking fabricated data.
+
+```JSON
+{
+  "type": "object",
+  "properties": {
+    "invoice_number": { "type": "string" },
+    "vendor_name": { "type": "string" },
+    "payment_terms": { "type": ["string", "null"] },
+  },
+  "required": ["invoice_number", "vendor_name"]
+}
+```
+
+- "unclear" enum value — For ambiguous cases where the source is genuinely unclear, add an explicit "unclear" option to enum fields. This prevents the model from forcing a classification when the evidence is ambiguous.
+- "other" + detail string — For extensible categorisation, include an "other" enum value paired with a freeform detail string field. This captures edge cases that your predefined categories do not cover.
+
+```JSON
+{
+  "category": {
+    "type": "string",
+    "enum": ["invoice", "receipt", "contract", "unclear", "other"]
+  },
+  "category_detail": {
+    "type": ["string", "null"],
+    "description": "Freeform detail when category is 'other'"
+  }
+}
+```
+
+- Format normalisation rules — Include format normalisation instructions in the prompt alongside the schema. The schema enforces structure. The prompt enforces formatting consistency (e.g., "All dates in ISO 8601 format," "All currency amounts as decimal numbers without currency symbols").
+- When data extraction fails, the correct retry pattern sends three pieces of information back to the model:
+  - The original document — so the model has the source to re-examine
+  - The failed extraction — so the model can see what it produced
+  - The specific validation error — so the model knows exactly what went wrong
+
+```typescript
+// Retry with error feedback
+const retryMessages = [
+  {
+    role: "user",
+    content:
+      `Original document:\n${originalDocument}\n\n` +
+      `Your extraction:\n${JSON.stringify(failedExtraction)}\n\n` +
+      `Validation error: Line items sum to £450 but stated_total is £500. ` +
+      `Please re-extract, ensuring all line items are captured.`,
+  },
+];
+```
+
+- Retry good for:
+  - Format mismatches (wrong date format, inconsistent currency notation)
+  - Structural output errors (values in wrong fields, incorrect nesting)
+  - Misplaced values (data that exists in the document but was extracted into the wrong field)
+  - Mathematical errors (the model missed a line item affecting the total)
+- Retry not good for:
+  - Information genuinely absent from the source document
+  - Data that exists only in an external document not provided to the model
+  - Fields requiring knowledge the model does not have
+- Self-correction in the extraction schema:
+  - calculated_total vs stated_total: Extract both the sum the model calculates from individual line items and the total stated in the document. When these differ, you have an automatic discrepancy flag without external logic.
+
+  ```JSON
+  {
+  "line_items": [
+    { "description": "Widget A", "amount": 150.00 },
+    { "description": "Widget B", "amount": 300.00 }
+  ],
+  "calculated_total": 450.00,
+  "stated_total": 500.00,
+  "total_discrepancy": true
+  }
+  ```
+
+  - conflict_detected booleans: Add boolean fields that flag when the source document contains contradictory information. For example, if a document states "payment due: 30 days" in one section but "payment terms: net 60" in another, the model should extract both and set conflict_detected: true rather than silently picking one.
+  - For code review and analysis pipelines, add detected_pattern fields to structured findings. This tracks which specific code construct triggered each finding.
+
+  ```JSON
+  {
+  "finding": "Potential SQL injection vulnerability",
+  "severity": "critical",
+  "detected_pattern": "string concatenation in SQL query",
+  "file": "user_service.py",
+  "line": 42
+  }
+  ```
+
+- Schema syntax errors — Malformed JSON, missing required fields, wrong data types. Eliminated entirely by tool_use with JSON schemas
+- Semantic validation errors — Correct JSON structure but incorrect values. Line items that do not sum, dates that precede each other incorrectly, values in wrong fields. These require validation logic outside the schema and are the focus of retry loops.
+- Schemas eliminate syntax errors but cannot express cross-field semantic rules — sums that must match, dates that must be ordered. Pydantic validators encode those rules and produce the specific, per-field error messages the retry loop feeds back to the model. We create a validator class with Pydantic and when Claude sends the response in the correct format defined by our class, our class can run some validation logic to check e.g. the sum of numbers. This can create the exact error message we feed back into claude to fix its response.
+- The Message Batches API is a cost optimisation tool
+  - 50% cost savings compared to synchronous API calls
+  - Up to 24-hour processing window — results may arrive in minutes or take up to 24 hours
+  - No guaranteed latency SLA — you cannot rely on results arriving within any specific timeframe
+  - No multi-turn tool calling within a single batch request — the model cannot execute tools mid-request and use the results to continue processing
+  - custom_id fields for correlating request/response pairs — each request in a batch gets a unique identifier used to match it with its response
+- SLA calculation: How often do I have to send a batch request to stay withing my SLA? Claude has a 24h window. So if I have an SLA 30 and send a request every 6 hours, then if my first request returnes successfully immediately, then my second wait 6 hours. If the second fails after 24 hours, that's 30 hours, outside of my SLA. So I have to send more often than 6 hours
+- Batch failure handling:
+  - Identify failures by custom_id. Each request has a unique identifier. Parse the batch results to find which custom_id values failed.
+  - Resubmit only failures with modifications. Do not resubmit the entire batch. Common modifications include:
+    - Chunking oversized documents that exceeded context limits
+    - Simplifying extraction prompts for documents with unusual structures
+    - Adding format-specific few-shot examples for documents that failed due to structural variety
+  - Refine prompts on a sample set BEFORE batch processing. This is the proactive step that maximises first-pass success and reduces resubmission costs. Test your prompts against a representative sample (5-10 documents covering the range of formats and edge cases) before processing the full batch.
+- The batch API doesn't support multi-turn tool calling within a single request.
+  If your workflow requires tool execution mid-processing, you must use the synchronous API. This limitation is a direct exam test point — if a scenario describes a batch workflow that needs to call external tools during processing, the correct answer is to use the synchronous API for that step.
+- The most cost-effective batch processing strategy is to invest time in prompt refinement before submitting large volumes
+- When Claude reviews its own output, it starts at a disadvantage: it still carries the reasoning it used to generate that output. The model remembers why it made each decision and is less likely to question it. That's not a bug. It's just how self-review works inside a single session. The job is to design around it.
+- Large reviews (multi-file PRs, complex extraction pipelines, broad code audits) suffer from attention dilution when processed in a single pass. The symptoms are specific and recognisable:
+  - Detailed feedback on some files, superficial comments on others
+  - Obvious bugs missed in the middle of the review
+  - Contradictory findings — flagging a pattern as problematic in one file while approving identical code elsewhere
+- Fix attention dilution:
+  - Per-file local analysis. Analyse each file individually with a focused review prompt. This ensures consistent depth across all files. Each invocation examines only one file, so the model gives it full attention.
+  - Cross-file integration. After all per-file analyses are complete, run a separate pass that receives all per-file findings and checks for cross-file issues: data flow between modules, consistent API usage across services, dependency conflicts, and contradictions in the per-file findings themselves.
+- Confidence-Based Routing: For findings that are uncertain, the model can self-report confidence alongside each finding. This enables a routing strategy
+  - High confidence findings: Report directly to developers
+  - Low confidence findings: Route to human review for validation
+  - Threshold calibration: Use labelled validation sets to calibrate what confidence score correlates with actual accuracy
+- The confidence score isn't self-reported accuracy. It's the model's read on its own certainty. Calibrate it by running labelled examples (where you already know the answer) through the system and measuring how reported confidence tracks actual accuracy. Then adjust routing thresholds from that data. The exam distinguishes between raw confidence scores (uncalibrated, unreliable for automated decisions) and calibrated confidence thresholds (validated against labelled sets, suitable for routing). Using uncalibrated confidence for automated decisions is an anti-pattern.
