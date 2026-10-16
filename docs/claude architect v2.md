@@ -2341,3 +2341,109 @@ const retryMessages = [
   - Low confidence findings: Route to human review for validation
   - Threshold calibration: Use labelled validation sets to calibrate what confidence score correlates with actual accuracy
 - The confidence score isn't self-reported accuracy. It's the model's read on its own certainty. Calibrate it by running labelled examples (where you already know the answer) through the system and measuring how reported confidence tracks actual accuracy. Then adjust routing thresholds from that data. The exam distinguishes between raw confidence scores (uncalibrated, unreliable for automated decisions) and calibrated confidence thresholds (validated against labelled sets, suitable for routing). Using uncalibrated confidence for automated decisions is an anti-pattern.
+
+## Context Management and Reliability
+
+- Proressive summarisation trap: When conversations grow long, a common strategy is to summarise earlier turns to free up token budget. This is a trap. Progressive summarisation systematically destroys the most critical information in customer-facing and data-processing systems: numerical values, dates, percentages, and customer-stated expectations.
+  - The fix: persistent case facts blocks. Extract transactional facts (amounts, dates, order numbers, statuses) into a structured block that is included in every prompt, outside the summarised history. This block is never summarised. It persists across every turn regardless of what happens to the conversation history.
+
+```JSON
+{
+  "caseFactsBlock": {
+    "customerId": "C-4421",
+    "issues": [
+      {
+        "orderId": "#8891",
+        "orderDate": "2024-03-03",
+        "refundAmount": "$247.83",
+        "status": "pending_refund",
+        "itemDescription": "Wireless headphones — defective"
+      }
+    ]
+  }
+}
+```
+
+- Lost in the middle effect: Models process information at the beginning and end of long inputs reliably. Findings buried in the middle of a long context may be missed or given less weight.
+  - The fix is structural, not prompt-based. Place key findings summaries at the beginning of aggregated inputs. Organise detailed results with explicit section headers throughout. If you are feeding a synthesis agent the output of three research subagents, start with a "Key Findings Summary" section, then provide the detailed outputs with clear section boundaries.
+- Tool result trimming: Tool results are a silent context budget killer. An order lookup might return 40+ fields: internal audit timestamps, warehouse codes, shipping carrier IDs, fulfilment centre identifiers, and dozens of other fields irrelevant to the customer's refund request. You need 5 fields. Those other 35 fields consume tokens in every subsequent turn as the conversation history grows.
+  - Trim verbose tool outputs to only relevant fields before they accumulate in context. Skip it and multi-turn systems slowly drown in stale tool output. It is not a nice-to-have. This trimming should happen in a PostToolUse hook or in the tool implementation itself, before the result enters the conversation history. Once verbose data is in the context, it stays there for every subsequent turn.
+- Instead of always sending the full conversation history, we can use fix it: The persistent case facts block resolves this by separating critical facts from summarisable narrative, letting you summarise the conversation flow while preserving every transactional detail.
+- Upstream agent optimmisation: In multi-agent systems, upstream agents often return verbose reasoning chains and raw content that downstream agents do not need. When a research subagent sends its full thought process to a synthesis agent with a limited context budget, the synthesis agent wastes tokens on reasoning it cannot use.
+  - Modify upstream agents to return structured data — key facts, citations, relevance scores — instead of verbose content and reasoning chains. Require subagents to include metadata (dates, source locations, methodological context) in structured outputs to support accurate downstream synthesis.
+  - The persistent case facts block is the single most important pattern in context window management. Extract transactional facts (amounts, dates, order numbers) into a structured block that is included in every prompt and never summarised. This is the fix for progressive summarisation and the foundation for reliable multi-turn systems. In other words, these are exact infos at the top of the prompt like the properties of a user so Claude can always reference id, name, age etc.
+- Prompt caching: Mark a stable prefix with a cache_control breakpoint and the API stores that processed prefix, then reuses it on the next request, charging a fraction of the input cost for the cached tokens.
+  - An ephemeral breakpoint lasts about five minutes since last use; a {"type": "ephemeral", "ttl": "1h"} breakpoint lasts an hour at a higher write cost. A request may carry at most four breakpoints.
+- 3 reasons when an agent needs to escalate to a human:
+  - Customer explicitly requests a human
+  - Policy exceptions or gaps. The request falls outside documented policy.
+  - Inability to make meaningful progress. The agent has attempted resolution and cannot advance.
+- 2 unreliable triggers
+  - Sentiment-based escalation. Using frustration detection or negative sentiment scores to trigger escalation is unreliable because frustration does not correlate with case complexity.
+  - Self-reported confidence scores. Having the model output a confidence score (1-10) and escalating when it falls below a threshold is unreliable because LLM self-reported confidence is poorly calibrated. This is the exact failure mode described in the exam scenario: the agent escalates simple cases while attempting complex ones.
+- The most effective way to calibrate escalation is to add explicit escalation criteria with few-shot examples to the system prompt.
+- When a subagent fails, it must return structured error context that enables the coordinator to make intelligent recovery decisions. This context must include four elements:
+  - Failure type. Categorise the failure: transient (timeout, rate limit — may succeed on retry), validation (bad input — fix the query), business (rule violation — escalate or find alternative), or permission (access denied — cannot be retried without authorisation changes).
+  - What was attempted. The specific query, parameters used, and target system. "Searched academic database for 'renewable energy policy' with date range 2022-2024" is actionable. "Search failed" is not.
+  - Partial results gathered before failure. If the subagent retrieved three of five sources before timing out, those three results are valuable. Discarding them because the overall operation failed is wasteful.
+  - Potential alternative approaches. The subagent knows its domain. If an academic database is down, it might suggest trying a different database, broadening the search terms, or checking cached results. These suggestions help the coordinator decide on recovery strategy.
+- 2 anti patterns for multi agent error handling
+  - Silent suppression: returning empty results marked as success. This is the worst anti-pattern. The subagent encounters a timeout but returns { "results": [], "status": "success" }. The coordinator believes the search ran and found nothing.
+  - Workflow termination: killing the entire pipeline on a single failure. One subagent times out and the entire research pipeline crashes. The other four subagents completed successfully, but their results are thrown away. This is a disproportionate response that wastes completed work and provides no recovery path.
+- Why the response is empty:
+  - Access failure: The tool could not reach the data source. A timeout, a connection error, a permission denial. The search did not execute. Consider retry with the same or modified parameters.
+  - Valid empty result: The tool reached the source and executed the query. It found no matches. This IS the answer. No retry is needed because the system worked correctly — there simply are no results for this query.
+- Coverage annotations: When a synthesis agent combines findings from multiple subagents, the output should note which topic areas are well-supported and which have gaps. Coverage annotations let the consumer know what the report covers fully and where there are known limitations. Without them, a gap in the synthesis looks like the topic was not relevant rather than the source being unavailable.
+- Local recovery for transient failures: Subagents should implement local recovery for transient failures — retry logic, fallback sources, degraded responses — before propagating errors to the coordinator. Only propagate errors the subagent can't resolve locally. When propagating, always include what was attempted and any partial results gathered.
+- Context degradation is not a token limit problem. Increasing the context window doesn't fix it. The model isn't running out of space. It's losing track of specific details as they get buried under newer, more verbose output.
+  - The primary mitigation for context degradation is scratchpad files. The agent writes key findings to a file and references it for subsequent questions. This persists knowledge outside the conversation context, making it immune to context degradation.
+- Spawning subagents for specific investigation tasks is the second major mitigation strategy. Instead of the main agent doing all exploration directly (filling its context with verbose output from every file read and search), delegate specific questions to subagents. Each subagent operates with its own isolated context. It can explore verbosely without polluting the main agent's context. It returns a structured summary to the coordinator, which keeps only the key findings.
+- Summary injection between phases: When exploration happens in phases (Phase 1: understand the architecture, Phase 2: investigate specific components), summarise key findings from Phase 1 before spawning Phase 2 subagents. Inject these summaries into the initial context of Phase 2 subagents.
+- Extended exploration sessions can fail due to session crashes, network interruptions, or context exhaustion. The fix is structured state persistence. Each agent exports its current state to a known file location (a manifest). On resume, the coordinator loads this manifest and injects it into agent prompts. The agent picks up where it left off without repeating earlier exploration.
+
+### Human Review and Confidence Calibration
+
+- This is the most dangerous misconception in production extraction systems. A system reports 97% overall accuracy. The problem: that 97% hides catastrophic failure rates on specific document types. The system extracts dates from standard invoices at 99.5% accuracy. But handwritten receipts? 60%.
+  - The rule: always validate accuracy by document type AND field segment before automating. Never make automation decisions based on aggregate metrics alone.
+- Stratified Random Sampling: Selecting a representative sample from each stratum (document type, confidence band, field type) and having humans verify it.
+- Field-level confidence calibration: But raw model confidence scores are not calibrated. A model that reports 0.95 confidence might actually be correct 88% of the time on certain field types. Or 99% of the time on others. The confidence score is relative, not absolute.
+  - Calibration requires labelled validation sets (ground truth data). You take a set of documents with known correct extractions, run the model, compare its confidence scores to actual accuracy, and build a calibration curve. This tells you: "When the model reports 0.90 confidence on date fields, it's actually correct 94% of the time. When it reports 0.90 on amount fields, it's actually correct 82% of the time."
+- Reviewer Capacity Prioritisation: Do NOT spread reviewer capacity evenly across all extractions. An even distribution wastes time reviewing high-confidence items that the model handles well while leaving insufficient capacity for the uncertain items that actually need human judgement.
+- The sequence matters:
+  - Measure accuracy by document type and field segment — not aggregate.
+  - Calibrate confidence scores using labelled validation sets.
+  - Set calibrated thresholds for automation versus human review.
+  - Implement stratified random sampling for ongoing verification of automated extractions.
+  - Only then reduce human review on segments that demonstrate consistent, validated accuracy.
+
+### Information Provenance & Multi-Source Synthesis
+
+- Information provenance — knowing where every claim comes from and how confident you should be in it — is the difference between a research system that produces trustworthy outputs and one that produces plausible-sounding fiction.
+- Every finding in a multi-agent research system must carry its provenance. This isn't optional metadata. It's the structural guarantee that the final output can be traced back to specific sources. Each finding must include:
+  - Claim: The specific assertion being made
+  - Source URL: Where the information was found
+  - Document name: The title of the source document
+  - Relevant excerpt: The specific passage that supports the claim
+  - Publication date: When the source was published or data was collected
+
+```JSON
+{
+  "claim": "Global renewable energy investment reached $495 billion in 2023",
+  "sourceUrl": "https://example.com/iea-report-2024",
+  "documentName": "IEA World Energy Investment Report 2024",
+  "relevantExcerpt": "Total investment in renewable energy technologies reached approximately $495 billion in calendar year 2023, representing a 17% increase over 2022.",
+  "publicationDate": "2024-06-15"
+}
+```
+
+- Downstream agents must explicitly preserve and merge claim-source mappings through synthesis. This requires:
+  - Subagents output findings in the structured claim-source format.
+  - The synthesis agent is instructed to maintain these mappings when combining findings.
+  - The final output includes inline citations or a structured reference section that traces each claim to its source.
+- When two credible sources report different statistics for the same measure, the synthesis agent faces a critical decision: Annotate with both values and full source attribution. Let the consumer decide.
+- Different publication dates explain different numbers: Require publication/data collection dates in all structured outputs.
+- Different types of content demand different presentation formats. The exam tests whether you understand that synthesis should not flatten everything into a uniform format:
+  - Financial data → Tables.
+  - News and current events → Prose
+  - Technical findings → Structured lists.
+- Attribution Preservation Through Multi-Step Synthesis: The synthesis agent's prompt must explicitly require that every claim in its output is traceable to a specific source.
