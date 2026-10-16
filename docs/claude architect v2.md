@@ -1915,7 +1915,12 @@ chat(
 
 ## Agentic Arhitecture & Orchestration
 
+### 1.1 Agentic Loops
+
 - stop_reason: tool_use, end_turn
+
+### 1.2 Multi-Agent Orchestration
+
 - hub and spoke architecture: coordinator agent + subagents
   - ALL communication flows through the coordinator. Subagents never communicate directly with each other
   - advantage:
@@ -1941,6 +1946,9 @@ chat(
 - Subagents do NOT share memory between invocations
 - The coordinator evaluates synthesis output for gaps, it is an iterative cycle
 - the narrow decomposition failure: This pattern applies broadly: if the output is incomplete in scope (not depth), the coordinator's decomposition is almost always the root cause.
+
+### 1.3 Subagent Invocation and Context Passing
+
 - The Task/Agent tool is how a coordinator spawns subagents
 - There is a critical configuration requirement: the coordinator's allowedTools must include Task/Agent; Without it, the coordinator physically can't spawn subagents.
 - Each subagent is defined by an AgentDefinition that specifies three things:
@@ -1957,6 +1965,9 @@ chat(
   - Investigate each in parallel using shared context (the customer's account information is relevant to all three).
   - Synthesise a unified resolution that addresses all items in a single response.
   - (The wrong approach is to handle them sequentially with separate conversations, or to address only the first item and forget the rest.)
+
+### 1.4 Workflow Enforcement and Handoff
+
 - When an agent can't resolve an issue and must escalate to a human agent, the handoff must follow a structured protocol. The critical constraint: the human agent does NOT have access to the conversation transcript.
   - A proper handoff summary must be self-contained and include:
     - Customer ID — so the human agent can pull up the account.
@@ -1964,8 +1975,14 @@ chat(
     - Root cause analysis — the agent's assessment of the underlying issue.
     - Refund amount (if applicable) — the specific financial figure, not a vague reference.
     - Recommended action — what the agent believes the human agent should do.
+
+### 1.5 Agent SDK Hooks
+
 - In the Agent SDK a PreToolUse hook answers with a permissionDecision of allow, deny, ask or defer, plus an optional updatedInput that rewrites the tool's arguments before it runs. A PostToolUse hook can set updatedToolOutput to replace what the model sees, for built-in and MCP tools alike.
 - reCompact, which runs immediately before Claude Code compacts the conversation, whether the user typed /compact (matcher manual) or the context reached the auto-compact window (matcher auto). The hook receives the transcript path, the trigger, and any custom instructions the user passed to /compact, so it can archive the full transcript to a log before the summary discards detail
+
+### 1.6 Task Decomposition Strategies
+
 - Dynamic adaptive decomposition generates subtasks based on what is discovered at each step. The plan evolves as the agent learns more about the problem. The agent starts with a high-level goal, performs initial investigation, and generates a plan based on what it finds. As it executes the plan, it discovers new information that may change the remaining steps. The agent adapts the plan accordingly.
 - Attention dilution is a specific failure mode that occurs when an agent processes too many items in a single pass. The result is inconsistent depth — the agent produces thorough analysis for some items and misses obvious issues in others.
   - details:
@@ -1976,6 +1993,9 @@ chat(
   - The fix: Multi-pass architecture. Split the work into two layers:
     - Per-item local analysis passes: analyse each file (or document, or module) individually in its own pass. Each pass has the full attention budget focused on a single item.
     - Cross-item integration pass: after all local passes complete, run a separate pass that looks across all items for cross-cutting concerns (data flow issues, inconsistent pattern usage, cross-file dependencies).
+
+### 1.7 Session State and Resumption
+
 - Session management determines how an agent maintains continuity across work sessions.
   1. resume continues a specific named session from where it left off. The entire conversation history — including all tool results, analyses, and reasoning — is restored.
   2. fork_session creates an independent branch from a shared analysis baseline. After the fork, each branch operates independently; you have to combine it with --resume to set a starting point
@@ -1985,6 +2005,8 @@ chat(
 
 ## Tool Design and MCP Integration
 
+### 2.1 Tool Interface Design
+
 - A production-grade tool description includes five elements:
   - What the tool does — its primary purpose, stated unambiguously
   - What inputs it expects — data types, formats, constraints, and required versus optional fields
@@ -1992,6 +2014,9 @@ chat(
   - Edge cases and limitations — what the tool does NOT do, and what happens when inputs fall outside expected ranges
   - Explicit boundaries — when to use THIS tool versus similar tools in the same toolkit
 - Keyword-sensitive instructions in system prompts can create unintended tool associations that override well-written descriptions. If your system prompt says "always check customer details before proceeding", the model may route any customer-related query to get_customer no matter what the descriptions say. So after updating tool descriptions, reread your system prompt for conflicts. It's a subtle failure mode, and the exam tests it.
+
+### 2.2 Structured Error Responses
+
 - error types
   - Protocol errors are standard JSON-RPC error responses. The server sends one when the request itself is malformed: the tool name does not exist, the arguments fail the input schema, or the server hits an internal fault. There's no result object at all, only an error with a code and a message. The host application handles these. The model never sees a tool result, because no tool ran.
   - Tool execution errors are results. The tool was found, the arguments were valid, the tool ran, and something went wrong inside it: an upstream API failed, the input data was wrong, a business rule rejected the request. The server returns a normal result with isError: true and the detail in content, and the model reads it and decides what to do next.
@@ -2083,6 +2108,9 @@ chat(
   - Different jobs (query, transform, export): Split by role, 4-5 tools each
   - Variations on one job, sharing a shape: Consolidate into one parameterised tool
   - Doing more than the agent should be able to do: Constrain them
+
+### 2.3 Tool Distribution & Tool Choice
+
 - The tool_choice parameter controls how the model interacts with available tools. Three settings, three distinct jobs.
   - "auto" (default) The model decides whether to call a tool or return text. Use this for general operation where the model needs flexibility to respond conversationally when no tool call is appropriate.
   - "any" The model MUST call a tool but chooses which one. Use this when you need guaranteed structured output from one of multiple schemas — the model will always produce a tool call, never plain text.
@@ -2091,11 +2119,17 @@ chat(
 - Replacing generic tools with constained alternatives: This is least privilege applied to tool design.
   - Prevents misuse, Makes the tool's purpose clearer, Reduces the risk of unintended side effects
   - e.g. instead of fetch_url create a load_document
+
+### 2.4 MCP Server Integration
+
 - A remote server declares "type": "http" and a url. A local one declares a command and args, and speaks over stdio. An entry with a url but no type is a configuration error — Claude Code reads it as a stdio server, skips it, and tells you to add the type. Both GitHub and Atlassian ship official remote servers now, which is why neither is an npx line.
 - The .mcp.json file supports ${VARIABLE_NAME} syntax for environment variable expansion. This is how you keep credentials out of version control whilst still sharing server configuration with your team.
   - There is a second form worth knowing: ${VAR:-default} expands to VAR when it is set and falls back to default when it is not. Use it for machine-specific paths that have a sensible fallback, as in the ${WORKSPACE_ROOT:-.} argument above. As of 14 August 2026, an unset variable with no default does not stop the rest of the configuration loading. Claude Code warns and carries on, so do not rely on a missing token failing loudly.
 - One precision from the MCP specification (September 2026): resources are application-controlled. The server lists them, but the client decides when to attach one to the model's context, so the agent sees a resource only when the host surfaces it. Claude Code does that through @server:resource mentions and a resource-listing tool.
 - Here's a subtle one: when an MCP tool has a sparse description, the agent may prefer built-in tools (like Grep) even when the MCP tool is more capable.
+
+### 2.5 Built-in Tools
+
 - Six built-in tools for working with codebases: Read, Write, Edit, Bash, Grep, and Glob
   - Grep searches file CONTENTS for patterns. Use Grep when you need to find text inside files.
   - Glob matches file PATHS by naming patterns. Use Glob when you need to find files by name, extension, or directory structure.
@@ -2119,7 +2153,7 @@ chat(
   - Glob for sibling test files — finds the test file that pairs with each caller by naming convention, e.g. OrderProcessor.ts → OrderProcessor.test.tsx, even when the test exercises the function indirectly through the source module (path matching)
   - Grep again for wrapper names — when a caller exposes the function through a wrapper (e.g. applyLegacyOrder calls processLegacyOrder internally), Grep for the wrapper name to find tests that cover the function transitively through it
 
-## CLAUDE.md Hierarchy, Scoping and Modular Organisation
+### 3.1 CLAUDE.md Hierarchy, Scoping, and Modular Organisation
 
 - CLAUDE.md
   - User-level: ~/.claude/CLAUDE.md
@@ -2138,17 +2172,29 @@ chat(
 - check the list under Memory (/context; /memory was used too) files to verify your CLAUDE.md and CLAUDE.local.md files loaded
 - When /compact summarises a long session, project-root CLAUDE.md comes back intact.
   - Two things don't come back automatically: nested CLAUDE.md files in subdirectories, and .claude/rules/ files with paths: frontmatter. Both load on demand, so they return the next time Claude reads a matching file rather than the moment compaction ends. When an instruction seems to vanish after /compact, that's usually why.
+
+### 3.2 Custom Slash Commands and Skills
+
 - Custom commands and skills have been merged into a single unified system: the Skills system. The two locations, .claude/skills/ and .claude/commands/, create /commands that behave the same way, but their file structures differ. A skill is a directory containing a SKILL.md file (.claude/skills/deploy/SKILL.md); a command is a flat Markdown file (.claude/commands/deploy.md).
 - The three critical frontmatter options:
   - context: fork: Runs the skill in an isolated sub-agent context. All the verbose output stays contained in the fork, and the main conversation stays clean.
   - allowed-tools: Pre-approves the listed tools so Claude can use them without a permission prompt while the skill is active. It does not restrict which tools are available: every other tool remains callable, and your normal permission settings still govern anything that is not listed. BUT: The exam guide (v1.0) describes allowed-tools as restricting the skill's tool access, and that is the keyed answer: if a question asks what the field does, answer "restricts". The pre-approval behaviour above is what current Claude Code (September 2026) actually does.
   - (disallowed-tools)
   - argument-hint: A hint shown during autocomplete to indicate the arguments the skill expects. Improves the developer experience by making inputs explicit rather than relying on the developer to remember what the skill needs. It is a label, not an interactive prompt: invoking the skill with no arguments does not stop and ask for them. BUT: Exam guide v1.0 describes argument-hint as prompting developers for required parameters when they invoke the skill without arguments, and that is the expected exam answer. As of 14 August 2026 the skills frontmatter reference defines it as a "Hint shown during autocomplete to indicate expected arguments."
+
+### 3.3 Path-Specific Rules for Conditional Convention Loading
+
 - Path-specific rules apply conventions conditionally, based on which files you're editing. They solve something neither root CLAUDE.md nor directory-level CLAUDE.md handles well: conventions that must apply to one file type scattered across many directories.
   - Rule files live in the .claude/rules/ directory. Each file carries YAML frontmatter with a paths field specifying glob patterns. The rules inside load only when you're editing files that match those patterns.
+
+### 3.4 Plan Mode vs Direct Execution
+
 - Writing "in plan mode" into the body of a prompt does nothing; /plan at the start of it does.
 - Direct execution skips the planning phase and makes changes straight away. For simple, well-defined tasks, planning adds nothing.
 - Use the Explore subagent during multi-phase tasks where the discovery phase is verbose but the implementation phase needs focused context.
+
+### 3.5 Iterative Refinement Techniques
+
 - refinement techniques:
   - Concrete input/output examples (most effective for inconsistent interpretation)
   - Test-driven iteration (most effective for complex transformations)
@@ -2156,6 +2202,9 @@ chat(
 - feedback patterns
   - Single message (batch) when fixes interact with each other: If changing the error handling pattern also affects the logging format and the response structure, provide all three pieces of feedback in one message. The model needs to see all the interacting constraints at once to produce a coherent fix.
   - Sequential iteration when issues are independent:If the naming convention issue and the indentation issue don't affect each other, fix them one at a time. Batching independent issues can confuse the model about which feedback applies to which part of the code.
+
+### 3.6 CI/CD Integration
+
 - Drop Claude Code into a CI/CD pipeline and it stops being an interactive developer tool and becomes an automated review and generation engine. The exam tests five concepts in this task statement, and the -p (--print) flag is the single most directly tested item
 - In CI, Claude Code's output has to be machine-parseable. No human is reading it. Automated systems process it to post inline PR comments, update dashboards, or trigger downstream workflows.
   - --output-format json — wraps the run in a JSON envelope (result text, session ID, cost and usage metadata) instead of human-readable text
@@ -2196,9 +2245,14 @@ claude -p \
 
 ## Prompt Engineering & Structured Output
 
+### 4.1 System Prompts with Explicit Criteria
+
 - False positive trust problem: High false positive rates in one category destroy developer trust in all categories. If your "documentation mismatch" findings are wrong 40% of the time, developers stop reading your "security vulnerability" findings too, even when those run at 98% accuracy. The fix feels backwards: temporarily disable the high false-positive categories while you rework their prompts.
 - Severity calibration: use concrete examples not descriptions e.g. a snippet for an unsanitized user input
 - The hierarchy is: explicit criteria first, confidence-based routing second. LLM self-reported confidence is poorly calibrated. The model is often sure about wrong findings and hesitant about right ones.
+
+### 4.2 Few-Shot Prompting
+
 - Few-shot examples are the most effective technique for achieving consistent, well-formatted output from Claude. Not more instructions. Not confidence thresholds. Not temperature adjustments. When your output is inconsistent, few-shot examples are the first tool to reach for.
 - Exact cases where to use few-shot examples
   - Detailed instructions alone produce inconsistent formatting.
@@ -2210,6 +2264,9 @@ claude -p \
   - Cover the failing scenarios.ot just match the specific cases in your examples.
 - Few-shot examples have a useful side effect: they cut hallucination in extraction tasks. This matters most for documents with inconsistent formatting.
 - In code review and analysis, few-shot examples pull double duty: they show both what to flag and what to ignore.
+
+### 4.3 Structured Output with Tool Use
+
 - When you need guaranteed schema-compliant structured output from Claude, there is a clear reliability hierarchy:
   - tool_use with JSON schemas — eliminates JSON syntax errors entirely: With tool use, the tool's JSON schema constrains the shape of what Claude returns, eliminating syntax issues like missing brackets, trailing commas, or unquoted keys.
   - Prompt-based JSON — model can produce malformed JSON
@@ -2252,6 +2309,9 @@ claude -p \
 ```
 
 - Format normalisation rules — Include format normalisation instructions in the prompt alongside the schema. The schema enforces structure. The prompt enforces formatting consistency (e.g., "All dates in ISO 8601 format," "All currency amounts as decimal numbers without currency symbols").
+
+### 4.4 Validation, Retry, and Feedback Loops
+
 - When data extraction fails, the correct retry pattern sends three pieces of information back to the model:
   - The original document — so the model has the source to re-examine
   - The failed extraction — so the model can see what it produced
@@ -2311,6 +2371,9 @@ const retryMessages = [
 - Schema syntax errors — Malformed JSON, missing required fields, wrong data types. Eliminated entirely by tool_use with JSON schemas
 - Semantic validation errors — Correct JSON structure but incorrect values. Line items that do not sum, dates that precede each other incorrectly, values in wrong fields. These require validation logic outside the schema and are the focus of retry loops.
 - Schemas eliminate syntax errors but cannot express cross-field semantic rules — sums that must match, dates that must be ordered. Pydantic validators encode those rules and produce the specific, per-field error messages the retry loop feeds back to the model. We create a validator class with Pydantic and when Claude sends the response in the correct format defined by our class, our class can run some validation logic to check e.g. the sum of numbers. This can create the exact error message we feed back into claude to fix its response.
+
+### 4.5 Batch Processing Strategies
+
 - The Message Batches API is a cost optimisation tool
   - 50% cost savings compared to synchronous API calls
   - Up to 24-hour processing window — results may arrive in minutes or take up to 24 hours
@@ -2328,6 +2391,9 @@ const retryMessages = [
 - The batch API doesn't support multi-turn tool calling within a single request.
   If your workflow requires tool execution mid-processing, you must use the synchronous API. This limitation is a direct exam test point — if a scenario describes a batch workflow that needs to call external tools during processing, the correct answer is to use the synchronous API for that step.
 - The most cost-effective batch processing strategy is to invest time in prompt refinement before submitting large volumes
+
+### 4.6 Multi-Instance and Multi-Pass Review
+
 - When Claude reviews its own output, it starts at a disadvantage: it still carries the reasoning it used to generate that output. The model remembers why it made each decision and is less likely to question it. That's not a bug. It's just how self-review works inside a single session. The job is to design around it.
 - Large reviews (multi-file PRs, complex extraction pipelines, broad code audits) suffer from attention dilution when processed in a single pass. The symptoms are specific and recognisable:
   - Detailed feedback on some files, superficial comments on others
@@ -2343,6 +2409,8 @@ const retryMessages = [
 - The confidence score isn't self-reported accuracy. It's the model's read on its own certainty. Calibrate it by running labelled examples (where you already know the answer) through the system and measuring how reported confidence tracks actual accuracy. Then adjust routing thresholds from that data. The exam distinguishes between raw confidence scores (uncalibrated, unreliable for automated decisions) and calibrated confidence thresholds (validated against labelled sets, suitable for routing). Using uncalibrated confidence for automated decisions is an anti-pattern.
 
 ## Context Management and Reliability
+
+### 5.1 Context Window Management
 
 - Proressive summarisation trap: When conversations grow long, a common strategy is to summarise earlier turns to free up token budget. This is a trap. Progressive summarisation systematically destroys the most critical information in customer-facing and data-processing systems: numerical values, dates, percentages, and customer-stated expectations.
   - The fix: persistent case facts blocks. Extract transactional facts (amounts, dates, order numbers, statuses) into a structured block that is included in every prompt, outside the summarised history. This block is never summarised. It persists across every turn regardless of what happens to the conversation history.
@@ -2374,6 +2442,9 @@ const retryMessages = [
   - The persistent case facts block is the single most important pattern in context window management. Extract transactional facts (amounts, dates, order numbers) into a structured block that is included in every prompt and never summarised. This is the fix for progressive summarisation and the foundation for reliable multi-turn systems. In other words, these are exact infos at the top of the prompt like the properties of a user so Claude can always reference id, name, age etc.
 - Prompt caching: Mark a stable prefix with a cache_control breakpoint and the API stores that processed prefix, then reuses it on the next request, charging a fraction of the input cost for the cached tokens.
   - An ephemeral breakpoint lasts about five minutes since last use; a {"type": "ephemeral", "ttl": "1h"} breakpoint lasts an hour at a higher write cost. A request may carry at most four breakpoints.
+
+### 5.2 Escalation & Ambiguity Resolution
+
 - 3 reasons when an agent needs to escalate to a human:
   - Customer explicitly requests a human
   - Policy exceptions or gaps. The request falls outside documented policy.
@@ -2382,6 +2453,9 @@ const retryMessages = [
   - Sentiment-based escalation. Using frustration detection or negative sentiment scores to trigger escalation is unreliable because frustration does not correlate with case complexity.
   - Self-reported confidence scores. Having the model output a confidence score (1-10) and escalating when it falls below a threshold is unreliable because LLM self-reported confidence is poorly calibrated. This is the exact failure mode described in the exam scenario: the agent escalates simple cases while attempting complex ones.
 - The most effective way to calibrate escalation is to add explicit escalation criteria with few-shot examples to the system prompt.
+
+### 5.3 Error Propagation in Multi-Agent Systems
+
 - When a subagent fails, it must return structured error context that enables the coordinator to make intelligent recovery decisions. This context must include four elements:
   - Failure type. Categorise the failure: transient (timeout, rate limit — may succeed on retry), validation (bad input — fix the query), business (rule violation — escalate or find alternative), or permission (access denied — cannot be retried without authorisation changes).
   - What was attempted. The specific query, parameters used, and target system. "Searched academic database for 'renewable energy policy' with date range 2022-2024" is actionable. "Search failed" is not.
@@ -2395,13 +2469,16 @@ const retryMessages = [
   - Valid empty result: The tool reached the source and executed the query. It found no matches. This IS the answer. No retry is needed because the system worked correctly — there simply are no results for this query.
 - Coverage annotations: When a synthesis agent combines findings from multiple subagents, the output should note which topic areas are well-supported and which have gaps. Coverage annotations let the consumer know what the report covers fully and where there are known limitations. Without them, a gap in the synthesis looks like the topic was not relevant rather than the source being unavailable.
 - Local recovery for transient failures: Subagents should implement local recovery for transient failures — retry logic, fallback sources, degraded responses — before propagating errors to the coordinator. Only propagate errors the subagent can't resolve locally. When propagating, always include what was attempted and any partial results gathered.
+
+### 5.4 Codebase Exploration & Context Degradation
+
 - Context degradation is not a token limit problem. Increasing the context window doesn't fix it. The model isn't running out of space. It's losing track of specific details as they get buried under newer, more verbose output.
   - The primary mitigation for context degradation is scratchpad files. The agent writes key findings to a file and references it for subsequent questions. This persists knowledge outside the conversation context, making it immune to context degradation.
 - Spawning subagents for specific investigation tasks is the second major mitigation strategy. Instead of the main agent doing all exploration directly (filling its context with verbose output from every file read and search), delegate specific questions to subagents. Each subagent operates with its own isolated context. It can explore verbosely without polluting the main agent's context. It returns a structured summary to the coordinator, which keeps only the key findings.
 - Summary injection between phases: When exploration happens in phases (Phase 1: understand the architecture, Phase 2: investigate specific components), summarise key findings from Phase 1 before spawning Phase 2 subagents. Inject these summaries into the initial context of Phase 2 subagents.
 - Extended exploration sessions can fail due to session crashes, network interruptions, or context exhaustion. The fix is structured state persistence. Each agent exports its current state to a known file location (a manifest). On resume, the coordinator loads this manifest and injects it into agent prompts. The agent picks up where it left off without repeating earlier exploration.
 
-### Human Review and Confidence Calibration
+### 5.5 Human Review & Confidence Calibration
 
 - This is the most dangerous misconception in production extraction systems. A system reports 97% overall accuracy. The problem: that 97% hides catastrophic failure rates on specific document types. The system extracts dates from standard invoices at 99.5% accuracy. But handwritten receipts? 60%.
   - The rule: always validate accuracy by document type AND field segment before automating. Never make automation decisions based on aggregate metrics alone.
@@ -2416,7 +2493,7 @@ const retryMessages = [
   - Implement stratified random sampling for ongoing verification of automated extractions.
   - Only then reduce human review on segments that demonstrate consistent, validated accuracy.
 
-### Information Provenance & Multi-Source Synthesis
+### 5.6 Information Provenance & Multi-Source Synthesis
 
 - Information provenance — knowing where every claim comes from and how confident you should be in it — is the difference between a research system that produces trustworthy outputs and one that produces plausible-sounding fiction.
 - Every finding in a multi-agent research system must carry its provenance. This isn't optional metadata. It's the structural guarantee that the final output can be traced back to specific sources. Each finding must include:
